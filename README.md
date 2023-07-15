@@ -1,1 +1,20 @@
-# ci
+# CICD
+
+[![Version status](https://img.shields.io/pypi/status/tyranno?label=Status)](https://pypi.org/project/tyranno)<!--<< :tyranno: [![Version status](https://img.shields.io/pypi/status/${.name}?label=Status)](https://pypi.org/project/${.name}) -->
+[![Version on PyPi](https://badgen.net/pypi/v/tyranno?label=PyPi)](https://pypi.org/project/tyranno)<!--<< :tyranno: [![Version on PyPi](https://badgen.net/pypi/v/${.name}?label=PyPi -->
+[![Version on GitHub](https://badgen.net/github/release/dmyersturnbull/tyranno/stable?label=GitHub)](https://github.com/dmyersturnbull/tyranno/releases)<!--<< :tyranno: [![Version on GitHub](https://badgen.net/github/release/${.frag}/stable?label=GitHub)](${.link.repo}/releases) -->
+[![Version on Docker Hub](https://img.shields.io/docker/v/dmyersturnbull/tyranno?color=green&label=Docker%20Hub)](https://hub.docker.com/repository/docker/dmyersturnbull/tyranno)<!--<< :tyranno: [![Version on Docker Hub](https://img.shields.io/docker/v/dmyersturnbull/tyranno?color=green&label=Docker%20Hub)](https://hub.docker.com/repository/docker/${.frag}) -->
+[![Version on Conda-Forge](https://img.shields.io/conda/vn/conda-forge/tyranno?label=Conda-Forge)](https://anaconda.org/conda-forge/tyranno)<!--<< :tyranno: [![Version on Conda-Forge](https://img.shields.io/conda/vn/conda-forge/${.name}?label=Conda-Forge)](https://anaconda.org/conda-forge/${T.name})\ -->
+
+[![Build (Actions)](https://img.shields.io/github/workflow/status/dmyersturnbull/tyranno/maintest?label=Tests)](https://github.com/dmyersturnbull/tyranno/actions)<!--<< :tyranno: [![Build (Actions)](https://img.shields.io/github/workflow/status/${T.name}/${.org}/maintest?label=Tests)](${.link.url}/actions) -->
+[![Documentation status](https://readthedocs.org/projects/tyranno/badge)](https://tyranno.readthedocs.io/en/stable/)<!--<< :tyranno: [![Documentation status](${.link.url}/badge)](${.link.docs}) -->
+[![Coverage (coveralls)](https://badgen.net/coveralls/c/github/dmyersturnbull/tyranno?label=Coveralls)](https://coveralls.io/github/dmyersturnbull/tyranno?branch=main)<!--<< :tyranno: [![Coverage (coveralls)](https://badgen.net/coveralls/c/github/${T.name}/${.name}?label=Coveralls)](https://coveralls.io/github/${.frag}?branch=main) -->
+[![Coverage (codecov)](https://badgen.net/codecov/c/github/dmyersturnbull/tyranno?label=CodeCov)](https://codecov.io/gh/dmyersturnbull/tyranno)<!--<< :tyranno: [![Coverage (codecov)](https://badgen.net/codecov/c/github/${.frag}?label=CodeCov)](https://codecov.io/gh/${.frag})\ -->
+
+[![Maintainability (Code Climate)](https://badgen.net/codeclimate/maintainability/dmyersturnbull/tyranno)](https://codeclimate.com/github/dmyersturnbull/tyranno/maintainability)<!--<< :tyranno: [![Maintainability (Code Climate)](https://badgen.net/codeclimate/maintainability/${.frag})](https://codeclimate.com/github/${.frag}/maintainability) -->
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/dmyersturnbull/tyranno/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/dmyersturnbull/tyranno/?branch=main)<!--<< :tyranno: [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/${.frag}/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/${.frag}/?branch=main) -->
+[![CodeFactor](https://www.codefactor.io/repository/github/dmyersturnbull/tyranno/badge)](https://www.codefactor.io/repository/github/dmyersturnbull/tyranno)<!--<< :tyranno: [![CodeFactor](https://www.codefactor.io/repository/github/${.frag}/badge)](https://www.codefactor.io/repository/github/${.frag}) -->
+
+[![License](https://badgen.net/pypi/license/tyranno?label=License)](https://opensource.org/licenses/Apache-2.0)<!--<< :tyranno: [![License](https://badgen.net/pypi/license/${.name}?label=License)](${.license.url}) -->
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4485186.svg)](https://doi.org/10.5281/zenodo.4485186)<!--<< :tyranno: [![DOI](https://zenodo.org/badge/DOI/${.doi}.svg)](https://doi.org/${.doi}) -->
+[![Created with Tyranno](https://img.shields.io/badge/Created_with-Tyranno-0000ff.svg)](https://github.com/dmyersturnbull/tyranno)<!--<< :tyranno: [![Created with ${.Name}](https://img.shields.io/badge/Created_with-${.Name}-0000ff.svg)](https://github.com/${.frag}) -->

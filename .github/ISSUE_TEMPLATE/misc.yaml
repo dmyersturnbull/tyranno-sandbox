@@ -1,0 +1,13 @@
+name: "🧹 Other"
+title: "📚 Other issue:"
+description: "Other issue"
+labels: ["type: misc"]
+
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What needs work?
+      placeholder: Describe the issue or change.
+    validations:
+      required: true

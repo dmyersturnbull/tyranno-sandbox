@@ -1,0 +1,28 @@
+# SPDX-License-Identifier Apache-2.0
+# Source: https://github.com/dmyersturnbull/tyranno
+name: on-pull-label
+
+on:
+  pull_request_target:
+    types: [opened, edited]
+    branches: [master]
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label pull request
+        uses: bcoe/conventional-release-labels@v1
+        with:
+          ignored_types: '["type: misc"]'
+          type_labels: |
+            {
+              "breaking": "breaking",
+              "feat": "type: feature",
+              "fix": "type: fix",
+              "build": "type: build",
+              "test": "type: test",
+              "perf": "type: performance",
+              "docs": "type: docs",
+              "test": "type: test"
+            }
