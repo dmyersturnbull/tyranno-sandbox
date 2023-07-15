@@ -1,0 +1,36 @@
+name: "🔧 Feature"
+title: "Build:"
+description: "Build improvement"
+labels: ["type: build"]
+
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      placeholder: Detail how you tried to build and what happened.
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: What OS types are you seeing the problem on?
+      multiple: true
+      options:
+        - Windows
+        - Linux
+        - macOS
+    validations:
+      required: true
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Configuration
+      placeholder: Please list other configuration information.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output.

@@ -1,0 +1,24 @@
+changelog:
+  exclude:
+    labels:
+      - "type: misc"
+      - "type: discussion"
+      - "type: question"
+      - "exclude"
+  categories:
+    - title: ⚠️ BREAKING CHANGES
+      labels: ["breaking"]
+    - title: 🎁 Features
+      labels: ["type: feature"]
+    - title: 🔒 Security
+      labels: ["security"]
+    - title: 🐛 Bug fixes
+      labels: ["type: fix"]
+    - title: 🔧 Build System
+      labels: ["type: build"]
+    - title: 📝 Documentation
+      labels: ["type: docs"]
+    - title: 🚀 Performance
+      labels: ["type: performance"]
+    - title: 🚨 Tests
+      labels: ["type: test"]
