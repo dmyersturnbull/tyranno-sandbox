@@ -76,7 +76,7 @@ typer                    = {version="^0.9", extras=["all"]}
 pre-commit               = "^3.3"
 pytest                   = "^7"
 coverage                 = {extras = ["toml"], version = "^7"}
-pytest-cov               = "^3"
+pytest-cov               = "^4"
 ruff                     = ">=0.0.28"
 
 #===== Doc dependencies =====#
