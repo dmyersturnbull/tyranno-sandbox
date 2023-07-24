@@ -90,14 +90,14 @@ furo                      = ">=2023"
 [tool.poetry.group.main-host.dependencies]
 python                   = "^3.11"
 poetry-core              = "^1.6"
-wheel                    = "^0.37"
+wheel                    = "^0.41"
 virtualenv               = ">=20.0.33"
 
 #===== Dev dependencies for test =====#
 [tool.poetry.group.test-host.dependencies]
 python                   = "^3.11"
 poetry-core              = "^1.6"
-wheel                    = "^0.37"
+wheel                    = "^0.41"
 virtualenv               = ">=20.0.33"
 tox                      = "^4"
 
