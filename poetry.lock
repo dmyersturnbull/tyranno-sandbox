@@ -593,18 +593,18 @@ files = [
 
 [[package]]
 name = "platformdirs"
-version = "3.9.0"
+version = "3.10.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "platformdirs-3.9.0-py3-none-any.whl", hash = "sha256:16a642e216f72f16a0bf0026468135d8ffd34a3e17ad0875b030f16f3cba5cbb"},
-    {file = "platformdirs-3.9.0.tar.gz", hash = "sha256:363fe3800e9c0227721c56eea50ae30c52c57ca7865def61ea9ebad133fe4445"},
+    {file = "platformdirs-3.10.0-py3-none-any.whl", hash = "sha256:d7c24979f292f916dc9cbf8648319032f551ea8c49a4c9bf2fb556a02070ec1d"},
+    {file = "platformdirs-3.10.0.tar.gz", hash = "sha256:b45696dab2d7cc691a3226759c0d3b00c47c8b6e293d96f6436f733303f77f6d"},
 ]
 
 [package.extras]
-docs = ["furo (>=2023.5.20)", "proselint (>=0.13)", "sphinx (>=7.0.1)", "sphinx-autodoc-typehints (>=1.23,!=1.23.4)"]
-test = ["appdirs (==1.4.4)", "covdefaults (>=2.3)", "pytest (>=7.3.1)", "pytest-cov (>=4.1)", "pytest-mock (>=3.10)"]
+docs = ["furo (>=2023.7.26)", "proselint (>=0.13)", "sphinx (>=7.1.1)", "sphinx-autodoc-typehints (>=1.24)"]
+test = ["appdirs (==1.4.4)", "covdefaults (>=2.3)", "pytest (>=7.4)", "pytest-cov (>=4.1)", "pytest-mock (>=3.11.1)"]
 
 [[package]]
 name = "pluggy"
@@ -1352,4 +1352,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "458a8e4413c2ed34e8676f0f2fdf025307a8aa4585743b01e88b8395998f7a07"
+content-hash = "58688755ed318805cee0f5ab1b2dd641ed397c2d4faa9d2ba9e0bfea5d4d7176"
