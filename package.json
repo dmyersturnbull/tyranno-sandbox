@@ -4,7 +4,7 @@
     "prettier-plugin-ini": "^1.1.0",
     "prettier-plugin-properties": "^0.3.0",
     "prettier-plugin-sh": "^0.13.1",
-    "prettier-plugin-sql": "^0.15.1",
+    "prettier-plugin-sql": "^0.16.0",
     "prettier-plugin-toml": "^1.0.0"
   },
   "prettier": {
