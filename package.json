@@ -1,11 +1,11 @@
 {
   "devDependencies": {
-    "@prettier/plugin-xml": "^3.2.2",
-    "prettier-plugin-ini": "^1.1.0",
+    "@prettier/plugin-xml": "^3.4.1",
+    "prettier-plugin-ini": "^1.2.0",
     "prettier-plugin-properties": "^0.3.0",
-    "prettier-plugin-sh": "^0.13.1",
-    "prettier-plugin-sql": "^0.15.1",
-    "prettier-plugin-toml": "^1.0.0"
+    "prettier-plugin-sh": "^0.14.0",
+    "prettier-plugin-sql": "^0.18.0",
+    "prettier-plugin-toml": "^2.0.1"
   },
   "prettier": {
     "plugins": [
