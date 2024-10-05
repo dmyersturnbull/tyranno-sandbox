@@ -15,9 +15,6 @@ repos:
       - id: check-symlinks
       - id: end-of-file-fixer
       - id: fix-byte-order-marker
-      - id: fix-encoding-pragma
-        args:
-          - '--remove'
       - id: trailing-whitespace
 
   # --- Strip output from .ipynb files ---
@@ -29,14 +26,9 @@ repos:
   # --- Linters ---
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # :tyranno: rev: v${tool.ruff.envs.default~extract_semver(@, "ruff")|semver_min(@)}
-    rev: v0.6.3
+    rev: v0.6.9
     hooks:
       - id: ruff
         args:
           -  '--fix-only'
-        types_or:
-          - python
-          - pypirc
-          - jupyter
-          - markdown
       - id: ruff-format

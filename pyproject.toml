@@ -59,11 +59,10 @@ classifiers = [
 ]
 dependencies = [
   "loguru >=0.7",
-  "tomlkit >=0.13",
   "typer-slim >=0.12",
-  "platformdirs >=4.0",
-  "rich >=13.0",
-  "tzdata >=2024.1; platform_system == 'Windows'",
+  "platformdirs >=4.1",
+  "rich >=13.8",
+  "tzdata >=2024.2; platform_system == 'Windows'",
 ]
 
 [project.optional-dependencies]
@@ -95,7 +94,7 @@ Download = "https://pypi.org/project/cicd/"
 # :tyranno: "Release Notes" = "https://github.com/${.frag}/releases"
 "Release Notes" = "https://github.com/dmyersturnbull/cicd/releases"
 # :tyranno: #Sponsor = "https://${.vendor}.github.io/${project.name}/placeholder#sponsor"
-#Sponsor = "https://${.vendor}.github.io/${project.name}/placeholder#sponsor"
+Sponsor = "https://${.vendor}.github.io/${project.name}/placeholder#sponsor"
 
 #
 #########################################################################################
@@ -111,15 +110,15 @@ skip-install = true
 dependencies = [
   "pre-commit >=3.8",
   "mypy >=1.11",
-  "ruff >=0.6.5",
+  "ruff >=0.6.9",
 ]
 
 [tool.hatch.envs.test]
 skip-install = false
 dependencies = [
   "hypothesis >=6.111",
-  "pytest >=8.3",
-  "tzdata >=2024.1",
+  "pytest >=8.3.3",
+  "tzdata >=2024.1; platform_system == 'Windows'",
   "coverage[toml] >=7.6",
   "pytest-cov >=5.0"
 ]
@@ -129,10 +128,10 @@ skip-install = true
 dependencies = [
   "mkdocs >=1.6",
   "mike >=2.1",
-  "mkdocs-literate-nav >=0.6",
-  "mkdocs-material >=9.5",
+  "mkdocs-literate-nav >=0.6.1",
+  "mkdocs-material >=9.5.32",
   "mkdocs-minify-plugin >=0.8",
-  "mkdocstrings[python] >=0.25",
+  "mkdocstrings[python] >=0.26",
   "mkdocs-table-reader-plugin >=3.1",
 ]
 

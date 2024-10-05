@@ -27,7 +27,7 @@ jobs:
       - name: Run Ruff format
         # Format Python
         run: |
-          uv install 'ruff >=0.6.5'
+          uv install 'ruff >=0.6.9'
           ruff format .
 
       - uses: actions/setup-node@v4

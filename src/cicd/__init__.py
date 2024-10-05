@@ -9,7 +9,7 @@ CI/CD example.
 from cicd._about import about as __about__
 
 __uri__ = __about__.homepage
-__title__ = __about__.title
+__title__ = __about__.name
 __summary__ = __about__.summary
 __version__ = __about__.version
 __license__ = __about__.license
