@@ -1,10 +1,13 @@
 # SPDX-FileCopyrightText: Copyright 2020-2024, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
-root=true
+
 # Check https://editorconfig.org for more information
 # These are derived from https://ukupat.github.io/tabs-or-spaces/
 # The most majority indentation style was selected for each language
+
+# Do not look in parent directories  
+root=true
 
 [*]
 end_of_line=lf
@@ -17,12 +20,14 @@ insert_final_newline=true
 # We assume TypeScript to be 2-space because JavaScript and JSX so strongly are,
 # and we'd rather keep those two consistent.
 
-[*.md]
-trim_trailing_whitespace=false
-# Markdown
+#[*.md]
+# using \ is better
+#trim_trailing_whitespace=false
 
 [*.{julia,rs,d,cpp,c,m,mm,f99,inc,h,s,asm}]
 indent_size=4
+# prettier uses max_line_length for --print-width; it's not really the max
+max_line_length=120
 # 4-space, traditionally compiled without bytecode or JIT --
 #   Julia, Rust, D, C++, Objective-C, C, Fortran, and Assembly
 # We exclude Fortran fixed-form (e.g. .f/.ftn); these have weird indentation rules
@@ -30,17 +35,20 @@ indent_size=4
 
 [*.{py,ipynb,php,java,groovy,gradle,kt,kts,cs,fs,fsx,fsi,erl,swift}]
 indent_size=4
+max_line_length=120
 # 4-space, generally VM --
 #   Erlang, F#, Python, PHP (in 8+), Java, Kotlin, Groovy (+Gradle), F#, erlang, Swift
 
 [*.{lua,vala,pl,perl,ps1,bat}]
 indent_size=4
+max_line_length=120
 # 4-space, generally interpreted --
 #   Lua, Vala, Perl, PowerShell, Batch
 # Lua and Vala are about even between 4-space and tab
 
 [*.{go,hx,v,sv,sas,au3}]
 indent_style=tab
+max_line_length=120
 # tab-based --
 #   Go, Haxe, Verilog, System Verilog, SAS, and AutoIt
 
