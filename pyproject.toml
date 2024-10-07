@@ -152,6 +152,13 @@ clean = "tyranno clean {args}"
 format = [
   "ruff format",
   "ruff check --fix-only",
+  "npx poetry .",
+]
+
+# 'format-python' just excludes Prettier
+format-python = [
+  "ruff format",
+  "ruff check --fix-only",
 ]
 
 # 'check' only checks but never fixes
@@ -372,6 +379,26 @@ max-nested-blocks = 3 # default is 5
 # A future version of pytest will create [tool.pytest]
 [tool.pytest.ini_options]
 
+# show log output from the tests
+# in the tests/ code, name the logger {pkg}-TEST to differentiate
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+doctest_optionflags = [
+  "DONT_ACCEPT_TRUE_FOR_1", # 1 is not the same as True
+  "NORMALIZE_WHITESPACE", # allows us to wrap expected output to 120 lines (ignores newlines)
+]
+
+# create markers so we can disable internet (or network-connected), or very slow tests
+markers = [
+  #"integration: marks integration tests (deselect with `-m 'not integration'`)",
+  "slow: marks tests that take a long time to run (select with `-m slow`)",
+  "net: marks tests that require internet access (select with `-m net`)",
+  "ux: marks tests that require manual input such as in-browser (select with `-m ux`)",
+]
+
 pythonpath = "./src" # critical!
 # coverage stops recursing after it finds one dir without an __init__.py
 # so if it finds src/java-app before src/pyapp, it won't find pyapp
@@ -384,27 +411,11 @@ addopts = """
   --cov-report term \
   --cov-config=pyproject.toml \
   --random-order \
+  --doctest-modules \
+  --strict-markers \
+  -m 'not (slow or net or ux)' \
   tests/
 """
-
-# show log output from the tests
-# in the tests/ code, name the logger {pkg}-TEST to differentiate
-log_cli = true
-log_cli_level = "INFO"
-log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s (%(filename)s:%(lineno)s)"
-log_cli_date_format = "%Y-%m-%d %H:%M:%S"
-
-# create markers so we can disable integration, network-connected, or very slow tests if desired
-markers = [
-  "integration: marks integration tests (deselect with '-m \"not integration\"')",
-  "network: marks tests that require network access (deselect with '-m \"not network\"')",
-  "slow: marks tests that take a long time to run (deselect with '-m \"not slow\"')",
-]
-
-doctest_optionflags = [
-  "DONT_ACCEPT_TRUE_FOR_1", # 1 is not the same as True
-  "NORMALIZE_WHITESPACE", # allows us to wrap expected output to 120 lines (ignores newlines)
-]
 
 #
 #########################################################################################
