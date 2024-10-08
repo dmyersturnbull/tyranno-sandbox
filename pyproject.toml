@@ -152,7 +152,7 @@ clean = "tyranno clean {args}"
 format = [
   "ruff format",
   "ruff check --fix-only",
-  "npx poetry .",
+  "npx prettier .",
 ]
 
 # 'format-python' just excludes Prettier
