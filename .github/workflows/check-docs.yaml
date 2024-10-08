@@ -18,10 +18,10 @@ on:
       - synchronize
       - edited
     paths:
-      - '**/*.md'
-      - '**/*.py'
-      - 'pyproject.toml'
-      - 'mkdocs.yaml'
+      - "**/*.md"
+      - "**/*.py"
+      - "pyproject.toml"
+      - "mkdocs.yaml"
   issue_comment:
     types:
       - created
@@ -33,7 +33,6 @@ permissions:
   security-events: write
 
 jobs:
-
   check-docs:
     name: Test building docs
     runs-on: ubuntu-latest

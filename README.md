@@ -20,6 +20,7 @@ The `\` are added on separate `:tyranno:` lines for visibility.
 <!-- :tyranno: [![License](https://badgen.net/pypi/license/${.name}?label=License)](${.license.url}) -->
 <!-- :tyranno: [![DOI](https://zenodo.org/badge/DOI/${.doi}.svg)](https://doi.org/${.doi}) -->
 <!-- :tyranno: [![Created with ${.Name}](https://img.shields.io/badge/Created_with-${.Name}-0000ff.svg)](https://github.com/${.frag}) -->
+
 [![Version status](https://img.shields.io/pypi/status/tyrannosaurus?label=Status)](https://pypi.org/project/tyrannosaurus)
 [![Version on PyPi](https://badgen.net/pypi/v/tyrannosaurus?label=PyPi)](https://pypi.org/project/tyrannosaurus)
 [![Version on GitHub](https://badgen.net/github/release/dmyersturnbull/tyrannosaurus/stable?label=GitHub)](https://github.com/dmyersturnbull/tyrannosaurus/releases)
@@ -43,8 +44,7 @@ built with
 [Ruff](https://github.com/astral-sh/ruff),
 and [GitHub actions](https://docs.github.com/en/actions).
 
-> [!CAUTION]
-> **🚧 Status:** The GitHub workflows and installable package under construction.
+> [!CAUTION] > **🚧 Status:** The GitHub workflows and installable package under construction.
 
 ### 🎁 Features
 
@@ -65,10 +65,9 @@ Hate all the GitHub workflows? Delete them.
 There’s no magic anywhere. Only standard tools are used, and they’re used in transparent ways.
 Just clone this repo and start modifying as you see fit.
 
-> [!TIP]
-> **Making a repo supporting a scientific publication?**\
+> [!TIP] > **Making a repo supporting a scientific publication?**\
 > Tyrannosaurus has a little sister,
-[science-notebook-template 🧪](https://github.com/dmyersturnbull/science-notebook-template).
+> [science-notebook-template 🧪](https://github.com/dmyersturnbull/science-notebook-template).
 
 ### 🎨 Another `sync` example
 
@@ -79,7 +78,7 @@ Set `default-python-version` and reference it:
 - uses: actions/setup-python@v5
   with:
     # :tyranno: python-version: '${.python-version-in-cicd}'
-    python-version: '3.12'
+    python-version: "3.12"
 ```
 
 **Or**, use a [JMESPath expression](https://jmespath.org/) to
@@ -89,13 +88,12 @@ find the highest value allowed by `project.requires-python = ">=3.9.2,<3.14`:
 - uses: actions/setup-python@v5
   with:
     # :tyranno: python-version: '${project.requires-python|vr_max(@)|vr_major(@)}'
-    python-version: '3.12'
+    python-version: "3.12"
 ```
 
 ### ✏️ How to start
 
-> [!CAUTION]
-> **🚧** This section needs some work
+> [!CAUTION] > **🚧** This section needs some work
 
 1. Clone this repo or click "Use this template".
 2. Edit `pyproject.toml` to fit your project, especially the `[project]` and `[tool.tyranno.data]` sections.

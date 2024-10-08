@@ -25,10 +25,10 @@ readme = { file = "README.md", content-type = "text/markdown" }
 # 'description' |--> 'summary' in importlib.metadata
 description = "CI/CD test repo"
 maintainers = [
-  { name = "Douglas Myers-Turnbull", email = " dmyersturnbull@gmail.com" }
+  { name = "Douglas Myers-Turnbull", email = " dmyersturnbull@gmail.com" },
 ]
 authors = [
-  { name = "Douglas Myers-Turnbull", email = " dmyersturnbull@gmail.com" }
+  { name = "Douglas Myers-Turnbull", email = " dmyersturnbull@gmail.com" },
 ]
 keywords = ["python", "ci", "cd"]
 # The Python Packaging Authority has contradictory recommendations for specifying the license:
@@ -48,27 +48,27 @@ keywords = ["python", "ci", "cd"]
 # which maps to License-Expression
 license = { text = "Apache-2.0" }
 classifiers = [
-  "Natural Language :: English",
-  "Programming Language :: Python :: 3 :: Only",
-  "Intended Audience :: Developers",
-  "Operating System :: OS Independent",
+  "Development Status :: 2 - Pre-Alpha",
   "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
   "Topic :: Software Development :: Build Tools",
   "Topic :: Software Development :: Code Generators",
-  "License :: OSI Approved :: Apache Software License",
+  "Typing :: Typed",
 ]
 dependencies = [
-  "loguru >=0.7",
-  "typer-slim >=0.12",
-  "platformdirs >=4.1",
-  "rich >=13.8",
-  "tzdata >=2024.2; platform_system == 'Windows'",
+  "loguru >=0.7.2",
+  "platformdirs >=4.3.2",
+  "rich >=13.9.1",
+  "typer-slim >=0.12.5",
+  "tzdata >=2024.2; platform_system == 'Windows'", # /usr/share/zoneinfo uses IANA zones; Windows does not
 ]
 
 [project.optional-dependencies]
-cli = [
-  "typer-slim[standard] >=0.9",
-]
+cli = ["typer-slim[standard] >=0.12.5"]
 
 #
 #=================================== scripts =================================#
@@ -107,20 +107,16 @@ Sponsor = "https://${.vendor}.github.io/${project.name}/placeholder#sponsor"
 
 [tool.hatch.envs.default]
 skip-install = true
-dependencies = [
-  "pre-commit >=3.8",
-  "mypy >=1.11",
-  "ruff >=0.6.9",
-]
+dependencies = ["pre-commit >=4.0", "mypy >=1.11", "ruff >=0.6.9"]
 
 [tool.hatch.envs.test]
 skip-install = false
 dependencies = [
-  "hypothesis >=6.111",
-  "pytest >=8.3.3",
-  "tzdata >=2024.1; platform_system == 'Windows'",
-  "coverage[toml] >=7.6",
-  "pytest-cov >=5.0"
+  "hypothesis >=6.110",
+  "pytest >=8.3",
+  "tzdata >=2024.2; platform_system == 'Windows'",
+  "coverage[toml] >=7.6.1",
+  "pytest-cov >=5.0",
 ]
 
 [tool.hatch.envs.docs]
@@ -156,16 +152,10 @@ format = [
 ]
 
 # 'format-python' just excludes Prettier
-format-python = [
-  "ruff format",
-  "ruff check --fix-only",
-]
+format-python = ["ruff format", "ruff check --fix-only"]
 
 # 'check' only checks but never fixes
-check = [
-  "ruff check --no-fix .",
-  "mypy --non-interactive src tests"
-]
+check = ["ruff check --no-fix .", "mypy --non-interactive src tests"]
 
 # only checks with ruff (mypy has a lot of false positives)
 check-ruff = "ruff check --no-fix . {args}"
@@ -225,9 +215,9 @@ x-serve-docs = "mike serve --strict {args}"
 
 line-length = 120 # 120 is hatch's default via 'hatch init'
 include = [
-  "*.py", # Source
+  "*.py",           # Source
   "pyproject.toml", # This file (RUF rules only)
-  "*.ipynb" # Jupyter notebooks
+  "*.ipynb",        # Jupyter notebooks
 ]
 
 #
@@ -249,9 +239,9 @@ select = [
   "ANN", # flake8-annotations
   #"ARG", # flake8-unused-args //DISABLED: correct in overrides//
   "ASYNC", # flake8-async
-  "B", # flake8-bugbear
+  "B",     # flake8-bugbear
   #"BLE", # flake8-blind-exception (try: * except: only) //DISABLED: covered by E722 (?)//
-  "C", # flake8-comprehensions
+  "C",  # flake8-comprehensions
   "C4", # flake8-comprehensions
   #"C90", # mmcabe //DISABLED: useful but thin-lined and time-intensive//
   #"COM", # flake8-commas //DISABLED: handled by formatter//
@@ -261,19 +251,19 @@ select = [
   "DTZ", # flake8-datetimez
   #"E", # pycodestyle ERRORs //DISABLED: almost all handled by formatter//
   "E502", # redundant backslash
-  "E71", # == None, != False, not in, not is, etc.
-  "E72", # bare except
-  "E73", # lambda assignment
-  "E74", # easily confused characters in names
-  "E9", # can't lint -- syntax error, etc.
-  "EM", # flake8-errmsg
+  "E71",  # == None, != False, not in, not is, etc.
+  "E72",  # bare except
+  "E73",  # lambda assignment
+  "E74",  # easily confused characters in names
+  "E9",   # can't lint -- syntax error, etc.
+  "EM",   # flake8-errmsg
   #"ERA", # eradicate (commented-out code) //DISABLED: catches code in comments, etc.//
   #"EXE", # flake8-executable //DISABLED: pre-commit shebang rules instead//
-  "F", # pyflakes
+  "F",  # pyflakes
   "FA", # flake8-future-annotations
   #"FBT", # flake8-boolean-trap //DISABLED: debatable and sometimes unavoidable//
   #"FIX", # flake8-fix*me //DISABLED: bans TO*DO, etc. and not configurable//
-  "FLY", # flynt (https://pypi.org/project/flynt/; updates .format)
+  "FLY",  # flynt (https://pypi.org/project/flynt/; updates .format)
   "FURB", # refurb (misc., mostly fixable)
   #"E", # flake8 errors //DISABLED: handled by formatter or nitpicky//
   "G", # flake8-logging-format
@@ -283,48 +273,48 @@ select = [
   "INT", # flake8-gettext (i18n)
   "ISC", # flake8-implicit-str-concat
   "LOG", # flake8-logging
-  "N", # pep8-naming
+  "N",   # pep8-naming
   #"NPY", # numpy-specific rules //DISABLED: enable if using numpy//
   #"PD",  # pandas-vet //DISABLED: enable if using pandas//
   "PERF", # perflint
-  "PGH", # pygrep-hooks
-  "PIE", # flake8-pie (misc. lint rules)
-  "PL", # pylint
-  "PT", # flake8-pytest-style
-  "PTH", # flake8-use-pathlib
+  "PGH",  # pygrep-hooks
+  "PIE",  # flake8-pie (misc. lint rules)
+  "PL",   # pylint
+  "PT",   # flake8-pytest-style
+  "PTH",  # flake8-use-pathlib
   #"PYI", # flake8-pyi (rules for stub files) //DISABLED: auto-generate stub files//
   #"Q", # flake8-quotes //DISABLED: handled by formatter//
   #"RSE", # flake8-raise //DISABLED: handled by formatter//
-  "RET", # flake8-return (fixable)
-  "RUF", # Ruff-specific tests
-  "S", # bandit
-  "SIM", # flake8-simplify
-  "SLF", # flake8-self (private access)
+  "RET",  # flake8-return (fixable)
+  "RUF",  # Ruff-specific tests
+  "S",    # bandit
+  "SIM",  # flake8-simplify
+  "SLF",  # flake8-self (private access)
   "SLOT", # flake8-slots
-  "T10", # flake8-debugger (bans debugger)
-  "T20", # flake8-print (bands print and pprint)
-  "TD", # flake8-to*do (mandates syntax; note: use 'to-do' in prose)
-  "TCH", # flake8-type-checking
-  "TID", # flake8-tidy-imports (bans relative imports)
-  "TRY", # tryceratops (try-except-raise)
-  "UP", # pyupgrade
+  "T10",  # flake8-debugger (bans debugger)
+  "T20",  # flake8-print (bands print and pprint)
+  "TD",   # flake8-to*do (mandates syntax; note: use 'to-do' in prose)
+  "TCH",  # flake8-type-checking
+  "TID",  # flake8-tidy-imports (bans relative imports)
+  "TRY",  # tryceratops (try-except-raise)
+  "UP",   # pyupgrade
   #"W", # warnings //DISABLED: most fixed by formatter//
   "W60", # E605 invalid escape character
   "YTT", # flake8-2020 (incorrect Python vr checks)
-  "RUF" # Ruff-specific rules
+  "RUF", # Ruff-specific rules
 ]
 
 #
 # ------------------------ Ruff ignored rules ----------------------
 ignore = [
-  "COM812", # contradicts Ruff formatter
-  "D107", # missing docstring in __init__ (put in class docstring)
-  "D212", # multi-line docstring start (contradictory)
-  "E203", # clons with space before (sometimes useful expand)
-  "E225", # missing whitespace around operator (sometimes useful to condense)
-  "E501", # line > 79 chars (we use Ruff's formatter)
-  "INP001", # missing __init__ -- false positives
-  "ISC001", # contradicts Ruff formatter
+  "COM812",  # contradicts Ruff formatter
+  "D107",    # missing docstring in __init__ (put in class docstring)
+  "D212",    # multi-line docstring start (contradictory)
+  "E203",    # clons with space before (sometimes useful expand)
+  "E225",    # missing whitespace around operator (sometimes useful to condense)
+  "E501",    # line > 79 chars (we use Ruff's formatter)
+  "INP001",  # missing __init__ -- false positives
+  "ISC001",  # contradicts Ruff formatter
   "PLR0912", # too many branches
   "PLR1711", # return None at end
   "PLR0916", # too many boolean expressions
@@ -335,16 +325,16 @@ ignore = [
 #
 # ------------------------ Ruff unfixable rules ---------------------
 unfixable = [
-  "F601", # repeated key in dict {}
-  "F602", # repeated key in dict()
-  "F811", # unused and redefined
-  "F841", # unused variable
-  "PGH004", # blanketed noqa
+  "F601",    # repeated key in dict {}
+  "F602",    # repeated key in dict()
+  "F811",    # unused and redefined
+  "F841",    # unused variable
+  "PGH004",  # blanketed noqa
   "PLE2510", # invalid unescaped characters
-  "RUF100", # unused noqa
-  "SIM112", # uncapitalized env var
-  "TD006", # 'to*do' -> 'TO*DO'
-  "W605", # invalid escape sequence
+  "RUF100",  # unused noqa
+  "SIM112",  # uncapitalized env var
+  "TD006",   # 'to*do' -> 'TO*DO'
+  "W605",    # invalid escape sequence
 ]
 
 #
@@ -361,14 +351,14 @@ max-nested-blocks = 3 # default is 5
 # ------------------------ Ruff per-file ignores --------------------
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*" = [
-  "INP001", # missing __init__
+  "INP001",  # missing __init__
   "PLR2004", # magic value
-  "S101", # assert
-  "TID252", # relative import
-  "S105", # possible password
+  "S101",    # assert
+  "TID252",  # relative import
+  "S105",    # possible password
   "S106",
   "S107",
-  "S108", # harcoded temp file
+  "S108",    # harcoded temp file
 ]
 
 #
@@ -388,7 +378,7 @@ log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
 doctest_optionflags = [
   "DONT_ACCEPT_TRUE_FOR_1", # 1 is not the same as True
-  "NORMALIZE_WHITESPACE", # allows us to wrap expected output to 120 lines (ignores newlines)
+  "NORMALIZE_WHITESPACE",   # allows us to wrap expected output to 120 lines (ignores newlines)
 ]
 
 # create markers so we can disable internet (or network-connected), or very slow tests
@@ -424,8 +414,8 @@ addopts = """
 
 [tool.coverage.run]
 data_file = ".coverage.json"
-branch = true # quantify % coverage of execution branches
-parallel = true # note that pytest-cov overrides this
+branch = true                # quantify % coverage of execution branches
+parallel = true              # note that pytest-cov overrides this
 # :tyranno: source_pkgs = ["src/${project.name}"]
 source_pkgs = ["cicd"]
 omit = ["src/**/__main__.py"]
@@ -489,15 +479,28 @@ show_error_code_links = true
 # Note: All trash globs are automatically excluded from targets.
 # So, e.g., .py files in cache dirs are never synced.
 target_globs = [
-  "**/*.yaml", "**/*.toml", "**/*.md", "**/Dockerfile",
-  "**/*.py", "**/*.ts", "**/*.js", "**/*.css", "**/*.less",
+  "**/*.yaml",
+  "**/*.toml",
+  "**/*.md",
+  "**/Dockerfile",
+  "**/*.py",
+  "**/*.ts",
+  "**/*.js",
+  "**/*.css",
+  "**/*.less",
 ]
 
 trash_globs = [
-  "**/*~", "**/*.bak", "**/*[.~]t[e]mp",
-  "**/*.class", "**/*.py[codi]",
-  "**/.*_cache", "**/__pycache__",  "**/cython_debug",
-  "build/", ".coverage.json",
+  "**/*~",
+  "**/*.bak",
+  "**/*[.~]t[e]mp",
+  "**/*.class",
+  "**/*.py[codi]",
+  "**/.*_cache",
+  "**/__pycache__",
+  "**/cython_debug",
+  "build/",
+  ".coverage.json",
 ]
 
 #
@@ -539,10 +542,10 @@ uris = [
 # they're only referenced by 'tyranno' sync comments.
 # No keys here have specific meanings.
 [tool.tyranno.data]
-vendor            = "dmyersturnbull"
-frag              = "${.vendor}/${project.name}"
-copyright         = "Copyright ${~|year(now_utc())~}, Contributors to ${project.name}"
-doi               = "10.5281/zenodo.4485186" # <<<comment out for new
+vendor = "dmyersturnbull"
+frag = "${.vendor}/${project.name}"
+copyright = "Copyright ${~|year(now_utc())~}, Contributors to ${project.name}"
+doi = "10.5281/zenodo.4485186"                                                 # <<<comment out for new
 # This is the version used in CD and some CI
 # :tyranno: python-version-in-cicd = "${project.requires-python~.semver_max(@).semver_minor(@)}"
 python-version-in-cicd = "3.12.3"

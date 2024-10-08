@@ -6,7 +6,7 @@
 # These are derived from https://ukupat.github.io/tabs-or-spaces/
 # The most majority indentation style was selected for each language
 
-# Do not look in parent directories  
+# Do not look in parent directories
 root=true
 
 [*]

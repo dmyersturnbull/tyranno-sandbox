@@ -1,4 +1,5 @@
 <!-- :tyranno: ${project.name~capitalize(@)} -->
+
 # CI/CD
 
 ## Basic usage
@@ -17,15 +18,15 @@ $$
 
 ```bash
 ├── docs/
-│   ├── js/
-│   │   ├── mathjax.js
-│   │   └── tablesort.js
-│   ├── overrides/
-│   │   └── main.html
-│   ├── gen_ref_pages.py
-│   ├── index.md
-│   ├── ref.md
-│   └── SUMMARY.md
+│ ├── js/
+│ │ ├── mathjax.js
+│ │ └── tablesort.js
+│ ├── overrides/
+│ │ └── main.html
+│ ├── gen_ref_pages.py
+│ ├── index.md
+│ ├── ref.md
+│ └── SUMMARY.md
 ├── src/
 ├── tests/
 ├── CITATION.cff

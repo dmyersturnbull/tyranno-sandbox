@@ -5,40 +5,40 @@
 changelog:
   exclude:
     labels:
-      - 'type: chore'
-      - 'type: style'
-      - 'changelog: exclude'
+      - "type: chore"
+      - "type: style"
+      - "changelog: exclude"
   categories:
     - title: 💥 Breaking changes
       labels:
-        - 'breaking'
+        - "breaking"
     - title: ❌ Removals
       labels:
-        - 'type: drop'
+        - "type: drop"
     - title: 🗑️ Deprecations
       labels:
-        - 'type: deprecation'
+        - "type: deprecation"
     - title: 🔒️ Security
       labels:
-        - 'type: security'
+        - "type: security"
     - title: ✨ Features
       labels:
-        - 'type: feature'
+        - "type: feature"
     - title: 🐛 Fixes
       labels:
-        - 'type: fix'
+        - "type: fix"
     - title: ⚡️ Performance
       labels:
-        - 'type: performance'
+        - "type: performance"
     - title: 📝 Documentation
       labels:
-        - 'type: docs'
-    - title: '🔧 Build'
+        - "type: docs"
+    - title: "🔧 Build"
       labels:
-        - 'type: build'
+        - "type: build"
     - title: 🍒 Miscellaneous
       labels:
-        - 'type: refactor'
-        - 'type: test'
-        - 'type: ci'
-        - 'changelog: include'
+        - "type: refactor"
+        - "type: test"
+        - "type: ci"
+        - "changelog: include"

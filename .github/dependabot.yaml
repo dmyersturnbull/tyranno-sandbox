@@ -14,7 +14,7 @@ updates:
     groups:
       python-main-deps:
         patterns:
-          - '*'
+          - "*"
     schedule:
       interval: weekly
   - package-ecosystem: github-actions
@@ -26,7 +26,7 @@ updates:
     groups:
       github-action-deps:
         patterns:
-          - '*'
+          - "*"
     schedule:
       interval: weekly
   - package-ecosystem: docker
@@ -38,7 +38,7 @@ updates:
     groups:
       docker-deps:
         patterns:
-          - '*'
+          - "*"
     schedule:
       interval: weekly
   - package-ecosystem: npm
@@ -50,6 +50,6 @@ updates:
     groups:
       npm-main-deps:
         patterns:
-          - '*'
+          - "*"
     schedule:
       interval: weekly

@@ -32,7 +32,6 @@ permissions:
   security-events: write
 
 jobs:
-
   docker:
     name: Run tests for ${{ matrix.os }}, Python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
@@ -56,7 +55,6 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
-    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         with:

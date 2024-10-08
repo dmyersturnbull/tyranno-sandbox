@@ -41,7 +41,6 @@ permissions:
   attestations: write
 
 jobs:
-
   tag-latest:
     # This job tags the release as 'latest' and 'v<x>', where <x> is its major version
     runs-on: ubuntu-latest

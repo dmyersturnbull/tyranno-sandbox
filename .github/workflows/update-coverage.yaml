@@ -20,9 +20,9 @@ on:
     branches:
       - main
       - master
-      - 'releases/**'
+      - "releases/**"
     paths:
-      - '**/*.py'
+      - "**/*.py"
       - pyproject.toml
 
 permissions:
@@ -38,7 +38,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   send-to-coveralls:
     name: Send reports to Coveralls
     if: true # Change this if you don't want to use Coveralls
@@ -48,7 +47,7 @@ jobs:
         os:
           - ubuntu-latest
         python:
-          - '3.12'
+          - "3.12"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Determine whether this is the last report.
@@ -79,7 +78,7 @@ jobs:
         os:
           - ubuntu-latest
         python:
-          - '3.12'
+          - "3.12"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Send coverage report for ${{ matrix.os }}-${{ matrix.python }} to Codecov

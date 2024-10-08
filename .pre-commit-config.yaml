@@ -6,12 +6,12 @@
 # :tyranno: minimum_pre_commit_version: v${tool.ruff.envs.default~extract_semver(@, 'pre-commit')|semver_min(@)}
 minimum_pre_commit_version: 4.0.0
 repos:
-
   # Standard hooks (`pre-commit-hooks`)
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
       - id: check-case-conflict
+      - id: check-illegal-windows-names
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
       - id: check-executables-have-shebangs
@@ -19,8 +19,6 @@ repos:
       - id: end-of-file-fixer
       - id: fix-byte-order-marker
       - id: trailing-whitespace
-      - id: check-illegal-windows-names
-      - id: check-merge-conflict
       - id: forbid-submodules
 
   # Strip output from .ipynb files with nbstripout
@@ -28,27 +26,62 @@ repos:
     rev: 0.7.1
     hooks:
       - id: nbstripout
-        stages:
-          - manual
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # :tyranno: rev: v${tool.ruff.envs.default~extract_semver(@, 'ruff')|semver_min(@)}
     rev: v0.6.9
     hooks:
-      - id: ruff-lint
+      - id: ruff
         args:
-          -  '--fix-only'
+          - "--fix-only"
       - id: ruff-format
 
-  # TODO
-  # Format various languages with Prettier (uses npx)
-  #- repo: local
-  #  hooks:
-  #    - id: pnpm-prettier
-  #      name: Prettier
-  #      entry: npx prettier --write .
-  #      language: system
-  #      files: '\\.(js|ts|jsx|tsx|json|css|scss|md|toml|yaml|yml|html|xml|properties|ini|jinja|jinja3|sql|sh|graphql)$'
-  #      types:
-  #        - file
+  # Format various languages with Prettier
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        description: "Auto-format using Prettier"
+        language: node
+        entry: prettier
+        args:
+          - --write
+          #- --ignore-unknown
+          - --experimental-ternaries
+          - "--plugin=@prettier/plugin-xml"
+          - "--plugin=prettier-plugin-ini"
+          - "--plugin=prettier-plugin-properties"
+          - "--plugin=prettier-plugin-toml"
+          - "--plugin=prettier-plugin-sh"
+        types:
+          - text
+        types_or:
+          - markdown
+          - mdx
+          - html
+          - javascript
+          - ts
+          - jsx
+          - graphql
+          - vue
+          - handlebars
+          - css
+          - scss
+          - less
+          - json
+          - json5
+          - yaml
+          - xml
+          - toml
+          - ini
+          - java-properties
+          - shell
+        require_serial: false
+        additional_dependencies:
+          - prettier@3.3.3
+          - "@prettier/plugin-xml"
+          - prettier-plugin-ini
+          - prettier-plugin-properties
+          - prettier-plugin-toml
+          - prettier-plugin-sh

@@ -18,14 +18,14 @@ on:
       - synchronize
       - edited
     paths:
-      - '**/*.py'
-      - '**/*.ts'
-      - '**/*.js'
-      - '**/*.sh'
-      - '**/*.java'
-      - '**/*.rs'
-      - '**/*.c'
-      - '**/*.cpp'
+      - "**/*.py"
+      - "**/*.ts"
+      - "**/*.js"
+      - "**/*.sh"
+      - "**/*.java"
+      - "**/*.rs"
+      - "**/*.c"
+      - "**/*.cpp"
   issue_comment:
     types:
       - created
@@ -37,7 +37,6 @@ permissions:
   security-events: write
 
 jobs:
-
   codeql:
     name: Test building docs
     runs-on: ubuntu-latest
@@ -70,8 +69,7 @@ jobs:
         run: uv python install '3.12'
       - name: Run ruff --no-fix
         id: ruff
-        run:
-          uv install hatch~=1.12
+        run: uv install hatch~=1.12
           hatch run check
       - name: Log Ruff outcome
         run: |

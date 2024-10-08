@@ -18,7 +18,7 @@ on:
       - synchronize
       - edited
     paths:
-      - '**/*.py'
+      - "**/*.py"
       - pyproject.toml
   issue_comment:
     types:
@@ -31,7 +31,6 @@ permissions:
   security-events: write
 
 jobs:
-
   security:
     name: Run security linters
     runs-on: ubuntu-latest

@@ -18,7 +18,7 @@ on:
       - synchronize
       - edited
     paths:
-      - '**/*.md'
+      - "**/*.md"
   issue_comment:
     types:
       - created
@@ -30,7 +30,6 @@ permissions:
   security-events: write
 
 jobs:
-
   check-links:
     name: Test building docs
     runs-on: ubuntu-latest
