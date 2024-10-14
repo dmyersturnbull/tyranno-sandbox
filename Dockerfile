@@ -5,7 +5,7 @@
 # https://stackoverflow.com/questions/53835198/integrating-python-poetry-with-docker/54763270#54763270
 
 # :tyranno: FROM python:${.python-version-in-cicd.semver_minor(@)~}
-FROM python:3.12
+FROM python:3.13
 
 # --------------------------------------
 # ------------- Set labels -------------
