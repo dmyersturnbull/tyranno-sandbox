@@ -3,7 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: format-pr
-run-name: ${{ github.workflow }} for ${{ github.ref_name }}
+run-name: >
+  ${{ github.workflow }} \
+  ${{ github.ref_name }} \
+  (triggered by ${{ github.ref_type }})
+  
 on:
   merge_group:
     types:
@@ -11,7 +15,20 @@ on:
 
 jobs:
   format:
-    if: github.event.review.state == 'approved'
+    if: >
+      github.event_name == 'pull_request'
+      && (
+        github.event.action == 'ready_for_review'
+        || github.event.pull_request.draft == false
+        && (
+          github.event.action == 'opened'
+          || github.event.action == 'edited'
+          || github.event.action == 'synchronize'
+        )
+      )
+      || github.event_name == 'issue_comment'
+      && github.event.action == 'created'
+      && github.event.comment.body == '/please-format'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,23 +38,14 @@ jobs:
       - uses: astral-sh/setup-uv@v2
 
       - name: Set up Python
-        run: uv python install '3.12'
+        run: uv python install 3.13
 
-      - name: Run Ruff format
-        # Format Python
+      - name: Run pre-commit hooks
+        # Run once to format, etc.
+        # Run again to check.
         run: |
-          uv install 'ruff >=0.6.9'
-          ruff format .
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22.x"
-
-      - name: Run Prettier
-        # for Python projects, we're mostly formatting YAML and Markdown
-        run: |
-          npm install --global prettier '>=3.0.0'
-          prettier --write .
+          pre-commit run --all-files || true
+          pre-commit run --all-files
 
       # Compress images
       - name: Compress Images
@@ -45,13 +53,6 @@ jobs:
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           compressOnly: true # don't commit
-
-      - name: Run pre-commit hooks
-        # do not continue on error because we should already be formatted
-        # (from ruff format and prettier steps earlier)
-        # we're mostly checking the other things, like that shebangs are executable
-        run: |
-          pre-commit run --all-files
 
       - name: Commit formatting changes
         run: |
@@ -71,5 +72,5 @@ jobs:
       - name: Force-push changes
         if: success() && steps.commit.outputs.commit != ''
         run: |
-          # --force should be fine here, too, but --force-with-lease feels safer
-          git push origin HEAD:${{ github.ref }} --force-with-lease
+          # we could use --force-with-lease if --amend-ing
+          git push origin HEAD:${{ github.ref }}

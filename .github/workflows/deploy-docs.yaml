@@ -35,13 +35,13 @@ jobs:
           ref: ${{ github.ref }}
       - uses: astral-sh/setup-uv@v2
       - name: Set up Python
-        run: uv python install '3.12'
+        run: uv python install 3.13
       - name: Install dependencies
         run: |
-          uv install hatch~=1.12
+          uv install hatch~=1.13
       - name: Deploy docs for ${{ github.ref_name }}
         run: |
-          hatch run x-deploy-docs ${{ github.ref_name }} --push
+          hatch --no-color --no-interactive	run x-deploy-docs ${{ github.ref_name }} --push
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .

@@ -35,19 +35,21 @@ jobs:
     name: Run tests for ${{ matrix.os }}, Python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     if: >
-      github.even_name == 'merge_group' ||
-      github.event_name == 'pull_request' &&
-        github.event.action == 'ready_for_review' ||
-      github.event_name == 'pull_request' &&
-        github.event.action == 'synchronize' &&
-        github.event.pull_request.draft == false ||
-      github.event_name == 'pull_request' &&
-        github.event.action == 'edited' &&
-        github.event.pull_request.draft == false ||
-      github.event_name == 'issue_comment' &&
-        github.event.action == 'created' && (
-        github.event.comment.body == '/please-review' ||
-        github.event.comment.body == '/please-test'
+      github.event_name == 'pull_request'
+      && (
+        github.event.action == 'ready_for_review'
+        || github.event.pull_request.draft == false
+        && (
+          github.event.action == 'opened'
+          || github.event.action == 'edited'
+          || github.event.action == 'synchronize'
+        )
+      )
+      || github.event_name == 'issue_comment'
+      && github.event.action == 'created'
+      && (
+        github.event.comment.body == '/please-review'
+        || github.event.comment.body == '/please-test'
       )
     strategy:
       matrix:
@@ -56,7 +58,7 @@ jobs:
           - windows-latest
           - macos-latest
         python:
-          - "3.12"
+          - "3.13"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -67,10 +69,10 @@ jobs:
       - name: Install dependencies and run tests
         id: test
         run: |
-          uv install hatch~=1.12
-          hatch run test
+          uv install hatch~=1.13
+          hatch --no-color --no-interactive	run test
           echo "Python tests on ${{os}}/${{python}}: $( (( $? == 0 )) && echo ✅ || echo ❌ )"
-      - name: Upload coverage report
+      - name: Upload coverage reports
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.os }}-${{ matrix.python }}

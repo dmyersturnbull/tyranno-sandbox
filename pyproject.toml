@@ -9,7 +9,7 @@
 
 [build-system]
 build-backend = "hatchling.build"
-requires = ["hatchling~=1.25"]
+requires = ["hatchling~=1.26"]
 
 #
 #########################################################################################
@@ -19,7 +19,7 @@ requires = ["hatchling~=1.25"]
 [project]
 name = "cicd"
 version = "0.0.1-alpha0"
-requires-python = "~=3.12"
+requires-python = "~=3.13"
 # 'readme' |--> 'description' in importlib.metadata
 readme = { file = "README.md", content-type = "text/markdown" }
 # 'description' |--> 'summary' in importlib.metadata
@@ -51,9 +51,10 @@ classifiers = [
   "Development Status :: 2 - Pre-Alpha",
   "Environment :: Console",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: Apache Software License",
   "Natural Language :: English",
   "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
   "Topic :: Software Development :: Build Tools",
   "Topic :: Software Development :: Code Generators",
@@ -63,7 +64,7 @@ dependencies = [
   "loguru >=0.7.2",
   "platformdirs >=4.3.2",
   "rich >=13.9.1",
-  "typer-slim >=0.12.5",
+  "typer-slim >=0.15.0",
   "tzdata >=2024.2; platform_system == 'Windows'", # /usr/share/zoneinfo uses IANA zones; Windows does not
 ]
 
@@ -96,22 +97,18 @@ Download = "https://pypi.org/project/cicd/"
 # :tyranno: #Sponsor = "https://${.vendor}.github.io/${project.name}/placeholder#sponsor"
 Sponsor = "https://${.vendor}.github.io/${project.name}/placeholder#sponsor"
 
-#
 #########################################################################################
-#                                  [tool.hatch]
+#                                          [dependency-groups]
 #########################################################################################
 
-#
-#============================= Hatch environments ============================#
-#
-
-[tool.hatch.envs.default]
-skip-install = true
-dependencies = ["pre-commit >=4.0", "mypy >=1.11", "ruff >=0.6.9"]
-
-[tool.hatch.envs.test]
-skip-install = false
-dependencies = [
+# See https://docs.astral.sh/uv/concepts/projects/dependencies/#dependency-groups
+[dependency-groups]
+dev = [
+  "pre-commit>=4.0.1",
+  "ruff >=0.8",
+  "mypy >=1.11",
+]
+test = [
   "hypothesis >=6.110",
   "pytest >=8.3",
   "tzdata >=2024.2; platform_system == 'Windows'",
@@ -119,9 +116,7 @@ dependencies = [
   "pytest-cov >=5.0",
 ]
 
-[tool.hatch.envs.docs]
-skip-install = true
-dependencies = [
+docs = [
   "mkdocs >=1.6",
   "mike >=2.1",
   "mkdocs-literate-nav >=0.6.1",
@@ -131,77 +126,6 @@ dependencies = [
   "mkdocs-table-reader-plugin >=3.1",
 ]
 
-#
-#=============================== Hatch scripts ===============================#
-
-#
-# -------------------- default environment scripts ------------------
-[tool.hatch.envs.default.scripts]
-
-# 'clean' removes unnecessary files (always safe to run)
-clean = "tyranno clean {args}"
-
-# hatch now has a built-in 'fmt' subcommand, which runs ruff
-# https://hatch.pypa.io/latest/cli/reference/#hatch-fmt
-
-# 'format' formats and fixes issues but does not complain
-format = [
-  "ruff format",
-  "ruff check --fix-only",
-  "npx prettier .",
-]
-
-# 'format-python' just excludes Prettier
-format-python = ["ruff format", "ruff check --fix-only"]
-
-# 'check' only checks but never fixes
-check = ["ruff check --no-fix .", "mypy --non-interactive src tests"]
-
-# only checks with ruff (mypy has a lot of false positives)
-check-ruff = "ruff check --no-fix . {args}"
-
-# to complement 'check-ruff'
-check-mypy = "mypy --non-interactive src tests {args}"
-
-# only check security via Bandit; we require these rules to pass
-check-security = "ruff check --select S --no-fix ."
-
-#
-# --------------------- `test` environment scripts ------------------
-[tool.hatch.envs.test.scripts]
-
-# hatch now has a hatch-test subcommand
-# https://hatch.pypa.io/latest/cli/reference/#hatch-test
-# it's an alternative to pytest
-# hatch test --randomize --cover
-
-# 'test' uses args in [tool.pytest] section (you can pass more)
-test = "pytest {args}"
-
-#
-# --------------------- `docs` environment scripts ------------------
-[tool.hatch.envs.docs.scripts]
-
-# build docs and fail for any warning
-build-docs = "mkdocs build --clean --strict {args}"
-# preview docs (only the current version)
-# also builds, but only prints warnings
-serve-docs = "mkdocs serve {args}"
-
-#   -   -   -   -    scripts for CI/CD   -   -   -   -
-#   -   -   -   -    !! DANGER ZONE      -   -   -   -
-# deploys the **latest** docs to GitHub Pages
-# this will overwrite the 'latest' alias (which is a tag on the GH Pages branch)
-x-deploy-docs = "mike deploy {args} latest --update-aliases"
-
-#   -   -   -   -    scripts to deploy docs    -   -   -
-#   -   -   -   -    !! DANGER ZONE            -   -   -
-# deletes all versions of docs from gh-pages for rebuilding
-x-obliterate-docs = "mike delete --all"
-# needed only if the docs were deleted or a prior deployment failed
-x-redeploy-docs = "mike deploy --strict {args}"
-# serves all versions of docs, complete with version selector
-x-serve-docs = "mike serve --strict {args}"
 
 #
 #########################################################################################
@@ -504,51 +428,20 @@ trash_globs = [
 ]
 
 #
-#============================ Tyranno remote sources =========================#
-#
-[tool.tyranno.fetch]
-
-# Sync is performed internally after these files are pulled down.
-# That enables us to pull files like SECURITY.md,
-# even though they contain strings specific to this project (e.g. URIs).
-uris = [
-  "https://github.com/dmyersturnbull/tyranno/blob/main/mkdocs.yaml",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/CITATION.cff",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/CONTRIBUTING.md",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/SECURITY.md",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/.gitignore",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/.dockerignore",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/.editorconfig",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/.gitattributes",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/.prettierignore",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/.prettierrc.toml",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/.scrutinizer.yaml",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/.pre-commit-config.yaml",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/docs/gen_ref_pages.py",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/docs/js/",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/docs/overrides/",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/.github/dependabot.yaml",
-  "https://github.com/dmyersturnbull/tyranno/blob/main/.github/release.yaml",
-  "https://github.com/dmyersturnbull/tyranno/tree/main/.github/workflows/",
-  "https://github.com/dmyersturnbull/tyranno/tree/main/.github/DISCUSSION_TEMPLATE/",
-  "https://github.com/dmyersturnbull/tyranno/tree/main/.github/ISSUE_TEMPLATE/",
-  "https://github.com/dmyersturnbull/tyranno/tree/main/.github/PULL_REQUEST_TEMPLATE/",
-]
-
-#
 #================================ Tyranno data ===============================#
 #
 # You can add any key-value pairs you want here;
 # they're only referenced by 'tyranno' sync comments.
 # No keys here have specific meanings.
+
 [tool.tyranno.data]
 vendor = "dmyersturnbull"
 frag = "${.vendor}/${project.name}"
 copyright = "Copyright ${~|year(now_utc())~}, Contributors to ${project.name}"
-doi = "10.5281/zenodo.4485186"                                                 # <<<comment out for new
+doi = "10.5281/zenodo.4485186" # <<<comment out for new
 # This is the version used in CD and some CI
 # :tyranno: python-version-in-cicd = "${project.requires-python~.semver_max(@).semver_minor(@)}"
-python-version-in-cicd = "3.12.3"
+python-version-in-cicd = "3.13.1"
 # These are the versions to test in CI:
 # :tyranno: python-versions = ${project.requires-python|semver_best_set(@).semver_minor(@)}
-python-versions = ["3.12.3"]
+python-versions = ["3.13.1"]

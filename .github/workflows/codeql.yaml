@@ -41,19 +41,21 @@ jobs:
     name: Test building docs
     runs-on: ubuntu-latest
     if: >
-      github.even_name == 'merge_group' ||
-      github.event_name == 'pull_request' &&
-        github.event.action == 'ready_for_review' ||
-      github.event_name == 'pull_request' &&
-        github.event.action == 'synchronize' &&
-        github.event.pull_request.draft == false ||
-      github.event_name == 'pull_request' &&
-        github.event.action == 'edited' &&
-        github.event.pull_request.draft == false ||
-      github.event_name == 'issue_comment' &&
-        github.event.action == 'created' && (
-        github.event.comment.body == '/please-review' ||
-        github.event.comment.body == '/please-check-quality'
+      github.event_name == 'pull_request'
+      && (
+        github.event.action == 'ready_for_review'
+        || github.event.pull_request.draft == false
+        && (
+          github.event.action == 'opened'
+          || github.event.action == 'edited'
+          || github.event.action == 'synchronize'
+        )
+      )
+      || github.event_name == 'issue_comment'
+      && github.event.action == 'created'
+      && (
+        github.event.comment.body == '/please-review'
+        || github.event.comment.body == '/please-check-quality'
       )
     # Runner size impacts CodeQL analysis time
     # See https://gh.io/recommended-hardware-resources-for-running-codeql
@@ -66,15 +68,16 @@ jobs:
           ref: ${{ github.event.inputs.ref }}
       - uses: astral-sh/setup-uv@v2
       - name: Set up Python
-        run: uv python install '3.12'
+        run: uv python install '3.13'
       - name: Run ruff --no-fix
         id: ruff
-        run: uv install hatch~=1.12
-          hatch run check
+        run: |
+          uv install hatch~=1.13
+          hatch --no-color --no-interactive	 run check
       - name: Log Ruff outcome
         run: |
           v=[[ ${{ steps.ruff.outcome }} == success ]]
-          echo "Ruff linting: $( (( ${v} == 0 )) && echo ✅ || echo ⚠️ )"
+          echo "Ruff linting: $( (( v == 0 )) && echo ✅ || echo ⚠️ )"
       - uses: github/codeql-action/init@v3
       - uses: github/codeql-action/autobuild@v3
       - id: codeql
@@ -82,4 +85,4 @@ jobs:
       - name: Log CodeQL outcome
         run: |
           v=[[ ${{ steps.codeql.outcome }} == success ]]
-          echo "CodeQL linting: $( (( ${v} == 0 )) && echo ✅ || echo ⚠️ )"
+          echo "CodeQL linting: $( (( v == 0 )) && echo ✅ || echo ⚠️ )"

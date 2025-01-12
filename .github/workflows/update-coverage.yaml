@@ -47,7 +47,7 @@ jobs:
         os:
           - ubuntu-latest
         python:
-          - "3.12"
+          - "3.13"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Determine whether this is the last report.
@@ -78,7 +78,7 @@ jobs:
         os:
           - ubuntu-latest
         python:
-          - "3.12"
+          - "3.13"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Send coverage report for ${{ matrix.os }}-${{ matrix.python }} to Codecov

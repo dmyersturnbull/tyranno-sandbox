@@ -1,87 +1,59 @@
-# SPDX-FileCopyrightText: Copyright 2020-2024, Contributors to Tyrannosaurus
-# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: Copyright 2017-2024, Douglas Myers-Turnbull
+# SPDX-PackageHomePage: https://dmyersturnbull.github.io
+# SPDX-License-Identifier: CC-BY-SA-4.0
 
 # Check out https://pre-commit.com/ for documentation
-# :tyranno: minimum_pre_commit_version: v${tool.ruff.envs.default~extract_semver(@, 'pre-commit')|semver_min(@)}
-minimum_pre_commit_version: 4.0.0
+minimum_pre_commit_version: 4.0.1
 repos:
   # Standard hooks (`pre-commit-hooks`)
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      - id: check-case-conflict
-      - id: check-illegal-windows-names
-      - id: check-merge-conflict
-      - id: check-shebang-scripts-are-executable
-      - id: check-executables-have-shebangs
-      - id: check-symlinks
-      - id: end-of-file-fixer
-      - id: fix-byte-order-marker
-      - id: trailing-whitespace
-      - id: forbid-submodules
+      - id: forbid-submodules # ban Git submodules
+      - id: check-case-conflict # ban ABC and abc both existing
+      - id: check-illegal-windows-names # ban filenames that are illegal on Windows
+      - id: check-merge-conflict # ban merge conflict markers
+        args:
+          - --assume-in-merge # otherwise skipped in rebase
+      - id: check-symlinks # ban *broken* symlinks
+      - id: end-of-file-fixer # auto-add final \n
+      - id: fix-byte-order-marker # auto-remove BOMs
+      - id: trailing-whitespace # auto-remove end-of-line whitespace
 
-  # Strip output from .ipynb files with nbstripout
-  - repo: https://github.com/kynan/nbstripout
-    rev: 0.7.1
+  # UV lock
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.5.18
     hooks:
-      - id: nbstripout
+      - id: uv-lock
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # :tyranno: rev: v${tool.ruff.envs.default~extract_semver(@, 'ruff')|semver_min(@)}
-    rev: v0.6.9
+    rev: v0.9.1
     hooks:
       - id: ruff
         args:
-          - "--fix-only"
+          - --fix-only
       - id: ruff-format
 
-  # Format various languages with Prettier
-  - repo: local
+  # Format various formats with Prettier
+  - repo: https://github.com/JoC0de/pre-commit-prettier
+    rev: v3.4.2
     hooks:
       - id: prettier
-        name: prettier
-        description: "Auto-format using Prettier"
-        language: node
-        entry: prettier
-        args:
-          - --write
-          #- --ignore-unknown
-          - --experimental-ternaries
-          - "--plugin=@prettier/plugin-xml"
-          - "--plugin=prettier-plugin-ini"
-          - "--plugin=prettier-plugin-properties"
-          - "--plugin=prettier-plugin-toml"
-          - "--plugin=prettier-plugin-sh"
-        types:
-          - text
-        types_or:
-          - markdown
-          - mdx
-          - html
-          - javascript
-          - ts
-          - jsx
-          - graphql
-          - vue
-          - handlebars
-          - css
-          - scss
-          - less
-          - json
-          - json5
-          - yaml
-          - xml
-          - toml
-          - ini
-          - java-properties
-          - shell
-        require_serial: false
         additional_dependencies:
-          - prettier@3.3.3
-          - "@prettier/plugin-xml"
-          - prettier-plugin-ini
-          - prettier-plugin-properties
-          - prettier-plugin-toml
-          - prettier-plugin-sh
+          - prettier@3.4.2
+          - prettier-plugin-ini@1.3.0
+          - prettier-plugin-properties@0.3.0
+          - prettier-plugin-toml@2.0.1
+          - prettier-plugin-sh@0.14.0
+        args:
+          - --experimental-ternaries # will be the default soon
+          - --plugin=prettier-plugin-ini
+          - --plugin=prettier-plugin-properties
+          - --plugin=prettier-plugin-toml
+          - --plugin=prettier-plugin-sh
+        # IMPORTANT: Sync this list with file types in this repo.
+        # It's ok to list unused suffixes, but Prettier or a plugin must understand them.
+        # See: https://prettier.io/docs/en/plugins.html
+        files: \.(md|mdx|json|yaml|yml|toml|ini|cfg|properties|sh|ts|js|html|less|css)$
