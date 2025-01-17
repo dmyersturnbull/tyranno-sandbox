@@ -1,11 +1,11 @@
-# SPDX-FileCopyrightText: Copyright 2017-2024, Douglas Myers-Turnbull
-# SPDX-PackageHomePage: https://dmyersturnbull.github.io
-# SPDX-License-Identifier: CC-BY-SA-4.0
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
 
 # Check out https://pre-commit.com/ for documentation
 minimum_pre_commit_version: 4.0.1
 repos:
-  # Standard hooks (`pre-commit-hooks`)
+  # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -28,8 +28,7 @@ repos:
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    # :tyranno: rev: v${tool.ruff.envs.default~extract_semver(@, 'ruff')|semver_min(@)}
-    rev: v0.9.1
+    rev: v0.9.2
     hooks:
       - id: ruff
         args:

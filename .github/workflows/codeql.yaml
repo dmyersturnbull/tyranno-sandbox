@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2024, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -60,20 +60,17 @@ jobs:
     # Runner size impacts CodeQL analysis time
     # See https://gh.io/recommended-hardware-resources-for-running-codeql
     timeout-minutes: 30
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.ref }}
-      - uses: astral-sh/setup-uv@v2
-      - name: Set up Python
-        run: uv python install '3.13'
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
       - name: Run ruff --no-fix
         id: ruff
         run: |
-          uv install hatch~=1.13
-          hatch --no-color --no-interactive	 run check
+          uvx ruff check --no-fix .
       - name: Log Ruff outcome
         run: |
           v=[[ ${{ steps.ruff.outcome }} == success ]]

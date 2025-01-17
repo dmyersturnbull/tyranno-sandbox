@@ -15,12 +15,8 @@ authors:
   - family-names: Myers-Turnbull
     given-names: Douglas
     orcid: https://orcid.org/0000-0003-3610-4808
-# :tyranno: date-released: ${|now_utc()|year(@)}
+# :tyranno: date-released: ${now_utc().date}
 date-released: 2020-05-10
-keywords:
-  # :tyranno: ${project.keywords|prettify_yaml(@)}
-  - cookiecutter
-  - conda-build
-  - pyproject-toml
-  - python-poetry
-  - python-template
+# prettier-ignore
+# :tyranno: keywords: ${project.keywords[*].unquote(@)}
+keywords: [cookiecutter, conda-build, pyproject-toml, python-poetry, python-template]

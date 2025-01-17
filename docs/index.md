@@ -1,5 +1,3 @@
-<!-- :tyranno: ${project.name~capitalize(@)} -->
-
 # CI/CD
 
 ## Basic usage

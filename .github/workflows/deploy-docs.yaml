@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2024, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -33,15 +33,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
-      - uses: astral-sh/setup-uv@v2
-      - name: Set up Python
-        run: uv python install 3.13
-      - name: Install dependencies
-        run: |
-          uv install hatch~=1.13
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
       - name: Deploy docs for ${{ github.ref_name }}
         run: |
-          hatch --no-color --no-interactive	run x-deploy-docs ${{ github.ref_name }} --push
+          uvx mike deploy ${{ github.ref_name }} --update-aliases --push
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .

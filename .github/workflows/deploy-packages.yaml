@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2024, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -54,13 +54,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v2
-      - name: Set up Python
-        run: uv python install 3.13
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
       - name: Install Hatch, and build
         run: |
-          uv install hatch~=1.13
-          hatch --no-color --no-interactive	 build
+          uv build --sdist --wheel
       - name: Upload dist/ artifacts (wheels and sdists) as GH workflow artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -116,19 +115,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: dist
-      - uses: astral-sh/setup-uv@v2
-      - name: Set up Python
-        run: uv python install 3.13
-      - name: Install Hatch
-        run: |
-          uv install hatch~=1.13
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
       - name: Publish to PyPi via Hatch
         run: |
-          hatch --no-color --no-interactive	publish
-        env:
-          HATCH_INDEX_USER: __token__
-          HATCH_INDEX_AUTH: ${{ secrets.PYPI_TOKEN }}
-        if: secrets.PYPI_TOKEN != ''
+          uv publish
 
   publish-docker:
     name: Publish to Docker container registries

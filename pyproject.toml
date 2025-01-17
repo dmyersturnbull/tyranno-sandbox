@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2024, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -23,7 +23,7 @@ requires-python = "~=3.13"
 # 'readme' |--> 'description' in importlib.metadata
 readme = { file = "README.md", content-type = "text/markdown" }
 # 'description' |--> 'summary' in importlib.metadata
-description = "CI/CD test repo"
+description = "Sandbox for Tyrannosaurus"
 maintainers = [
   { name = "Douglas Myers-Turnbull", email = " dmyersturnbull@gmail.com" },
 ]
@@ -61,15 +61,18 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "loguru >=0.7.2",
-  "platformdirs >=4.3.2",
-  "rich >=13.9.1",
-  "typer-slim >=0.15.0",
-  "tzdata >=2024.2; platform_system == 'Windows'", # /usr/share/zoneinfo uses IANA zones; Windows does not
+  "loguru>=0.7.2",
+  "platformdirs>=4.3.2",
+  "typer-slim>=0.15",
+  # /usr/share/zoneinfo uses IANA zones; Windows does not
+  "tzdata>=2024.2; platform_system == 'Windows'",
 ]
 
 [project.optional-dependencies]
-cli = ["typer-slim[standard] >=0.12.5"]
+cli = [
+  "rich>=13.9.1",
+  "typer-slim[standard]>=0.12.5",
+]
 
 #
 #=================================== scripts =================================#
@@ -95,7 +98,7 @@ Download = "https://pypi.org/project/cicd/"
 # :tyranno: "Release Notes" = "https://github.com/${.frag}/releases"
 "Release Notes" = "https://github.com/dmyersturnbull/cicd/releases"
 # :tyranno: #Sponsor = "https://${.vendor}.github.io/${project.name}/placeholder#sponsor"
-Sponsor = "https://${.vendor}.github.io/${project.name}/placeholder#sponsor"
+#Sponsor = "https://${.vendor}.github.io/${project.name}/placeholder#sponsor"
 
 #########################################################################################
 #                                          [dependency-groups]
@@ -103,29 +106,29 @@ Sponsor = "https://${.vendor}.github.io/${project.name}/placeholder#sponsor"
 
 # See https://docs.astral.sh/uv/concepts/projects/dependencies/#dependency-groups
 [dependency-groups]
+
 dev = [
   "pre-commit>=4.0.1",
-  "ruff >=0.8",
-  "mypy >=1.11",
+  "ruff>=0.9",
+  "mypy>=1.14",
 ]
 test = [
-  "hypothesis >=6.110",
-  "pytest >=8.3",
-  "tzdata >=2024.2; platform_system == 'Windows'",
-  "coverage[toml] >=7.6.1",
-  "pytest-cov >=5.0",
+  "hypothesis>=6.115",
+  "pytest>=8.3",
+  "tzdata>=2024.2; platform_system == 'Windows'",
+  "coverage[toml]>=7.6.3",
+  "pytest-cov>=6.0",
 ]
-
 docs = [
-  "mkdocs >=1.6",
-  "mike >=2.1",
-  "mkdocs-literate-nav >=0.6.1",
-  "mkdocs-material >=9.5.32",
-  "mkdocs-minify-plugin >=0.8",
-  "mkdocstrings[python] >=0.26",
-  "mkdocs-table-reader-plugin >=3.1",
+  "mkdocs>=1.6",
+  "mike>=2.1",
+  "mkdocs-include-markdown-plugin>=7.0",
+  "mkdocs>=1.6",
+  "mkdocs-material>=9.5",
+  "mkdocs-minify-plugin>=0.8",
+  "mkdocstrings[python]>=0.27",
+  "mkdocs-literate-nav>=0.6",
 ]
-
 
 #
 #########################################################################################
@@ -340,7 +343,7 @@ addopts = """
 data_file = ".coverage.json"
 branch = true                # quantify % coverage of execution branches
 parallel = true              # note that pytest-cov overrides this
-# :tyranno: source_pkgs = ["src/${project.name}"]
+# :tyranno: source_pkgs = ["${project.name}"]
 source_pkgs = ["cicd"]
 omit = ["src/**/__main__.py"]
 
@@ -402,7 +405,7 @@ show_error_code_links = true
 
 # Note: All trash globs are automatically excluded from targets.
 # So, e.g., .py files in cache dirs are never synced.
-target_globs = [
+target-globs = [
   "**/*.yaml",
   "**/*.toml",
   "**/*.md",
@@ -414,7 +417,7 @@ target_globs = [
   "**/*.less",
 ]
 
-trash_globs = [
+trash-globs = [
   "**/*~",
   "**/*.bak",
   "**/*[.~]t[e]mp",
@@ -437,11 +440,9 @@ trash_globs = [
 [tool.tyranno.data]
 vendor = "dmyersturnbull"
 frag = "${.vendor}/${project.name}"
-copyright = "Copyright ${~|year(now_utc())~}, Contributors to ${project.name}"
+copyright = "Copyright ${now_utc().year}, Contributors to ${project.name}"
 doi = "10.5281/zenodo.4485186" # <<<comment out for new
 # This is the version used in CD and some CI
-# :tyranno: python-version-in-cicd = "${project.requires-python~.semver_max(@).semver_minor(@)}"
-python-version-in-cicd = "3.13.1"
+default-python-version = "3.13.1"
 # These are the versions to test in CI:
-# :tyranno: python-versions = ${project.requires-python|semver_best_set(@).semver_minor(@)}
 python-versions = ["3.13.1"]

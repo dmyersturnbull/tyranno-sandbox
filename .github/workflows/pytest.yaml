@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2024, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -63,14 +63,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.ref }}
-      - uses: astral-sh/setup-uv@v2
-      - name: Set up Python
-        run: uv python install ${{ matrix.python }}
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "${{ matrix.python }}"
       - name: Install dependencies and run tests
         id: test
         run: |
-          uv install hatch~=1.13
-          hatch --no-color --no-interactive	run test
+          uvx pytest
           echo "Python tests on ${{os}}/${{python}}: $( (( $? == 0 )) && echo ✅ || echo ❌ )"
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4

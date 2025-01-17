@@ -1,17 +1,19 @@
-# SPDX-FileCopyrightText: Copyright 2020-2024, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
 # A short description of the repository that will show up on GitHub
 # :tyranno: description: ${project.description}
-description: CI/CD example
+description: Sandbox for Tyrannosaurus
 # :tyranno: homepage: ${project.urls.Homepage}
 homepage: https://github.com/dmyersturnbull/cicd
-# :tyranno: topics: ${project.keywords}
+
 topics:
-  - ci
-  - ci/cd
-#
+  # prettier-ignore-start
+  # :tyranno: ${project.keywords[*].unquote(@)}
+  [cookiecutter, conda-build, pyproject-toml, python-poetry, python-template]
+  # prettier-ignore-end
+
 labels:
   - name: "breaking"
     description: "💥 Breaking change"

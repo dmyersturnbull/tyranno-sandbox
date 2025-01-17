@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2024, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -40,7 +40,7 @@ concurrency:
 jobs:
   send-to-coveralls:
     name: Send reports to Coveralls
-    if: true # Change this if you don't want to use Coveralls
+    if: !cancelled()
     strategy:
       # we can use a matrix to send OS-specific and Python-version-specific coverage data
       matrix:
@@ -69,10 +69,8 @@ jobs:
 
   send-to-codecov:
     name: Send reports to codecov
-    needs: test
-    if: true
+    if: !cancelled()
     continue-on-error: true
-    #if: !cancelled()
     strategy:
       matrix:
         os:
@@ -91,7 +89,7 @@ jobs:
     # This job sends final data to Coveralls to mark the parallel runs as finished.
     # Will not run if the 'send-to-codecov' job was not cancelled
     needs: send-to-codecov
-    #if: !cancelled()
+    if: !cancelled()
     runs-on: ubuntu-latest
     steps:
       - name: Send final data to Coveralls to mark the set completed

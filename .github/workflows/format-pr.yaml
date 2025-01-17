@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2024, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -7,7 +7,7 @@ run-name: >
   ${{ github.workflow }} \
   ${{ github.ref_name }} \
   (triggered by ${{ github.ref_type }})
-  
+
 on:
   merge_group:
     types:
@@ -35,10 +35,9 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      - uses: astral-sh/setup-uv@v2
-
-      - name: Set up Python
-        run: uv python install 3.13
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
 
       - name: Run pre-commit hooks
         # Run once to format, etc.
@@ -72,5 +71,5 @@ jobs:
       - name: Force-push changes
         if: success() && steps.commit.outputs.commit != ''
         run: |
-          # we could use --force-with-lease if --amend-ing
+          # we could use --force-with-lease if --amend -ing
           git push origin HEAD:${{ github.ref }}

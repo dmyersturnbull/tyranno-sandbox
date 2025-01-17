@@ -1,11 +1,11 @@
-# SPDX-FileCopyrightText: Copyright 2020-2024, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
 # https://stackoverflow.com/questions/53835198/integrating-python-poetry-with-docker/54763270#54763270
 
-# :tyranno: FROM python:${.python-version-in-cicd.semver_minor(@)~}
-FROM python:3.12
+# :tyranno: FROM python:${.default-python-version.vr_minor(@)}
+FROM python:3.13
 
 # --------------------------------------
 # ------------- Set labels -------------
