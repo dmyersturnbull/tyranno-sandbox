@@ -2,15 +2,9 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# https://stackoverflow.com/questions/53835198/integrating-python-poetry-with-docker/54763270#54763270
-
-# :tyranno: FROM python:${.default-python-version.vr_minor(@)}
-FROM python:3.13
-
-# --------------------------------------
-# ------------- Set labels -------------
-
-# See https://github.com/opencontainers/image-spec/blob/master/annotations.md
+# Set the labels.
+# These are standard opencontainer labels; see:
+# https://github.com/opencontainers/image-spec/blob/master/annotations.md
 # :tyranno: LABEL org.opencontainers.image.version="${project.version}"
 LABEL org.opencontainers.image.version="0.0.1-alpha0"
 # :tyranno: LABEL org.opencontainers.image.vendor="${.vendor}"
@@ -22,30 +16,87 @@ LABEL org.opencontainers.image.url="https://github.com/dmyersturnbull/cicd"
 # :tyranno: LABEL org.opencontainers.image.documentation="${project.urls.Documentation}"
 LABEL org.opencontainers.image.documentation="https://github.com/dmyersturnbull/cicd"
 
-# --------------------------------------
-# ---------- Copy and install ----------
+# Declare the core build args.
+# These must exist outside of any stage and be declared before the first FROM.
+ARG ALPINE_VERSION=""
+# :tyranno: ARG PYTHON_VERSION="${.default-python-version.vr_minor(@)}"
+ARG PYTHON_VERSION="3.13"
 
-# ENV no longer adds a layer in new Docker versions,
-# so we don't need to chain these in a single line
-ENV PYTHONFAULTHANDLER=1
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONHASHSEED=random
-ENV PIP_DISABLE_PIP_VERSION_CHECK=on
-ENV PIP_DEFAULT_TIMEOUT=120
-ENV PATH="/root/.cargo/bin/:$PATH"
+# -------------------- Download uv and set vars --------------------
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
+# Start the stage "builder", and download uv.
+FROM python:$PYTHON_VERSION:alpine$ALPINE_VERSION as builder
+SHELL ["/bin/bash", "-c"]
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-ADD https://astral.sh/uv/install.sh /uv-installer.sh
-RUN sh /uv-installer.sh && rm /uv-installer.sh
+# Environment variables
+ENV PATH=/root/.cargo/bin/:/root/.local/bin:$PATH
+# Any non-empty string is taken as true for boolean UV and Python env vars.
+# https://docs.python.org/3/using/cmdline.html#envvar-PYTHONFAULTHANDLER
+ENV PYTHONFAULTHANDLER=yes
+# https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUNBUFFERED
+ENV PYTHONUNBUFFERED=yes
+# https://docs.astral.sh/uv/guides/integration/docker/#compiling-bytecode
+ENV UV_LINK_MODE=copy
+# https://docs.astral.sh/uv/guides/integration/docker/#caching
+ENV UV_COMPILE_BYTECODE=yes
+# Alternative we're not using:
+# ENV UV_NO_CACHE=yes
+
+# -------------------- Install the project --------------------
+
+# We'll install in 2 layers: (1) transitive dependencies and (2) project, as described in
+# https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
+# Then, we'll create a new stage containing only our installed package, as described in
+# https://docs.astral.sh/uv/guides/integration/docker/#non-editable-installs
 
 WORKDIR /app
+
+# Install the dependencies in one layer.
+RUN \
+  --mount=type=cache,target=/root/.cache/uv \
+  --mount=type=bind,source=uv.lock,target=uv.lock \
+  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+  uv sync --frozen --no-dev --no-editable --no-install-project
+
+# Copy the source and build/install it in another layer.
 COPY . /app/
+RUN \
+  --mount=type=cache,target=/root/.cache/uv \
+  uv sync --frozen --no-dev --no-editable
 
-#RUN uv install .
-RUN uv sync --frozen
+#
+# -------------------- Run in a fresh stage --------------------
 
+# Make a new stage that contains only the final venv.
+FROM python:$PYTHON_VERSION:alpine$ALPINE_VERSION
+COPY --from=builder --chown=app:app /app/.venv /app/.venv
+
+# Expose HTTP 1.1 & 2.0 on TCP/80, HTTPS 1.1 & 2.0 on TCP/443, and HTTP/3 on UDP/443.
 EXPOSE 80
 EXPOSE 443
+EXPOSE 443/udp
 
-CMD hypercorn cicd.api:app --bind '[::]:80' --bind '[::]:443' --quic-bind '[::]:443'
+ENTRYPOINT [
+  "/app/.venv/bin/hypercorn",
+  "cicd.api:app"
+]
+CMD [
+  "--bind",
+  "[::]:80",
+  "--bind",
+  "[::]:443",
+  "--quic-bind",
+  "[::]:443"
+]
+
+ARG HEALTHCHECK_INTERVAL=5m
+ARG HEALTHCHECK_TIMEOUT=3s
+ARG HEALTHCHECK_START_PERIOD=5s
+
+# Ubuntu curl doesn't support --http3 yet
+HEALTHCHECK \
+  --interval=$HEALTHCHECK_INTERVAL \
+  --timeout=$HEALTHCHECK_TIMEOUT \
+  --start-period=$HEALTHCHECK_START_PERIOD \
+  CMD curl --fail --http2-prior-knowledge http://localhost/ || exit 1
