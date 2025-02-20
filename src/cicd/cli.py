@@ -18,9 +18,9 @@ from loguru import logger
 from typer import Argument, Exit, Option, Typer
 
 from cicd._about import __about__
-from cicd.context import DefaultContextFactory
 from cicd._global_vars import DefaultGlobalVarsFactory
 from cicd.clean import Cleaner
+from cicd.context import DefaultContextFactory
 
 _GLOBAL_VARS = DefaultGlobalVarsFactory()()
 

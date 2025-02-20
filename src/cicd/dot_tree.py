@@ -9,14 +9,11 @@ See [DotTree][].
 import json
 import re
 from collections import defaultdict
+from collections.abc import Callable, Generator
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from re import Pattern
-from typing import TYPE_CHECKING, overload, ClassVar
-
-if TYPE_CHECKING:
-    from typing import Any, Self, TypeGuard
-    from collections.abc import Callable, Generator
+from typing import Any, ClassVar, Self, TypeGuard, overload
 
 type Primitive = str | int | float | bool | date | datetime | time
 type Array = list[Toml]

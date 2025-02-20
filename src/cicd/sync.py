@@ -7,19 +7,16 @@
 
 import re
 import shutil
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from re import Pattern
-from typing import TYPE_CHECKING
 
 from jmespath import Options
 from loguru import logger
 
 from cicd.context import Context, Data
 from cicd.james import TyrannoFunctions
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
 
 __all__ = ["Syncer"]
 _TYRANNO = ":tyranno:"
@@ -110,8 +107,7 @@ class Substitutions:
 
     def _read(self) -> Iterator[str]:
         with self.path.open(encoding="utf-8") as file:
-            for line in file:
-                yield line
+            yield from file
 
     def _write(self, path: Path, lines: list[str]) -> None:
         backup_path = path.parent / ("~." + path.with_suffix(path.suffix + ".bak").name)

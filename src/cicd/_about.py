@@ -11,7 +11,7 @@ while your `mypkg/__init__.py` includes lines like `from mypkg.app import Entry`
 (This would break if `mypkg.app` tried to `from mypkg import __about__`.)
 """
 
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

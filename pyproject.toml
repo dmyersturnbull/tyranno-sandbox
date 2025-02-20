@@ -199,7 +199,7 @@ select = [
   "FURB",     # refurb (misc., mostly fixable)
   #"E",       # flake8 errors //DISABLED: handled by formatter or nitpicky//
   "G",        # flake8-logging-format
-  #"I",       # isort //DISABLED: handled by formatter//
+  "I",        # isort
   "ICN",      # flake8-import-conventionals
   #"INP",     # flake8-no-pep420 (require __init__.py to import) //DISABLED: false positives//
   "INT",      # flake8-gettext (i18n)

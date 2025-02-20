@@ -14,8 +14,8 @@ from pathlib import Path, PurePath
 
 import jmespath
 
-from ._global_vars import GlobalVars
-from cicd.dot_tree import Toml, DotTree
+from cicd._global_vars import GlobalVars
+from cicd.dot_tree import DotTree, Toml
 
 __all__ = ["Context", "ContextFactory", "Data", "DefaultContextFactory"]
 _PATTERN = re.compile(r"\$\{ *([-._A-Za-z0-9]*) *(?:~ *([^~]+) *~ *)?}")
@@ -76,7 +76,8 @@ class Context:
     def resolve_path(self, path: PurePath | str) -> Path:
         path = Path(path).resolve(strict=True)
         if not str(path).startswith(str(self.repo_dir)):
-            raise AssertionError(f"{path} is not a descendent of {self.repo_dir}")
+            msg = f"{path} is not a descendent of {self.repo_dir}"
+            raise AssertionError(msg)
         return path.relative_to(self.repo_dir)
 
 

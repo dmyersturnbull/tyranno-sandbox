@@ -11,8 +11,8 @@ from zoneinfo import ZoneInfo
 
 import niquests
 from jmespath import functions
-from packaging.version import Version
 from packaging.specifiers import SpecifierSet
+from packaging.version import Version
 
 
 def _format_dt(dt: datetime, *, sep: str = "T", ts: str = "seconds") -> str:

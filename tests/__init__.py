@@ -10,12 +10,12 @@ import contextlib
 import io
 import logging
 import time
+from collections.abc import Generator
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path, PurePath
 from types import TracebackType
 from typing import Self
-from collections.abc import Generator
 
 __all__ = ["TestHelper", "logger"]
 
