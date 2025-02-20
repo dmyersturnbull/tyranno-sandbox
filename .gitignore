@@ -13,7 +13,6 @@ Thumbs.db
 null
 *.log
 *.pid
-*.lock
 *.out
 
 # Temp dirs
