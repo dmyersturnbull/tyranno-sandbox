@@ -8,11 +8,9 @@ Wrapper around repo for Tyrannosaurus.
 import glob
 import re
 import tomllib
-from dataclasses import dataclass
-from datetime import date, datetime
-from pathlib import Path, PurePath
-from typing import Self
 from collections.abc import Iterator
+from dataclasses import dataclass
+from pathlib import Path, PurePath
 
 import jmespath
 
@@ -31,35 +29,19 @@ class Data:
 
     data: DotTree
 
-    def get(self: Self, key: str) -> Toml | None:
+    def get(self, key: str) -> Toml | None:
         try:
             return self._sub(key, None)
         except KeyError:
             return None
 
-    def req(self: Self, key: str) -> Toml:
+    def req(self, key: str) -> Toml:
         return self._sub(key, None)
 
-    def _sub(self: Self, key: str, james: str | None) -> Toml:
+    def _sub(self, key: str, james: str | None) -> Toml:
         key = "tool.tyranno.data" if key == "." else "tool.tyranno.data" + key
         result = self.data.demand(key)
         return jmespath.search(james, result) if james else result
-
-    def _get_value(self, key: str):
-        # TODO: what is this for?
-        value = self.data
-        match value:
-            case list():
-                result = [self._sub(v, None) for v in value]
-            case dict():
-                result = {k: self._sub(v, None) for k, v in value.items()}
-            case str():
-                result = _PATTERN.sub(lambda p: self._sub(p.group(1), p.group(2)), value)
-            case int() | float() | datetime() | date():
-                result = value
-            case _:
-                raise AssertionError(f"Impossible type {value}")
-        return result
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -72,41 +54,41 @@ class Context:
     global_vars: GlobalVars
 
     @property
-    def data(self: Self) -> Data:
+    def data(self) -> Data:
         return Data(self.config.data.demand_subtree("tool.tyranno.data"))
 
     @property
-    def trash_dir(self: Self) -> Path:
-        return self.repo_path / self.trash_dir_name
+    def trash_dir(self) -> Path:
+        return self.repo_dir / self.global_vars.trash_dir_name
 
-    def find_targets(self: Self) -> Iterator[Path]:
-        include = self.config.data.demand_subtree("tool.tyranno.target-globs")
+    def find_targets(self) -> Iterator[Path]:
+        include = self.config.data.demand_subtree("tool.tyranno.targets")
         for pattern in include:
             for p in glob.glob(pattern):
                 yield self.resolve_path(p)
 
-    def find_trash(self: Self) -> Iterator[Path]:
-        include = self.config.data.demand_subtree("tool.tyranno.trash-globs")
+    def find_trash(self) -> Iterator[Path]:
+        include = self.config.data.demand_subtree("tool.tyranno.trash")
         for pattern in include:
             for p in glob.glob(pattern):
                 yield self.resolve_path(p)
 
-    def resolve_path(self: Self, path: PurePath | str) -> Path:
+    def resolve_path(self, path: PurePath | str) -> Path:
         path = Path(path).resolve(strict=True)
-        if not str(path).startswith(str(self.repo_path)):
-            raise AssertionError(f"{path} is not a descendent of {self.repo_path}")
-        return path.relative_to(self.repo_path)
+        if not str(path).startswith(str(self.repo_dir)):
+            raise AssertionError(f"{path} is not a descendent of {self.repo_dir}")
+        return path.relative_to(self.repo_dir)
 
 
 @dataclass(frozen=True, slots=True)
 class ContextFactory:
-    def __call__(self: Self, cwd: Path, global_vars: GlobalVars, *, dry_run: bool) -> Context:
+    def __call__(self, cwd: Path, global_vars: GlobalVars, *, dry_run: bool) -> Context:
         raise NotImplementedError()
 
 
 @dataclass(frozen=True, slots=True)
 class DefaultContextFactory(ContextFactory):
-    def __call__(self: Self, cwd: Path, global_vars: GlobalVars, *, dry_run: bool) -> Context:
+    def __call__(self, cwd: Path, global_vars: GlobalVars, *, dry_run: bool) -> Context:
         read = Path("pyproject.toml").read_text(encoding="utf-8")
         tree = DotTree.from_nested(tomllib.loads(read))
         return Context(

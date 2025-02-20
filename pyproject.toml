@@ -9,7 +9,7 @@
 
 [build-system]
 build-backend = "hatchling.build"
-requires = ["hatchling~=1.26"]
+requires = ["hatchling>=1.26"]
 
 #
 #########################################################################################
@@ -20,9 +20,9 @@ requires = ["hatchling~=1.26"]
 name = "cicd"
 version = "0.0.1-alpha0"
 requires-python = "~=3.13"
-# 'readme' |--> 'description' in importlib.metadata
+# 'readme' is importlib.metadata 'description'
 readme = { file = "README.md", content-type = "text/markdown" }
-# 'description' |--> 'summary' in importlib.metadata
+# 'description' is importlib.metadata 'summary'
 description = "Sandbox for Tyrannosaurus"
 maintainers = [
   { name = "Douglas Myers-Turnbull", email = " dmyersturnbull@gmail.com" },
@@ -61,17 +61,21 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
+  "jmespath>=1.0",
   "loguru>=0.7.2",
+  "niquests>=3.13",
+  "packaging>=24.0",
   "platformdirs>=4.3.2",
   "typer-slim>=0.15",
   # /usr/share/zoneinfo uses IANA zones; Windows does not
-  "tzdata>=2024.2; platform_system == 'Windows'",
+  "tzdata>=2025.1; platform_system == 'Windows'",
+  "zstandard>=0.23",
 ]
 
 [project.optional-dependencies]
 cli = [
   "rich>=13.9.1",
-  "typer-slim[standard]>=0.12.5",
+  "shellingham>=0.15",
 ]
 
 #
@@ -108,26 +112,19 @@ Download = "https://pypi.org/project/cicd/"
 [dependency-groups]
 
 dev = [
-  "pre-commit>=4.0.1",
-  "ruff>=0.9",
-  "mypy>=1.14",
-]
-test = [
-  "hypothesis>=6.115",
-  "pytest>=8.3",
-  "tzdata>=2024.2; platform_system == 'Windows'",
-  "coverage[toml]>=7.6.3",
-  "pytest-cov>=6.0",
-]
-docs = [
+  "coverage[toml]>=7.6.10",
+  "hypothesis>=6.124",
   "mkdocs>=1.6",
-  "mike>=2.1",
-  "mkdocs-include-markdown-plugin>=7.0",
-  "mkdocs>=1.6",
-  "mkdocs-material>=9.5",
+  "mkdocs-material>=9.6",
   "mkdocs-minify-plugin>=0.8",
-  "mkdocstrings[python]>=0.27",
   "mkdocs-literate-nav>=0.6",
+  "mkdocs-api-autonav>=0.1",
+  "mkdocstrings[python]>=0.28",
+  "pre-commit>=4.0.1",
+  "pyright[nodejs]>=1.1",
+  "pytest>=8.3",
+  "pytest-cov>=6.0",
+  "ruff>=0.9.5",
 ]
 
 #
@@ -160,108 +157,99 @@ explicit-preview-rules = true
 #
 # ---------------------- Ruff selected rule sets --------------------
 
+#             # align to col 15 == 1 + len('  #' '"ASYNC'" '111' ',' ' ')
 select = [
-  "A", # flake8-builtins
-  #"AIR", # Airflow //DISABLED: enable if using airflow//
-  "ANN", # flake8-annotations
-  #"ARG", # flake8-unused-args //DISABLED: correct in overrides//
-  "ASYNC", # flake8-async
-  "B",     # flake8-bugbear
-  #"BLE", # flake8-blind-exception (try: * except: only) //DISABLED: covered by E722 (?)//
-  "C",  # flake8-comprehensions
-  "C4", # flake8-comprehensions
-  #"C90", # mmcabe //DISABLED: useful but thin-lined and time-intensive//
-  #"COM", # flake8-commas //DISABLED: handled by formatter//
-  #"CPY", # flake8-copyright //DISABLED: handle carefully instead; also unmaintained//
-  "D", # pydocstyle
-  #"DJ", # flake8-django //DISABLED: enable if using Django//
-  "DTZ", # flake8-datetimez
-  #"E", # pycodestyle ERRORs //DISABLED: almost all handled by formatter//
-  "E502", # redundant backslash
-  "E71",  # == None, != False, not in, not is, etc.
-  "E72",  # bare except
-  "E73",  # lambda assignment
-  "E74",  # easily confused characters in names
-  "E9",   # can't lint -- syntax error, etc.
-  "EM",   # flake8-errmsg
-  #"ERA", # eradicate (commented-out code) //DISABLED: catches code in comments, etc.//
-  #"EXE", # flake8-executable //DISABLED: pre-commit shebang rules instead//
-  "F",  # pyflakes
-  "FA", # flake8-future-annotations
-  #"FBT", # flake8-boolean-trap //DISABLED: debatable and sometimes unavoidable//
-  #"FIX", # flake8-fix*me //DISABLED: bans TO*DO, etc. and not configurable//
-  "FLY",  # flynt (https://pypi.org/project/flynt/; updates .format)
-  "FURB", # refurb (misc., mostly fixable)
-  #"E", # flake8 errors //DISABLED: handled by formatter or nitpicky//
-  "G", # flake8-logging-format
-  #"I", # isort //DISABLED: handled by formatter//
-  #"ICN", # flake8-import-conventionals //DISABLED: handled by formatter//
-  "INP", # flake8-no-pep420 (require __init__.py to import)
-  "INT", # flake8-gettext (i18n)
-  "ISC", # flake8-implicit-str-concat
-  "LOG", # flake8-logging
-  "N",   # pep8-naming
-  #"NPY", # numpy-specific rules //DISABLED: enable if using numpy//
-  #"PD",  # pandas-vet //DISABLED: enable if using pandas//
-  "PERF", # perflint
-  "PGH",  # pygrep-hooks
-  "PIE",  # flake8-pie (misc. lint rules)
-  "PL",   # pylint
-  "PT",   # flake8-pytest-style
-  "PTH",  # flake8-use-pathlib
-  #"PYI", # flake8-pyi (rules for stub files) //DISABLED: auto-generate stub files//
-  #"Q", # flake8-quotes //DISABLED: handled by formatter//
-  #"RSE", # flake8-raise //DISABLED: handled by formatter//
-  "RET",  # flake8-return (fixable)
-  "RUF",  # Ruff-specific tests
-  "S",    # bandit
-  "SIM",  # flake8-simplify
-  "SLF",  # flake8-self (private access)
-  "SLOT", # flake8-slots
-  "T10",  # flake8-debugger (bans debugger)
-  "T20",  # flake8-print (bands print and pprint)
-  "TD",   # flake8-to*do (mandates syntax; note: use 'to-do' in prose)
-  "TCH",  # flake8-type-checking
-  "TID",  # flake8-tidy-imports (bans relative imports)
-  "TRY",  # tryceratops (try-except-raise)
-  "UP",   # pyupgrade
-  #"W", # warnings //DISABLED: most fixed by formatter//
-  "W60", # E605 invalid escape character
-  "YTT", # flake8-2020 (incorrect Python vr checks)
-  "RUF", # Ruff-specific rules
+  "A",        # flake8-builtins
+  #"AIR",     # Airflow //DISABLED: enable if using airflow//
+  "ANN",      # flake8-annotations
+  #"ARG",     # flake8-unused-args //DISABLED: correct in overrides//
+  "ASYNC",    # flake8-async
+  "B",        # flake8-bugbear
+  "B901",     # PREVIEW: Return in generator
+  #"BLE",     # flake8-blind-exception (try: * except: only) //DISABLED: covered by E722 (?)//
+  "C4",       # flake8-comprehensions
+  #"C90",     # mmcabe //DISABLED: useful but thin-lined and time-intensive//
+  #"COM",     # flake8-commas //DISABLED: handled by formatter//
+  #"CPY",     # flake8-copyright //DISABLED: handle carefully instead; also unmaintained//
+  #"D",       # pydocstyle //DISABLED: most rules handled by formatter//
+  "D1",       # undocumented public methods, etc.
+  "D210",     # whitespace around text
+  "D214",     # over-indented section
+  "D3",       # docstring ''', \, etc.
+  "D4",       # blank docstring sections, etc.
+  #"DJ",      # flake8-django //DISABLED: enable if using Django//
+  "DOC",      # pydoclint //DISABLED: encourages writing sections out of habit//
+  #"DOC202",  # says "return" but does not (PREVIEW)
+  #"DOC403",  # says "yield" but does not (PREVIEW)
+  "DTZ",      # flake8-datetimez
+  #"E",       # pycodestyle ERRORs //DISABLED: almost all handled by formatter//
+  "E7",       # == True, bare except, lambda assignment, 'l' in names, etc.
+  "E9",       # can't lint -- syntax error, etc.
+  "EM",       # flake8-errmsg
+  #"ERA",     # eradicate (commented-out code) //DISABLED: catches code in comments, etc.//
+  #"EXE",     # flake8-executable //DISABLED: pre-commit shebang rules instead//
+  "F",        # pyflakes
+  "FA",       # flake8-future-annotations
+  "FAST",     # fastapi (disable if not using)
+  #"FBT",     # flake8-boolean-trap //DISABLED: debatable and sometimes unavoidable//
+  #"FIX",     # flake8-fix*me //DISABLED: unnecessary //
+  "FIX003",   # 'XXX: ' comments (use F*I*X*M*E or T*O*D*O instead)
+  "FIX004",   # 'HACK: ' comments (use F*I*X*M*E or T*O*D*O instead)
+  "FLY",      # flynt (https://pypi.org/project/flynt/; updates .format)
+  "FURB",     # refurb (misc., mostly fixable)
+  #"E",       # flake8 errors //DISABLED: handled by formatter or nitpicky//
+  "G",        # flake8-logging-format
+  #"I",       # isort //DISABLED: handled by formatter//
+  "ICN",      # flake8-import-conventionals
+  #"INP",     # flake8-no-pep420 (require __init__.py to import) //DISABLED: false positives//
+  "INT",      # flake8-gettext (i18n)
+  "ISC",      # flake8-implicit-str-concat
+  "LOG",      # flake8-logging
+  "N",        # pep8-naming
+  #"NPY",     # numpy-specific rules //DISABLED: enable if using numpy//
+  #"PD",      # pandas-vet //DISABLED: enable if using pandas//
+  "PERF",     # perflint
+  "PGH",      # pygrep-hooks
+  "PIE",      # flake8-pie (misc. lint rules)
+  "PL",       # pylint (PLC, PLE, PLR, and PLW)
+  "PT",       # flake8-pytest-style
+  "PTH",      # flake8-use-pathlib
+  #"PYI",     # flake8-pyi (rules for stub files) //DISABLED: auto-generate stub files//
+  #"Q",       # flake8-quotes //DISABLED: handled by formatter//
+  #"RSE",     # flake8-raise //DISABLED: handled by formatter//
+  "RET",      # flake8-return (fixable)
+  "RUF",      # Ruff-specific tests
+  "S",        # bandit
+  "SIM",      # flake8-simplify
+  "SLF",      # flake8-self (private access)
+  "SLOT",     # flake8-slots
+  "T10",      # flake8-debugger (bans debugger)
+  "T20",      # flake8-print (bands print and pprint)
+  #"TD",      # flake8-to*do (mandates syntax) //DISABLED: bans fix*me, requires author, nitpicky//
+  "TCH",      # flake8-type-checking
+  "TID",      # flake8-tidy-imports (bans relative imports)
+  "TRY",      # tryceratops (try-except-raise)
+  "UP",       # pyupgrade
+  "UP04",     # PREVIEW: 3.11+ fixes
+  #"W",       # warnings //DISABLED: most fixed by formatter//
+  "W60",      # E605 invalid escape character
+  "YTT",      # flake8-2020 (incorrect Python version checks)
+  "RUF",      # Ruff-specific rules
 ]
 
 #
 # ------------------------ Ruff ignored rules ----------------------
 ignore = [
-  "COM812",  # contradicts Ruff formatter
-  "D107",    # missing docstring in __init__ (put in class docstring)
-  "D212",    # multi-line docstring start (contradictory)
-  "E203",    # clons with space before (sometimes useful expand)
-  "E225",    # missing whitespace around operator (sometimes useful to condense)
-  "E501",    # line > 79 chars (we use Ruff's formatter)
-  "INP001",  # missing __init__ -- false positives
-  "ISC001",  # contradicts Ruff formatter
-  "PLR0912", # too many branches
-  "PLR1711", # return None at end
-  "PLR0916", # too many boolean expressions
-  "PLR2044", # line with empty comment
-  "PLR6301", # 'self' not used -- correct for overrides etc.; and required in
+  "ISC001",   # contradicts Ruff formatter
+  "PLR6301",  # 'self' not used (correct for overrides; more OOP)
 ]
 
 #
 # ------------------------ Ruff unfixable rules ---------------------
 unfixable = [
-  "F601",    # repeated key in dict {}
-  "F602",    # repeated key in dict()
-  "F811",    # unused and redefined
-  "F841",    # unused variable
-  "PGH004",  # blanketed noqa
-  "PLE2510", # invalid unescaped characters
-  "RUF100",  # unused noqa
-  "SIM112",  # uncapitalized env var
-  "TD006",   # 'to*do' -> 'TO*DO'
-  "W605",    # invalid escape sequence
+  "F841",     # unused variable
+  "SIM112",   # uncapitalized env var
+  "TD006",    # 'to*do' -> 'TO*DO'
 ]
 
 #
@@ -272,7 +260,9 @@ pydocstyle.convention = "google"
 flake8-tidy-imports.ban-relative-imports = "all"
 
 [tool.ruff.lint.pylint]
-max-nested-blocks = 3 # default is 5
+max-args = 8 # default is 5
+max-positional-args = 3 # default is 5
+max-bool-expr = 8 # default is 5
 
 #
 # ------------------------ Ruff per-file ignores --------------------
@@ -281,11 +271,11 @@ max-nested-blocks = 3 # default is 5
   "INP001",  # missing __init__
   "PLR2004", # magic value
   "S101",    # assert
-  "TID252",  # relative import
-  "S105",    # possible password
-  "S106",
-  "S107",
+  "S105",    # possible password in string
+  "S106",    # in function arg
+  "S107",    # in function default
   "S108",    # harcoded temp file
+  "TID252",  # relative import
 ]
 
 #
@@ -293,46 +283,70 @@ max-nested-blocks = 3 # default is 5
 #                                  [tool.pytest]
 #########################################################################################
 
-# A future version of pytest will create [tool.pytest]
+# A future version of pytest will create `[tool.pytest]`.
 [tool.pytest.ini_options]
 
-# show log output from the tests
-# in the tests/ code, name the logger {pkg}-TEST to differentiate
-log_cli = true
-log_cli_level = "INFO"
-log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s (%(filename)s:%(lineno)s)"
-log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+# This pytest 7+ option avoids repeating the package name in various options.
+#pythonpath = "./src" # critical!
+pythonpath = ["src"]
 
+# Set the default path to `tests/` so that it can be omitted on CLI.
+# Don't use `.` or `["tests/", "src/"]`: That would mistakenly pick up `src/**/Test*.py`.
+# Any doctests in `src/**/*.py` won't be found.
+# Doctests must be run manually like this:
+# `pytest --doctest-modules src/`
+testpaths = ["tests/"]
+
+# Configure logging, and send it "live" (in realtime) to stdout with `log_cli`.
+# In `tests/**/*.py`, append `-TEST` to logger names to distinguish them.
+log_level = "INFO"
+log_cli = true
+log_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s (%(filename)s:%(lineno)s)"
+log_date_format = "%Y-%m-%d %H:%M:%S"
+
+# These are used when running `pytest --doctest-modules src/`.
 doctest_optionflags = [
-  "DONT_ACCEPT_TRUE_FOR_1", # 1 is not the same as True
-  "NORMALIZE_WHITESPACE",   # allows us to wrap expected output to 120 lines (ignores newlines)
+  "DONT_ACCEPT_TRUE_FOR_1", # Makes doctest not consider 1 to equal True.
+  "NORMALIZE_WHITESPACE",   # Ignores newlines, so we can wrap expected output.
 ]
 
-# create markers so we can disable internet (or network-connected), or very slow tests
+# Create markers for very slow, network-dependent, or interactive tests.
 markers = [
-  #"integration: marks integration tests (deselect with `-m 'not integration'`)",
   "slow: marks tests that take a long time to run (select with `-m slow`)",
-  "net: marks tests that require internet access (select with `-m net`)",
+  "net: marks tests that require network access (select with `-m net`)",
   "ux: marks tests that require manual input such as in-browser (select with `-m ux`)",
 ]
 
-pythonpath = "./src" # critical!
-# coverage stops recursing after it finds one dir without an __init__.py
-# so if it finds src/java-app before src/pyapp, it won't find pyapp
-# So specify exactly which directories to test
+# `coverage` stops recursing after it finds one dir without an __init__.py
+# So, if it finds `src/java-app` before `src/pyapp`, it won't find `pyapp`.
+# So, we need to specify which directory to test via `--cov=src/{pkg}`.
+# The `--cov-*` options are handled by pytest-cov.
+# `--import-mode=importlib` is recommended but requires test classes to have unique names.
+# `-r` controls the summary columns:
+# (f)ailed, (E)rror, (s)kipped, (x)failed, (X|p)passed, (p)assed
+# `--quiet` hides 'rootdir', 'testpaths', etc.
+# ---
 # :tyranno: addopts = """
-# :tyranno:   --cov=src/${project.name}
+# :tyranno:   --cov=src/${project.name} \
 addopts = """
   --cov=src/cicd \
   --cov-report json:.coverage.json \
   --cov-report term \
   --cov-config=pyproject.toml \
-  --random-order \
-  --doctest-modules \
+  --import-mode=importlib \
+  --strict-config \
   --strict-markers \
-  -m 'not (slow or net or ux)' \
-  tests/
+  --quiet
 """
+
+# To run only unit tests, run:
+# `-m 'not (slow or net or ux)'`
+# To show the slowest tests, add:
+# `--durations=5 --durations-min=0.1`
+# Other useful options to add:
+# `--verbose`     : Show full test names.
+# `--full-trace`  : Show full stack traces.
+# `--showlocals`  : Show local variables.
 
 #
 #########################################################################################
@@ -341,24 +355,20 @@ addopts = """
 
 [tool.coverage.run]
 data_file = ".coverage.json"
-branch = true                # quantify % coverage of execution branches
-parallel = true              # note that pytest-cov overrides this
-# :tyranno: source_pkgs = ["${project.name}"]
-source_pkgs = ["cicd"]
-omit = ["src/**/__main__.py"]
+branch = true # Quantify the % coverage of execution branches.
+relative_files = true
 
 [tool.coverage.paths]
 source = ["src/"]
 
 [tool.coverage.report]
-fail_under = 50 # 50% coverage required
+#fail_under = 90 # % coverage required
+format = "markdown"
 precision = 1 # n decimal points for coverage %
 show_missing = true
-exclude_lines = [
-  "nocov",
-  "pragma: no cover",
+skip_empty = true
+exclude_also = [
   "def __repr__",
-  "def __str__",
   "raise AssertionError",
   "raise NotImplementedError",
   "if __name__ == \"__main__\":",
@@ -368,12 +378,25 @@ exclude_lines = [
 
 #
 #########################################################################################
-#                                       [tool.mypy]
+#                                       [tool.pyright]
 #########################################################################################
 
-[tool.mypy]
+[tool.pyright]
 
-files = ["src/**/*.py", "tests/**/*.py"]
+include = ["src/**/*.py", "tests/**/*.py"]
+strictListInference = true
+strictDictionaryInference = true
+strictSetInference = true
+strictParameterNoneValue = false
+deprecateTypingAliases = true
+enableReachabilityAnalysis = true
+typeCheckingMode = "strict"
+reportImplicitOverride = "error"
+reportImportCycles = "error"
+reportMissingSuperCall = "error"
+reportPropertyTypeMismatch = "error"
+reportShadowedImports = "warning"
+reportUnnecessaryTypeIgnoreComment = "warning"
 
 # strictness options
 disallow_any_generics = true
@@ -405,20 +428,23 @@ show_error_code_links = true
 
 # Note: All trash globs are automatically excluded from targets.
 # So, e.g., .py files in cache dirs are never synced.
-target-globs = [
-  "**/*.yaml",
-  "**/*.toml",
-  "**/*.md",
-  "**/Dockerfile",
-  "**/*.py",
-  "**/*.ts",
-  "**/*.js",
-  "**/*.css",
-  "**/*.less",
+targets = [
+  ".github/**/*.md",
+  ".github/**/*.yaml",
+  ".github/CODEOWNERS",
+  "docs/**/*.md",
+  "src/**/*.py",
+  "tests/**/*.py",
+  ".editorignore",
+  "*.md",
+  "*.toml",
+  "*.yaml",
+  "CITATION.cff",
+  "Dockerfile",
 ]
 
-trash-globs = [
-  "**/*~",
+trash = [
+  "**/*[~#]",
   "**/*.bak",
   "**/*[.~]t[e]mp",
   "**/*.class",
@@ -433,9 +459,9 @@ trash-globs = [
 #
 #================================ Tyranno data ===============================#
 #
-# You can add any key-value pairs you want here;
-# they're only referenced by 'tyranno' sync comments.
-# No keys here have specific meanings.
+# These keys are only referenced by `:tyranno:` comments.
+# None have specific meanings.
+# Add any you want.
 
 [tool.tyranno.data]
 vendor = "dmyersturnbull"

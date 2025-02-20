@@ -11,11 +11,11 @@ import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Self
+from typing import Annotated
 
 import typer
 from loguru import logger
-from typer import Option
+from typer import Argument, Exit, Option, Typer
 
 from cicd._about import __about__
 from cicd.context import DefaultContextFactory
@@ -32,16 +32,16 @@ class Messenger:
     success_color: str = typer.colors.GREEN
     error_color: str = typer.colors.RED
 
-    def success(self: Self, msg: str) -> None:
+    def success(self, msg: str) -> None:
         typer.echo(typer.style(msg, fg=self.success_color, bold=True))
 
-    def info(self: Self, msg: str) -> None:
+    def info(self, msg: str) -> None:
         typer.echo(msg)
 
-    def failure(self: Self, msg: str) -> None:
+    def failure(self, msg: str) -> None:
         typer.echo(typer.style(msg, fg=self.error_color, bold=True))
 
-    def show_project_info(self: Self) -> None:
+    def show_project_info(self) -> None:
         self.info(f"{__about__.name} v{__about__.version}")
 
 
@@ -68,7 +68,7 @@ class _Opts:
 
 
 messenger = Messenger()
-cli = typer.Typer()
+cli = Typer()
 
 
 class CliCommands:
@@ -79,7 +79,7 @@ class CliCommands:
     @staticmethod
     @cli.command()
     def new(
-        path: Annotated[Path, typer.Argument("name", help="name", exists=False)] = Path.cwd(),
+        path: Annotated[Path, Argument("name", help="name", exists=False)] = Path.cwd(),
         *,
         name: Annotated[str, Option(help="Full project name")] = "my-project",
         license_id: Annotated[str, Option("--license", help="vendor")] = "Apache-2.0",
@@ -88,7 +88,7 @@ class CliCommands:
         quiet: _Opts.quiet = False,
     ) -> None:
         if path is None and name is None:
-            raise typer.Exit()
+            raise Exit()
         set_cli_state(verbose=verbose, quiet=quiet)
         context = DefaultContextFactory()(Path(os.getcwd()), dry_run=dry_run, global_vars=_GLOBAL_VARS)
         messenger.info(f"Done! Created a new repository under {name}")

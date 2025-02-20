@@ -7,9 +7,9 @@ Environment variables and internal utils.
 
 import os
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
-from typing import Self
+from zoneinfo import ZoneInfo
 
 import platformdirs
 
@@ -27,19 +27,18 @@ class GlobalVars:
 
 @dataclass(frozen=True, slots=True)
 class GlobalVarsFactory:
-    def __call__(self: Self) -> GlobalVars:
+    def __call__(self) -> GlobalVars:
         raise NotImplementedError()
 
 
 @dataclass(frozen=True, slots=True)
 class DefaultGlobalVarsFactory(GlobalVarsFactory):
-    def __call__(self: Self) -> GlobalVars:
-        _now_utc = datetime.now(UTC)
-        _user_cache_path = platformdirs.user_cache_path("cicd")
+    def __call__(self) -> GlobalVars:
+        now_utc = datetime.now(ZoneInfo("Etc/UTC"))
         return GlobalVars(
-            now_utc=_now_utc,
-            now_local=_now_utc.astimezone(),
-            cache_dir=Path(os.environ.get("CICD_CACHE_DIR", platformdirs.user_cache_path("cicd"))),
-            config_dir=Path(os.environ.get("CICD_CONFIG_DIR", platformdirs.user_config_path("cicd"))),
+            now_utc=now_utc,
+            now_local=now_utc.astimezone(),
+            cache_dir=Path(os.environ.get("TYRANNO_CACHE_DIR", platformdirs.user_cache_path("tyranno"))),
+            config_dir=Path(os.environ.get("TYRANNO_CONFIG_DIR", platformdirs.user_config_path("tyranno"))),
             trash_dir_name=".#trash~",
         )

@@ -26,8 +26,8 @@ ARG PYTHON_VERSION="3.13"
 
 # Start the stage "builder", and download uv.
 FROM python:$PYTHON_VERSION:alpine$ALPINE_VERSION as builder
-SHELL ["/bin/bash", "-c"]
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+SHELL ["/bin/bash", "-c"]
 
 # Environment variables
 ENV PATH=/root/.cargo/bin/:/root/.local/bin:$PATH
@@ -50,7 +50,7 @@ ENV UV_COMPILE_BYTECODE=yes
 # Then, we'll create a new stage containing only our installed package, as described in
 # https://docs.astral.sh/uv/guides/integration/docker/#non-editable-installs
 
-WORKDIR /app
+WORKDIR /var/app
 
 # Install the dependencies in one layer.
 RUN \
@@ -60,17 +60,18 @@ RUN \
   uv sync --frozen --no-dev --no-editable --no-install-project
 
 # Copy the source and build/install it in another layer.
-COPY . /app/
+COPY . /var/app/
 RUN \
   --mount=type=cache,target=/root/.cache/uv \
   uv sync --frozen --no-dev --no-editable
 
+# ******************** In production only! ************************
 #
 # -------------------- Run in a fresh stage --------------------
-
 # Make a new stage that contains only the final venv.
-FROM python:$PYTHON_VERSION:alpine$ALPINE_VERSION
-COPY --from=builder --chown=app:app /app/.venv /app/.venv
+# FROM python:$PYTHON_VERSION:alpine$ALPINE_VERSION
+# COPY --from=builder --chown=app:app /var/app/.venv /var/app/.venv
+# *****************************************************************
 
 # Expose HTTP 1.1 & 2.0 on TCP/80, HTTPS 1.1 & 2.0 on TCP/443, and HTTP/3 on UDP/443.
 EXPOSE 80
@@ -78,7 +79,7 @@ EXPOSE 443
 EXPOSE 443/udp
 
 ENTRYPOINT [
-  "/app/.venv/bin/hypercorn",
+  "/var/app/.venv/bin/hypercorn",
   "cicd.api:app"
 ]
 CMD [

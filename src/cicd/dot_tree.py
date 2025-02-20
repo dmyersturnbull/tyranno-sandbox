@@ -6,19 +6,17 @@ Utilities for working with nested dicts, using `.` as a subkey delimiter.
 See [DotTree][].
 """
 
-from __future__ import annotations
-
 import json
 import re
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from re import Pattern
-from typing import TYPE_CHECKING, Any, overload, ClassVar
+from typing import TYPE_CHECKING, overload, ClassVar
 
 if TYPE_CHECKING:
-    from typing import Self, TypeGuard
-    from collections.abc import Generator, Callable
+    from typing import Any, Self, TypeGuard
+    from collections.abc import Callable, Generator
 
 type Primitive = str | int | float | bool | date | datetime | time
 type Array = list[Toml]
@@ -43,18 +41,18 @@ class Checker:
 
     @classmethod
     @overload
-    def check(cls: type[Self], node: Branch, /) -> Branch: ...
+    def check(cls, node: Branch, /) -> Branch: ...
 
     @classmethod
     @overload
-    def check(cls: type[Self], node: Array, /) -> Array: ...
+    def check(cls, node: Array, /) -> Array: ...
 
     @classmethod
     @overload
-    def check(cls: type[Self], node: Primitive, /) -> Primitive: ...
+    def check(cls, node: Primitive, /) -> Primitive: ...
 
     @classmethod
-    def check(cls: type[Self], node: Toml, /) -> Toml:
+    def check(cls, node: Toml, /) -> Toml:
         if isinstance(node, dict | list):
             cls.check_keys(node)
             cls.check_values(node)
@@ -64,14 +62,14 @@ class Checker:
 
     @classmethod
     @overload
-    def check_keys(cls: type[Self], node: Branch, /) -> Branch: ...
+    def check_keys(cls, node: Branch, /) -> Branch: ...
 
     @classmethod
     @overload
-    def check_keys(cls: type[Self], node: Array, /) -> Array: ...
+    def check_keys(cls, node: Array, /) -> Array: ...
 
     @classmethod
-    def check_keys(cls: type[Self], node: Branch | Array, /) -> Branch | Array:
+    def check_keys(cls, node: Branch | Array, /) -> Branch | Array:
         """
         Recursively, verifies that keys are `str` that don't contain `.`.
         """
@@ -93,14 +91,14 @@ class Checker:
 
     @classmethod
     @overload
-    def check_values(cls: type[Self], node: Branch, /) -> Branch: ...
+    def check_values(cls, node: Branch, /) -> Branch: ...
 
     @classmethod
     @overload
-    def check_values(cls: type[Self], node: Array, /) -> Array: ...
+    def check_values(cls, node: Array, /) -> Array: ...
 
     @classmethod
-    def check_values(cls: type[Self], node: Branch | Array, /) -> Branch | Array:
+    def check_values(cls, node: Branch | Array, /) -> Branch | Array:
         """
         Recursively, verifies that values have valid types.
         """
@@ -118,20 +116,20 @@ class Checker:
         return node
 
     @classmethod
-    def check_primitive[T](cls: type[Self], value: T, /) -> T:
-        if not isinstance(value, cls.primitive_type):
+    def check_primitive[T](cls, value: T, /) -> T:
+        if not cls.is_primitive(value):
             msg = f"Invalid type {type(value)}"
             raise TypeError(msg)
         return value
 
     @classmethod
-    def is_primitive(cls: type[Self], value: Any, /) -> TypeGuard[Primitive]:
-        return isinstance(value, cls.primitive_type)
+    def is_primitive(cls, value: Any, /) -> TypeGuard[Primitive]:
+        return isinstance(value, str | int | float | bool | date | datetime | time)
 
 
 class Utils:
     @classmethod
-    def nest(cls: type[Self], items: Branch, /) -> Branch:
+    def nest(cls, items: Branch, /) -> Branch:
         """
         Converts a dict with dotted keys to a nested dict.
         However, won't complain if `items` contains nested items.
@@ -142,11 +140,11 @@ class Utils:
             {"genus": {"species": "bat"}}
         """
         dct = {}
-        cls._nest(dct, items)
+        cls._nest(dct, "", items)
         return dct
 
     @classmethod
-    def _nest(cls: type[Self], to: Branch, at: str, items: Toml) -> None:
+    def _nest(cls, to: Branch, at: str, items: Toml) -> None:
         if "." in at:
             k0, k1 = at.split(".", 1)
             if k0 not in to:
@@ -173,7 +171,7 @@ class Utils:
             to[at] = items
 
     @classmethod
-    def dotify(cls: type[Self], items: Branch, /) -> Branch:
+    def dotify(cls, items: Branch, /) -> Branch:
         """
         Converts a nested dict to a dict with dotted keys.
         However, won't complain if a key in (or nested in) `items` contains `.`.
@@ -187,14 +185,14 @@ class Utils:
 
     @classmethod
     @overload
-    def _dotify(cls: type[Self], at: str, items: Branch) -> Generator[tuple[str, Leaf]]: ...
+    def _dotify(cls, at: str, items: Branch) -> Generator[tuple[str, Leaf]]: ...
 
     @classmethod
     @overload
-    def _dotify(cls: type[Self], at: str, items: Leaf) -> Generator[Leaf]: ...
+    def _dotify(cls, at: str, items: Leaf) -> Generator[Leaf]: ...
 
     @classmethod
-    def _dotify(cls: type[Self], at: str, items: Branch | Array) -> Generator[tuple[str, Leaf] | Leaf]:
+    def _dotify(cls, at: str, items: Branch | Array) -> Generator[tuple[str, Leaf] | Leaf]:
         if isinstance(items, dict):
             for k, v in items.items():
                 nxt = f"{at}.{k}" if at == "" else k
@@ -256,7 +254,7 @@ class DotTree(dict[str, Toml]):
           Be aware that any empty branches will be discarded.
     """
 
-    def __init__(self: Self, /, x: Branch) -> None:
+    def __init__(self, /, x: Branch) -> None:
         """Constructs a tree from a nested dict (approximately identical to `dict(x)`)."""
         if not isinstance(x, dict):
             msg = f"Not a dict; actually {type(x)} (value: '{x}')"
@@ -264,7 +262,7 @@ class DotTree(dict[str, Toml]):
         super().__init__(x)
 
     @classmethod
-    def from_mixed(cls: type[Self], x: Branch, /) -> None:
+    def from_mixed(cls, x: Branch, /) -> Self:
         """
         Builds from a potential mixture of nested and `"."`-separated keys.
 
@@ -280,7 +278,7 @@ class DotTree(dict[str, Toml]):
         return cls(Utils.nest(Utils.dotify(x)))
 
     @classmethod
-    def from_nested(cls: type[Self], x: Branch, /) -> Self:
+    def from_nested(cls, x: Branch, /) -> Self:
         """
         Creates a tree from a nested dict.
         In contrast to the constructor, this verifies that the keys are valid.
@@ -292,7 +290,7 @@ class DotTree(dict[str, Toml]):
         return cls(Checker.check(x))
 
     @classmethod
-    def from_dotted(cls: type[Self], x: Limb, /) -> Self:
+    def from_dotted(cls, x: Limb, /) -> Self:
         """
         Creates a new tree from a dict of leaves.
 
@@ -309,7 +307,7 @@ class DotTree(dict[str, Toml]):
         """
         return cls(Utils.nest(x))
 
-    def transform_leaves(self: Self, fn: Callable[[str, Leaf], Leaf | None], /) -> Self:
+    def transform_leaves(self, fn: Callable[[str, Leaf], Leaf | None], /) -> Self:
         """
         Applies a function to each leaf, returning a new tree.
 
@@ -325,13 +323,13 @@ class DotTree(dict[str, Toml]):
             `dot_dict.transform_leaves(lambda v: v)` is equivalent to [normalize][].
         """
         x = {k: fn(k, v) for k, v in self.leaves()}
-        return self.__class__.from_leaves({k: v for k, v in x.items() if v is not None})
+        return self.__class__.from_dotted({k: v for k, v in x.items() if v is not None})
 
-    def normalize(self: Self) -> Self:
+    def normalize(self) -> Self:
         """Removes all empty branches."""
-        return self.__class__.from_leaves(self.leaves())
+        return self.__class__.from_dotted(self.leaves())
 
-    def walk(self: Self) -> Generator[Toml]:
+    def walk(self) -> Generator[Toml]:
         """Iterates over the branches and leaves, depth-first."""
         for value in self.values():
             if isinstance(value, dict):
@@ -339,7 +337,7 @@ class DotTree(dict[str, Toml]):
             else:
                 yield value
 
-    def limbs(self: Self) -> dict[str, Limb]:
+    def limbs(self) -> dict[str, Limb]:
         """
         Maps each bottom-level branch to a dict of its leaves.
         Leaves directly under the root are assigned to key `""`.
@@ -353,7 +351,7 @@ class DotTree(dict[str, Toml]):
             dicts[k0][k1] = v
         return dicts
 
-    def leaves(self: Self) -> Limb:
+    def leaves(self) -> Limb:
         """
         Gets the leaves in this tree; e.g. `{"info.pet.genus": "Felis", "info.pet.species": "catus"}`.
 
@@ -368,7 +366,7 @@ class DotTree(dict[str, Toml]):
                 dct[key] = value
         return dct
 
-    def demand_subtree(self: Self, keys: str, /) -> Self:
+    def demand_subtree(self, keys: str, /) -> Self:
         """
         Returns the subtree under the `.`-delimited key string, `keys`.
 
@@ -378,7 +376,7 @@ class DotTree(dict[str, Toml]):
         """
         return self.__class__(self._access(keys))
 
-    def request_subtree(self: Self, keys: str, /, default: Branch | None = None) -> Self:
+    def request_subtree(self, keys: str, /, default: Branch | None = None) -> Self:
         """
         Returns the subtree under the `.`-delimited key string, `keys`.
         If `keys` is not found, returns `default`; returns `{}` if `default=None`.
@@ -393,9 +391,9 @@ class DotTree(dict[str, Toml]):
         return self.__class__(x)
 
     @overload
-    def request_primitive_as[T: Primitive](self: Self, keys: str, /, as_type: type[T], default: T) -> T: ...
+    def request_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T], default: T) -> T: ...
 
-    def request_primitive_as[T: Primitive](self: Self, keys: str, /, as_type: type[T], default: T | None = None) -> T:
+    def request_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T], default: T | None = None) -> T:
         """
         Returns a primitive value after checking its type, or `default` if not found.
 
@@ -411,7 +409,7 @@ class DotTree(dict[str, Toml]):
             raise TypeError(msg)
         return x
 
-    def demand_primitive_as[T: Primitive](self: Self, keys: str, /, as_type: type[T]) -> T:
+    def demand_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T]) -> T:
         """
         Returns a value after checking its type, or raises a `KeyError` if not found.
 
@@ -425,22 +423,21 @@ class DotTree(dict[str, Toml]):
             raise TypeError(msg)
         return x
 
-    def request_list[T: Primitive](self: Self, keys: str, /, default: list[T] | None = None) -> list[T]:
+    def request_list(self, keys: str, /, default: Array | None = None) -> Array:
         """
         Returns a list, or `default` if not found.
         `default=None` is equivalent to `default=[]`.
         """
         try:
             v = self._access(keys)
-            if not isinstance(v, list):
-                msg = f"Value from key {keys} is not a list"
-                raise TypeError(msg)
         except KeyError:
             return [] if default is None else default
+        if not isinstance(v, list):
+            msg = f"Value from key {keys} is not a list"
+            raise TypeError(msg)
+        return v
 
-    def request_list_as[T: Primitive](
-        self: Self, keys: str, /, as_type: type[T], default: list[T] | None = None
-    ) -> list[T]:
+    def request_list_as[T: Primitive](self, keys: str, /, as_type: type[T], default: list[T] | None = None) -> list[T]:
         """
         Returns a list, or `default` if not found, checking the types of the list elements.
         `default=None` is equivalent to `default=[]`.
@@ -460,7 +457,7 @@ class DotTree(dict[str, Toml]):
             raise TypeError(msg)
         return x
 
-    def demand_list_as[T: Primitive](self: Self, keys: str, /, as_type: type[T]) -> list[T]:
+    def demand_list_as[T: Primitive](self, keys: str, /, as_type: type[T]) -> list[T]:
         """
         Returns a list after checking the types of its elements, or raises a `KeyError`.
 
@@ -478,9 +475,9 @@ class DotTree(dict[str, Toml]):
         return x
 
     @overload
-    def request_primitive[T: Primitive](self: Self, keys: str, /, default: T) -> T: ...
+    def request_primitive[T: Primitive](self, keys: str, /, default: T) -> T: ...
 
-    def request_primitive[T: Primitive](self: Self, keys: str, /, default: T | None = None) -> T | None:
+    def request_primitive[T: Primitive](self, keys: str, /, default: T | None = None) -> T | None:
         """
         Returns a primitive value, or `default` if not found.
 
@@ -493,7 +490,7 @@ class DotTree(dict[str, Toml]):
             return default
         return Checker.check_primitive(v)
 
-    def demand_primitive(self: Self, keys: str) -> Primitive:
+    def demand_primitive(self, keys: str) -> Primitive:
         """
         Returns a primitive value, or raises a `KeyError`.
 
@@ -503,7 +500,7 @@ class DotTree(dict[str, Toml]):
         """
         return Checker.check_primitive(self._access(keys))
 
-    def request(self: Self, keys: str) -> Toml | None:
+    def request(self, keys: str) -> Toml | None:
         """
         Returns a value from the `.`-delimited `keys`, falling back to `None`.
         """
@@ -512,7 +509,7 @@ class DotTree(dict[str, Toml]):
         except KeyError:
             return None
 
-    def demand(self: Self, keys: str) -> Toml:
+    def demand(self, keys: str) -> Toml:
         """
         Returns a value from the `.`-delimited `keys`, or raises a `KeyError`.
 
@@ -521,7 +518,7 @@ class DotTree(dict[str, Toml]):
         """
         return self._access(keys)
 
-    def _access(self: Self, keys: str) -> Toml:
+    def _access(self, keys: str) -> Toml:
         x = self
         split = keys.split(".")
         for i, k in enumerate(split):
@@ -532,32 +529,32 @@ class DotTree(dict[str, Toml]):
                 raise KeyError(msg) from None
         return x
 
-    def __rich_repr__(self: Self) -> str:
+    def __rich_repr__(self) -> str:
         """See [print][]."""
         return self.print()
 
-    def print(self: Self) -> str:
+    def print(self) -> str:
         """Pretty-prints the leaves of this dict using `json.dumps`."""
         return json.dumps(self, ensure_ascii=True, indent=2)
 
 
 class DotTrees:
     @classmethod
-    def from_json(cls: type[Self], data: str, /) -> DotTree:
+    def from_json(cls, data: str, /) -> DotTree:
         """Builds a tree from a JSON string."""
         import json
 
         return DotTree.from_nested(json.loads(data))
 
     @classmethod
-    def from_toml(cls: type[Self], data: str, /) -> DotTree:
+    def from_toml(cls, data: str, /) -> DotTree:
         """Builds a tree from a TOML string, parsed with `tomllib`."""
         import tomllib
 
         return DotTree.from_nested(tomllib.loads(data))
 
     @classmethod
-    def to_json(cls: type[Self], tree: DotTree) -> str:
+    def to_json(cls, tree: DotTree) -> str:
         """Converts to JSON, raising `ValueError` for `NaN`, `Inf`, and `-Inf` values."""
         import json
 

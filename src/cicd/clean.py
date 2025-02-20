@@ -9,7 +9,6 @@ import shutil
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Self
 
 from cicd.context import Context
 
@@ -22,13 +21,13 @@ class Cleaner:
 
     context: Context
 
-    def run(self: Self) -> Iterator[Path]:
+    def run(self) -> Iterator[Path]:
         for path in self.context.find_trash():
             self._trash(path)
             yield path
 
-    def _trash(self: Self, source: Path) -> None:
+    def _trash(self, source: Path) -> None:
         dest = self.context.trash_dir / source
-        if not self.dry_run:
+        if not self.context.dry_run:
             dest.parent.mkdir(exist_ok=True, parents=True)
             shutil.move(str(source), str(dest))

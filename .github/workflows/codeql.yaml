@@ -18,11 +18,14 @@ on:
       - synchronize
       - edited
     paths:
+      - "pyproject.toml"
       - "**/*.py"
       - "**/*.ts"
       - "**/*.js"
       - "**/*.sh"
       - "**/*.java"
+      - "**/*.scala"
+      - "**/*.kt"
       - "**/*.rs"
       - "**/*.c"
       - "**/*.cpp"
@@ -41,21 +44,22 @@ jobs:
     name: Test building docs
     runs-on: ubuntu-latest
     if: >
-      github.event_name == 'pull_request'
-      && (
-        github.event.action == 'ready_for_review'
-        || github.event.pull_request.draft == false
+      (
+        github.event_name == 'pull_request'
         && (
-          github.event.action == 'opened'
-          || github.event.action == 'edited'
-          || github.event.action == 'synchronize'
+          github.event.action == 'ready_for_review'
+          || (
+            contains(fromJSON('["opened", "edited", "synchronize"]'), github.event.action)
+            && (
+              !contains(github.event.pull_request, 'draft')
+              || github.event.pull_request.draft == false
+            )
+          )
         )
-      )
-      || github.event_name == 'issue_comment'
-      && github.event.action == 'created'
-      && (
-        github.event.comment.body == '/please-review'
-        || github.event.comment.body == '/please-check-quality'
+      ) || (
+        github.event_name == 'issue_comment'
+        && github.event.action == 'created'
+        && contains(fromJSON('["/please-review", "/please-check-quality"]'), github.event.comment.body)
       )
     # Runner size impacts CodeQL analysis time
     # See https://gh.io/recommended-hardware-resources-for-running-codeql
@@ -67,19 +71,17 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.13"
-      - name: Run ruff --no-fix
+          enable-cache: true
+      - name: Run ruff check --no-fix
         id: ruff
         run: |
-          uvx ruff check --no-fix .
-      - name: Log Ruff outcome
-        run: |
-          v=[[ ${{ steps.ruff.outcome }} == success ]]
-          echo "Ruff linting: $( (( v == 0 )) && echo ✅ || echo ⚠️ )"
+          uv run --frozen ruff check --no-fix
       - uses: github/codeql-action/init@v3
       - uses: github/codeql-action/autobuild@v3
       - id: codeql
         uses: github/codeql-action/analyze@v3
-      - name: Log CodeQL outcome
+      - name: Log outcomes
         run: |
-          v=[[ ${{ steps.codeql.outcome }} == success ]]
-          echo "CodeQL linting: $( (( v == 0 )) && echo ✅ || echo ⚠️ )"
+          ruff="$( [[ ${{ steps.ruff.outcome }} == success ]] && echo ✅ || echo ⚠️ ))"
+          codeql="$( [[ ${{ steps.codeql.outcome }} == success ]] && echo ✅ || echo ⚠️ ))"
+          printf "\n\n---\n## Outcomes ##\n**Ruff: %s**\n**CodeQL %s:**\n\n" "$ruff" "$codeql"

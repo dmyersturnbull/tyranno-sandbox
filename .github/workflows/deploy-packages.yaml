@@ -24,7 +24,6 @@ run-name: ${{ github.workflow }} for ${{ github.ref_name }}
 on:
   push:
     tags:
-      # Note: Mike (https://pypi.org/project/mike/) handles the 'latest' tag
       - '^v(\d+)\.(\d+)\.(\d+)(?:-(alpha|beta|preview|rc))?$' # match all semver, including prerelease
       #- '^v(\d+)\.(\d+)\.(\d+)$' # match all non-prerelease semver
       #- '^v(\d+)\.([1-9]\d*)\.(\d+)$' # OR: match only 0.1.0+ (non-prerelease)
@@ -57,6 +56,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.13"
+          enable-cache: true
       - name: Install Hatch, and build
         run: |
           uv build --sdist --wheel
@@ -97,8 +97,11 @@ jobs:
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          # NOTE: This breaks if the tag includes build metadata that contains '-'
-          # Tags really shouldn't include build metadata, only specific files for download (if needed).
+          # PEP 440 allows `-`, `_`, `.`, or `` as a pre-release separator.
+          # Semver only allows `-`.
+          # That's by far the best choice anyway, so we'll only look for that.
+          # This breaks if the tag includes build metadata that contains '-'; e.g. `+linux-x86_64`.
+          # That's not compatible with PEP 440 anyway.
           draft: ${{contains(github.ref_name, '-') }}
           generate_release_notes: true
           fail_on_unmatched_files: true
@@ -118,7 +121,9 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.13"
-      - name: Publish to PyPi via Hatch
+          enable-cache: true
+      - name: Publish to PyPi using uv.
+        # See: https://docs.pypi.org/trusted-publishers/adding-a-publisher/
         run: |
           uv publish
 
@@ -130,8 +135,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      #- name: Set up QEMU
+      #  uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Extract Docker metadata

@@ -10,37 +10,37 @@ import contextlib
 import io
 import logging
 import time
-from datetime import datetime
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from pathlib import Path, PurePath
-from typing import TYPE_CHECKING, Self
+from types import TracebackType
+from typing import Self
+from collections.abc import Generator
+
+__all__ = ["TestHelper", "logger"]
+
 from zoneinfo import ZoneInfo
 
-if TYPE_CHECKING:
-    from types import TracebackType
-
-__all__ = ["TestHelper"]
-
 # Separate logging in the main package vs. inside test functions
-logger_name = Path(__file__).parent.parent.name.upper() + ".TEST"
-_logger = logging.getLogger(logger_name)
+logger = logging.getLogger(Path(__file__).parent.parent.name + "::test")
 
 
 class Capture(contextlib.ExitStack):
-    def __init__(self: Self) -> None:
+    def __init__(self) -> None:
         super().__init__()
         self._stdout = io.StringIO()
         self._stderr = io.StringIO()
 
     @property
-    def stdout(self: Self) -> str:
+    def stdout(self) -> str:
         return self._stdout.getvalue()
 
     @property
-    def stderr(self: Self) -> str:
+    def stderr(self) -> str:
         return self._stderr.getvalue()
 
-    def __enter__(self: Self) -> Self:
-        _logger.debug("Capturing stdout and stderr")
+    def __enter__(self) -> Self:
+        logger.debug("Capturing stdout and stderr")
         super().__enter__()
         self._stdout_context = self.enter_context(contextlib.redirect_stdout(self._stdout))
         # If the next line failed, the stdout context wouldn't exit
@@ -48,37 +48,31 @@ class Capture(contextlib.ExitStack):
         self._stderr_context = self.enter_context(contextlib.redirect_stderr(self._stderr))
         return self
 
-    def __exit__(self: Self, exc_type: type[BaseException], exc_value: BaseException, traceback: TracebackType) -> None:
-        _logger.debug("Finished capturing stdout and stderr")
+    def __exit__(self, exc_type: type[BaseException], exc_value: BaseException, traceback: TracebackType) -> None:
+        logger.debug("Finished capturing stdout and stderr")
         # The ExitStack handles everything
         super().__exit__(exc_type, exc_value, traceback)
 
 
+@dataclass(frozen=True, slots=True)
 class TestHelper:
     """
-    A static singleton with utilities for filesystem operations in tests.
-    Use `TestResources.resource` to get a file under `tests/resources/`.
-
-    Initializes a temporary directory with `tempfile.TemporaryDirectory`
-    and populates it with a single subdirectory, `TestResources.global_temp_dir`.
-    Temp directories for independent tests can be created underneath using
-    `TestResources.temp_dir`.
+    A set of utilities for tests classes.
+    Use [resource][] to get a file under `tests/resources/`.
     """
 
-    logger = _logger
-
-    _start_dt = datetime.now(ZoneInfo("Etc/UTC")).astimezone()
-    _start_ns = time.monotonic_ns()
+    _start_dt: datetime = field(default_factory=lambda: datetime.now().astimezone(), init=False)
+    _start_s: float = field(default_factory=lambda: time.monotonic(), init=False)
 
     @classmethod
     @contextlib.contextmanager
-    def capture(cls: type[Self]) -> Capture:
+    def capture(cls) -> Generator[Capture]:
         """
         Context manager that captures stdout and stderr in a `Capture` object that contains both.
         Useful for testing code that prints to stdout and/or stderr.
 
         Yields:
-            A `Capture` instance, which contains `.stdout` and `.stderr`
+            A [Capture][] instance, which contains `.stdout` and `.stderr`
         """
         with Capture() as cap:
             yield cap
@@ -95,3 +89,19 @@ class TestHelper:
             The Path `resources`/`<node-1>`/`<node-2>`/.../`<node-n>`
         """
         return Path(__package__, "resources", *nodes).resolve()
+
+    @property
+    def start_datetime(self) -> datetime:
+        return self._start_dt
+
+    @property
+    def start_timestamp_safe_local(self) -> str:
+        return self._start_dt.strftime("%Y-%m-%d %H-%M-%S.%f%z")
+
+    @property
+    def start_timestamp_safe_utc(self) -> str:
+        return self._start_dt.astimezone(ZoneInfo("Etc/UTC")).strftime("%Y-%m-%d %H-%M-%S.%fZ")
+
+    @property
+    def time_elapsed(self) -> timedelta:
+        return timedelta(seconds=time.monotonic() - self._start_s)

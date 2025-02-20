@@ -14,15 +14,16 @@ end_of_line=lf
 charset=utf-8
 indent_style=space
 indent_size=2
-trim_trailing_whitespace=true
+trim_trailing_whitespace=true # (For Markdown `<br />`, use `\`.)
 insert_final_newline=true
 # In 2022, most languages are 2-space
 # We assume TypeScript to be 2-space because JavaScript and JSX so strongly are,
 # and we'd rather keep those two consistent.
 
-#[*.md]
-# using \ is better
-#trim_trailing_whitespace=false
+[justfile]
+indent_size=4
+max_line_length=120
+# https://github.com/casey/just
 
 [*.{julia,rs,d,cpp,c,m,mm,f99,inc,h,s,asm}]
 indent_size=4

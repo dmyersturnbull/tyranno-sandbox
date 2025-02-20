@@ -124,9 +124,7 @@ celerybeat-schedule
 
 # pre-commit
 !/.pre-commit-config.yaml
-!/.pre-commit-config.yml
 !/.pre-commit-hooks.yaml
-!/.pre-commit-hooks.yml
 
 # Ignore files
 !/.gitignore
@@ -146,23 +144,11 @@ celerybeat-schedule
 !/.cz.toml
 !/.flake8
 !/.editorconfig
-!.prettierrc.yaml
-!.prettierrc.yml
-!.prettierrc.json
-!.prettierrc.json5
-!.prettierrc.toml
-!.prettierrc.js
-!.prettierrc.mjs
-!.prettierrc.cjs
+!.prettierrc.*
 
 # External service config
 !/.readthedocs.yaml
-!/.readthedocs.yml
 !/.scrutinizer.yaml
-!/.scrutinizer.yml
-!/.travis.yml
 !/.travis.yaml
 !/.circleci/config.yaml
-!/.circleci/config.yml
 !/.appveyor.yaml
-!/.appveyor.yml

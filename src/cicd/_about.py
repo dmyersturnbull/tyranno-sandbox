@@ -12,7 +12,6 @@ while your `mypkg/__init__.py` includes lines like `from mypkg.app import Entry`
 """
 
 from dataclasses import dataclass, asdict
-from typing import Self
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -28,8 +27,9 @@ class UrlDict:
     funding: str | None = None
 
     @property
-    def as_dict(self: Self) -> dict[str, str | list[str] | dict[str, str]]:
+    def as_dict(self) -> dict[str, str | list[str] | dict[str, str]]:
         """Returns a JSON-compatible dictionary."""
+        # noinspection PyTypeChecker
         return asdict(self)
 
 
@@ -66,8 +66,9 @@ class About:
     urls: UrlDict
 
     @property
-    def as_dict(self: Self) -> dict[str, str | list[str] | dict[str, str]]:
+    def as_dict(self) -> dict[str, str | list[str] | dict[str, str]]:
         """Returns a JSON-compatible dictionary."""
+        # noinspection PyTypeChecker
         return asdict(self)
 
 

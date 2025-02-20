@@ -16,17 +16,7 @@ on:
 jobs:
   format:
     if: >
-      github.event_name == 'pull_request'
-      && (
-        github.event.action == 'ready_for_review'
-        || github.event.pull_request.draft == false
-        && (
-          github.event.action == 'opened'
-          || github.event.action == 'edited'
-          || github.event.action == 'synchronize'
-        )
-      )
-      || github.event_name == 'issue_comment'
+      github.event_name == 'issue_comment'
       && github.event.action == 'created'
       && github.event.comment.body == '/please-format'
     runs-on: ubuntu-latest
@@ -38,13 +28,14 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.13"
+          enable-cache: true
 
       - name: Run pre-commit hooks
         # Run once to format, etc.
         # Run again to check.
         run: |
-          pre-commit run --all-files || true
-          pre-commit run --all-files
+          uvx pre-commit run --all-files || true
+          uvx pre-commit run --all-files
 
       # Compress images
       - name: Compress Images
@@ -68,7 +59,7 @@ jobs:
           git add uv.lock
           git commit -m "build: update uv lock file" || echo "No changes found."
 
-      - name: Force-push changes
+      - name: Push changes
         if: success() && steps.commit.outputs.commit != ''
         run: |
           # we could use --force-with-lease if --amend -ing

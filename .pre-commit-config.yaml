@@ -9,6 +9,9 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+      - id: check-added-large-files
+        args:
+          - --maxkb=256
       - id: forbid-submodules # ban Git submodules
       - id: check-case-conflict # ban ABC and abc both existing
       - id: check-illegal-windows-names # ban filenames that are illegal on Windows
@@ -22,13 +25,13 @@ repos:
 
   # UV lock
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.5.18
+    rev: 0.5.31
     hooks:
       - id: uv-lock
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.2
+    rev: v0.9.6
     hooks:
       - id: ruff
         args:

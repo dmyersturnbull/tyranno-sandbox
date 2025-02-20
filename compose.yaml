@@ -1,18 +1,11 @@
-version: "3.8"
 services:
   web:
     build: .
     volumes:
       - .:/var/lib/app/
     ports:
-      - "80:80/tcp"
-      - "443:443/tcp"
-      - "80:80/udp"
-      - "443:443/udp"
-    expose:
-      - "80:80/tcp"
-      - "443:443/tcp"
-      - "80:80/udp"
+      - "80:80"
+      - "443:443"
       - "443:443/udp"
     environment:
       - POSTGRES_URI=postgres://user:password@postgres:5432/app
@@ -20,37 +13,31 @@ services:
     depends_on:
       - mongodb
       - postgres
-    networks:
-      - default
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+
   postgres:
-    image: postgres:17beta1
+    image: postgres:17
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=app
     restart: unless-stopped
     volumes:
-      - type: volume
-        source: data
-        target: /var/lib/postgresql/data/
-      - type: volume
-        source: ./src/sql/init.sql
-        target: /docker-entrypoint-initdb.d/0-init.sql
-    ports:
-      - "5432:5432/tcp"
+      - postgres:/var/lib/postgresql/data
+      - ./src/sql/init.sql:/docker-entrypoint-initdb.d/0-init.sql # bind mount
+
   mongodb:
-    image: mongo:8.0.0
+    image: mongo:8
     restart: unless-stopped
-    ports:
-      - "27017:27017/tcp"
     volumes:
-      - type: volume
-        source: data
-        target: /var/lib/mongodb
-    networks:
-      - default
+      - mongo:/var/lib/mongodb
+
   elastic:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.1
+    image: elasticsearch:8.17.1
     environment:
       - node.name=elasticsearch
       - cluster.name=elasticsearch
@@ -63,14 +50,15 @@ services:
         soft: -1
         hard: -1
     volumes:
-      - type: volume
-        source: data
-        target: /usr/share/elasticsearch/data
+      - elastic:/usr/share/elasticsearch/data
     ports:
-      - "9200:9200/tcp"
+      - "9200:9200"
 
 volumes:
-  data:
+  postgres:
+  mongo:
+  elastic:
 
 networks:
   default:
+    enable_ipv6: true

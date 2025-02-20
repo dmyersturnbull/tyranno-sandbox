@@ -103,7 +103,9 @@ default-python-version = "3.13.1"
 ### ✏️ How to start
 
 First, [install uv](https://docs.astral.sh/uv/getting-started/installation/).
-(I also recommend the [GitHub CLI](https://cli.github.com/).)
+I also recommend [just](https://github.com/casey/just)
+and the
+[GitHub CLI](https://cli.github.com/).
 
 1. Clone this repo with `git clone` or
    ["Use this template"](https://github.com/new?template_name=cicd&template_owner=dmyersturnbull).
@@ -112,7 +114,7 @@ First, [install uv](https://docs.astral.sh/uv/getting-started/installation/).
    For example, if you don’t use Docker, delete `Dockerfile` and `compose.yaml`.
 4. Add your code to `src/` and `tests/`.
    (Consider keeping the `_about.py`.)
-5. Run `uv lock --upgrade`, `uv sync`, `uvx pre-commit install`, and `uvx pre-commit --all-files`.
+5. Run `just lock` uvx pre-commit install`, and `uvx pre-commit --all-files`.
 
 Do whatever after that.
 I recommend a PR-only workflow, and using
@@ -126,7 +128,7 @@ is a popular alternative to GitHub’s feature.
 
 ### 🍁 Contributing
 
-[New issues](https://github.com/dmyersturnbull/cicd/issues) and pull requests are welcome.
+New issues and pull requests are welcome.
 Please refer to the [contributing guide](https://github.com/dmyersturnbull/cicd/blob/master/CONTRIBUTING.md)
 and [security policy](https://github.com/dmyersturnbull/cicd/blob/main/SECURITY.md).
 

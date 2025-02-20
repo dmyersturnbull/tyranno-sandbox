@@ -37,21 +37,22 @@ jobs:
     name: Test building docs
     runs-on: ubuntu-latest
     if: >
-      github.event_name == 'pull_request'
-      && (
-        github.event.action == 'ready_for_review'
-        || github.event.pull_request.draft == false
+      (
+        github.event_name == 'pull_request'
         && (
-          github.event.action == 'opened'
-          || github.event.action == 'edited'
-          || github.event.action == 'synchronize'
+          github.event.action == 'ready_for_review'
+          || (
+            contains(fromJSON('["opened", "edited", "synchronize"]'), github.event.action)
+            && (
+              !contains(github.event.pull_request, 'draft')
+              || github.event.pull_request.draft == false
+            )
+          )
         )
-      )
-      || github.event_name == 'issue_comment'
-      && github.event.action == 'created'
-      && (
-        github.event.comment.body == '/please-review'
-        || github.event.comment.body == '/please-check-docs'
+      ) || (
+        github.event_name == 'issue_comment'
+        && github.event.action == 'created'
+        && contains(fromJSON('["/please-review", "/please-check-docs"]'), github.event.comment.body)
       )
     steps:
       - uses: actions/checkout@v4
@@ -60,14 +61,12 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.13"
+          enable-cache: true
       - name: Install dependencies and build docs
+        id: mkdocs
         run: |
-          # Use ⚠️ if there were warnings.
-          mkdocs_output=$( uvx mkdocs build --strict 2>&1 )
-          emoji=$(
-            (( $? != 0 ))
-            && echo "❌"
-            || ( echo "${mkdocs_output}" | grep --quiet "^WARNING  " && echo"⚠️" || echo "✅" )
-          )
-          echo "Docs build: ${emoji}"
-          echo "${mkdocs_output}"
+          uv run --frozen mkdocs build --strict
+      - name: Log
+        run: |
+          v=${{ steps.mkdocs.outcome }}
+          echo "Markdown links: $( [[ ${v} == success ]] && echo ✅ || echo ❌ )"

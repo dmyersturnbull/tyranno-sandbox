@@ -7,14 +7,16 @@ Tests.
 """
 
 import pytest
-from typing import Self
+
+# noinspection PyUnresolvedReferences
+from cicd._about import __about__ as about
 
 
-class TestApp:
+class TestAbout:
     """Tests for running the app."""
 
-    def test_it(self: Self) -> None:
-        assert True
+    def test_about(self) -> None:
+        assert about.namespace == "tyranno"
 
 
 if __name__ == "__main__":
