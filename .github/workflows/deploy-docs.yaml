@@ -38,7 +38,7 @@ jobs:
           enable-cache: true
       - name: Deploy docs for ${{ github.ref_name }}
         run: |
-          uv run --frozen mkdocs build --strict
+          uv run --locked mkdocs build --strict
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .

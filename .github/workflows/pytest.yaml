@@ -76,7 +76,7 @@ jobs:
       - name: Install dependencies and run tests
         id: test
         run: |
-          uv run --frozen pytest
+          uv run --locked pytest -m 'not ux'
           echo "Python tests on ${{os}}/${{python}}: $( (( $? == 0 )) && echo ✅ || echo ❌ )"
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4

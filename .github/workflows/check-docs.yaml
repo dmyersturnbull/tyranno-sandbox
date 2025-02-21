@@ -65,7 +65,7 @@ jobs:
       - name: Install dependencies and build docs
         id: mkdocs
         run: |
-          uv run --frozen mkdocs build --strict
+          uv run --locked mkdocs build --strict
       - name: Log
         run: |
           v=${{ steps.mkdocs.outcome }}

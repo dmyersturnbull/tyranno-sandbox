@@ -20,5 +20,9 @@ Maintainers should instead refer to the
 
 The [`justfile`](justfile) lists useful commands for development.
 Consider
-[installing just](https://github.com/casey/just?tab=readme-ov-file#installation)
+[installing just](https://github.com/casey/just?tab=readme-ov-file#packages)
 so you can run (e.g.) `just format`.
+On Windows, you may need
+[Git for Windows](https://gitforwindows.org/),
+[posh-git](https://github.com/dahlbyk/posh-git),
+or similar.

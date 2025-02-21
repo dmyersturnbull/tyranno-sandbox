@@ -114,7 +114,7 @@ and the
    For example, if you don’t use Docker, delete `Dockerfile` and `compose.yaml`.
 4. Add your code to `src/` and `tests/`.
    (Consider keeping the `_about.py`.)
-5. Run `just lock` uvx pre-commit install`, and `uvx pre-commit --all-files`.
+5. Run `just lock`, `just pre-commit install`, and `uvx pre-commit --all-files`.
 
 Do whatever after that.
 I recommend a PR-only workflow, and using

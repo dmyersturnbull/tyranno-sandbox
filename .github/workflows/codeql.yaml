@@ -75,7 +75,7 @@ jobs:
       - name: Run ruff check --no-fix
         id: ruff
         run: |
-          uv run --frozen ruff check --no-fix
+          uv run --locked ruff check --no-fix
       - uses: github/codeql-action/init@v3
       - uses: github/codeql-action/autobuild@v3
       - id: codeql

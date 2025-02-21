@@ -124,7 +124,7 @@ dev = [
   "pyright[nodejs]>=1.1",
   "pytest>=8.3",
   "pytest-cov>=6.0",
-  "ruff>=0.9.5",
+  "ruff>=0.9.7",
 ]
 
 #
