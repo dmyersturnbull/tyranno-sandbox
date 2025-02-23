@@ -4,9 +4,10 @@
 
 name: codeql
 run-name: >
-  ${{ github.workflow }} \
-  ${{ github.ref_name }} \
-  (triggered by ${{ github.ref_type }})
+  ${{ github.workflow }}
+  ::${{ github.event_name }}
+  ::${{ github.ref_type }}:${{ github.ref_name }}
+  ::@${{ github.actor }}
 
 on:
   merge_group:
@@ -16,9 +17,10 @@ on:
     types:
       - ready_for_review
       - synchronize
+      - opened
       - edited
     paths:
-      - "pyproject.toml"
+      - pyproject.toml
       - "**/*.py"
       - "**/*.ts"
       - "**/*.js"
@@ -32,12 +34,12 @@ on:
   issue_comment:
     types:
       - created
+      - edited
 
 permissions:
   contents: read
   statuses: write
   actions: read
-  security-events: write
 
 jobs:
   codeql:
@@ -58,7 +60,7 @@ jobs:
         )
       ) || (
         github.event_name == 'issue_comment'
-        && github.event.action == 'created'
+        && contains(fromJSON('["created", "edited"]'), github.event.action)
         && contains(fromJSON('["/please-review", "/please-check-quality"]'), github.event.comment.body)
       )
     # Runner size impacts CodeQL analysis time
@@ -82,6 +84,8 @@ jobs:
         uses: github/codeql-action/analyze@v3
       - name: Log outcomes
         run: |
-          ruff="$( [[ ${{ steps.ruff.outcome }} == success ]] && echo ✅ || echo ⚠️ ))"
-          codeql="$( [[ ${{ steps.codeql.outcome }} == success ]] && echo ✅ || echo ⚠️ ))"
-          printf "\n\n---\n## Outcomes ##\n**Ruff: %s**\n**CodeQL %s:**\n\n" "$ruff" "$codeql"
+          printf '\n'
+          printf "%s Ruff lint\n" \
+            "$( [[ ${{ steps.ruff.outcome }} == success ]] && echo ✅ || echo ⚠️ ))"
+          printf "%s CodeQL\n" \
+            "$( [[ ${{ steps.codeql.outcome }} == success ]] && echo ✅ || echo ⚠️ ))"

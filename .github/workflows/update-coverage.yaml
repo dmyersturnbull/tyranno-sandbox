@@ -12,8 +12,9 @@
 name: update-coverage
 run-name: >
   ${{ github.workflow }}
-  on ${{ github.ref_name }}
-  (run=${{ github.run_id }})
+  ::${{ github.event_name }}
+  ::${{ github.ref_type }}:${{ github.ref_name }}
+  ::@${{ github.actor }}
 
 on:
   push:
@@ -29,7 +30,6 @@ permissions:
   contents: write
   statuses: write
   actions: write
-  security-events: write
 
 concurrency:
   group: >
@@ -55,12 +55,12 @@ jobs:
         shell: bash
         run: |
           echo "is_last_report=(( ${{ strategy.job-index }} == ${{ strategy.job-total }} - 1 ))" \
-          >> "${GITHUB_OUTPUT}"
+            >> "$GITHUB_OUTPUT"
       - name: Download coverage artifact for ${{ matrix.os }} / Python ${{ matrix.python }}
         uses: actions/download-artifact@v4
         with:
           name: coverage-${{ matrix.os }}-${{ matrix.python }}
-      - name: Send coverage report for "${{ matrix.os }}-${{ matrix.python }}" to Coveralls
+      - name: Send coverage report for ${{ matrix.os }}-${{ matrix.python }} to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           flag-name: run-${{ matrix.os }}-py${{ matrix.python }}
@@ -87,7 +87,7 @@ jobs:
 
   finalize-codecov-send:
     # This job sends final data to Coveralls to mark the parallel runs as finished.
-    # Will not run if the 'send-to-codecov' job was not cancelled
+    # Will not run if the 'send-to-codecov' job was not cancelled.
     needs: send-to-codecov
     if: !cancelled()
     runs-on: ubuntu-latest
@@ -96,4 +96,4 @@ jobs:
         uses: coverallsapp/github-action@v2
         with:
           parallel-finished: true
-          file: coverage.json
+          file: .coverage.json

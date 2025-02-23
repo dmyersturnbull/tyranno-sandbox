@@ -2,109 +2,103 @@
 # https://cheatography.com/linux-china/cheat-sheets/justfile/
 
 list:
-    just --list --unsorted
-
-###################################################################################################
+  just --list --unsorted
 
 # Delegate to `uv run --locked {}`.
 run *args:
-    uv --locked -- {{args}}
+  uv --locked -- {{args}}
+
+###################################################################################################
 
 # Upgrade the lock file, sync the venv, and install pre-commit hooks.
-prep:
-    uv lock --refresh
-    uv sync --only-dev
-	uv run pre-commit install
+install-hooks:
+  uv lock --refresh
+  uv sync --only-dev
+  uv run pre-commit install --install-hooks --overwrite
 
-# Upgrade pre-commit hooks.
-upgrade-hooks:
-    uv run pre-commit autoupdate
-    uv run pre-commit gc
+# Auto-upgrade pre-commit hooks.
+upgrade-hooks *args:
+  uv run pre-commit autoupdate {{args}}
+  uv run pre-commit gc
+
+###################################################################################################
+
+# Upgrade the lock file, clean, and auto-fix+auto-format changes.
+refresh: lock fix-changes clean
 
 # Upgrade the lock file and sync the venv.
 lock:
-    uv lock --refresh
-    uv sync --only-dev
-alias sync := lock
+  uv lock --refresh
+  uv sync --only-dev --locked
 
-# Remove temporary files.
+# Remove temporary files, including unlinked uv cache files and old Git hooks.
 clean:
-    uv cache prune
-    uv run pre-commit gc
-
-# Upgrade the lock file, clean, and auto-fix+auto-format changes.
-refresh: lock clean fix-changes format-changes
-
-# Creates a pull request on GitHub using the GitHub CLI.
-create-pr:
-    gh pr create --fill --web --draft
+  uv cache prune
+  uv run pre-commit gc
 
 ###################################################################################################
 
-# Format all files using Ruff and Prettier.
-format-all:
-    uv run pre-commit run --all-files ruff-format
-	uv run pre-commit run --all-files prettier
-
-# Format files with uncommitted changes using Ruff and Prettier.
-format-changes:
-    uv run pre-commit run ruff-format
-	uv run pre-commit run prettier
-alias format := format-changes
-
-###################################################################################################
-
-# Auto-fix Ruff rule violations in all files.
+# Run pre-commit hooks on all files.
 fix-all *args:
-	uv run pre-commit run --all-files ruff {{args}}
+  uv run pre-commit run --all-files
 
-# Auto-fix Ruff lint rule violations in all files with uncommitted changes.
-fix-changes *args:
-	uv run pre-commit run ruff {{args}}
+# Run pre-commit hooks on all files with uncommitted changes.
+fix-changes:
+  uv run pre-commit run
 alias fix := fix-changes
 
-# Auto-fix Ruff lint rule violations using `--preview`, `--unsafe-fixes`, and `--ignore-noqa`.
-fix-unsafe *args:
-    uv run ruff check --preview --unsafe-fixes --fix-only {{args}}
+# Auto-fix Ruff violations using `--preview`, `--unsafe-fixes`, and `--ignore-noqa`.
+fix-unsafe:
+  uv run ruff check --fix-only --preview --unsafe-fixes --ignore-noqa
 
 ###################################################################################################
 
 # Find violations of Ruff lint and Pyright typing rules.
-check: check-ruff check-pyright
+check: check-ruff check-pyright check-links
 
-# Find violations Ruff lint rules.
+# Find violations of Ruff lint rules.
 check-ruff *args:
-	uv run ruff check --no-fix {{args}}
+  uv run ruff check --no-fix {{args}}
 
 # Find violations of Bandit-derived `S` Ruff lint rules.
-check-security *args:
-    uv run ruff check --no-fix --select S {{args}}
+check-bandit *args:
+  uv run ruff check --no-fix --select S {{args}}
 
 # Find violations of Pyright typing rules.
 check-pyright *args:
-	uv run pyright {{args}}
+  uv run pyright {{args}}
 # Soon: https://github.com/astral-sh/ruff/issues/3893
+
+# Find broken hyperlinks in Markdown docs.
+check-links *args:
+  uv run pre-commit run markdown-link-check {{args}}
 
 ###################################################################################################
 
 # Run all PyTest tests.
 test *args:
-	uv run pytest {{args}}
+  uv run pytest {{args}}
 
 # Run PyTest tests that are not marked `slow`, `net`, or `ux`.
 test-fast *args:
-	uv run pytest -m 'not (slow or net or ux)' {{args}]}
+  uv run pytest -m 'not (slow or net or ux)' {{args}]}
 
 # List PyTest markers.
 test-markers *args:
-	uv run pytest --markers
+  uv run pytest --markers
 
 ###################################################################################################
 
 # Build the docs, failing for any warnings.
 docs-build *args:
-    uv run mkdocs build --clean --strict {{args}}
+  uv run mkdocs build --clean --strict {{args}}
 
 # Locally serve the docs.
 docs-serve *args:
-    uv run mkdocs serve {{args}}
+  uv run mkdocs serve {{args}}
+
+###################################################################################################
+
+# Creates a pull request on GitHub using the GitHub CLI.
+create-pr:
+  gh pr create --fill-verbose --web --draft

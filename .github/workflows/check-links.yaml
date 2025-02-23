@@ -2,11 +2,14 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# Checks links.
+
 name: check-links
 run-name: >
-  ${{ github.workflow }} \
-  ${{ github.ref_name }} \
-  (triggered by ${{ github.ref_type }})
+  ${{ github.workflow }}
+  ::${{ github.event_name }}
+  ::${{ github.ref_type }}:${{ github.ref_name }}
+  ::@${{ github.actor }}
 
 on:
   merge_group:
@@ -22,12 +25,12 @@ on:
   issue_comment:
     types:
       - created
+      - edited
 
 permissions:
   contents: read
-  statuses: write
+  statuses: read
   actions: read
-  security-events: write
 
 jobs:
   check-links:
@@ -48,18 +51,21 @@ jobs:
         )
       ) || (
         github.event_name == 'issue_comment'
-        && github.event.action == 'created'
+        && contains(fromJSON('["created", "edited"]'), github.event.action)
         && contains(fromJSON('["/please-review", "/please-check-links"]'), github.event.comment.body)
       )
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+          enable-cache: true
       - uses: actions/checkout@v4
       - name: Run linkspector
         uses: umbrelladocs/action-linkspector@v1
         with:
           github_token: ${{ secrets.github_token }}
-          filter_mode: added
-          reporter: ${{ github.event_type == 'schedule' && 'github-check' || 'github-pr-review' }}
-      - name: Log
-        run: |
-          v=${{ steps.linkspector.outcome }}
-          echo "Markdown links: $( [[ ${v} == success ]] && echo ✅ || echo ⚠️ )"
+          # Optional:
+          # reporter: ${{ github.event_type == 'schedule' && 'github-check' || 'github-pr-review' }}

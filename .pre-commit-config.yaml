@@ -40,7 +40,7 @@ repos:
 
   # Format various formats with Prettier
   - repo: https://github.com/JoC0de/pre-commit-prettier
-    rev: v3.5.1
+    rev: v3.5.2
     hooks:
       - id: prettier
         additional_dependencies:

@@ -2,11 +2,14 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# Tests building mkdocs docs.
+
 name: check-docs
 run-name: >
-  ${{ github.workflow }} \
-  ${{ github.ref_name }} \
-  (triggered by ${{ github.ref_type }})
+  ${{ github.workflow }}
+  ::${{ github.event_name }}
+  ::${{ github.ref_type }}:${{ github.ref_name }}
+  ::@${{ github.actor }}
 
 on:
   merge_group:
@@ -16,21 +19,22 @@ on:
     types:
       - ready_for_review
       - synchronize
+      - opened
       - edited
     paths:
-      - "**/*.md"
-      - "**/*.py"
-      - "pyproject.toml"
-      - "mkdocs.yaml"
+      - "src/**/*.py"
+      - docs/
+      - pyproject.toml
+      - mkdocs.yaml
   issue_comment:
     types:
       - created
+      - edited
 
 permissions:
   contents: read
   statuses: write
   actions: read
-  security-events: write
 
 jobs:
   check-docs:
@@ -51,7 +55,7 @@ jobs:
         )
       ) || (
         github.event_name == 'issue_comment'
-        && github.event.action == 'created'
+        && contains(fromJSON('["created", "edited"]'), github.event.action)
         && contains(fromJSON('["/please-review", "/please-check-docs"]'), github.event.comment.body)
       )
     steps:
@@ -62,11 +66,7 @@ jobs:
         with:
           python-version: "3.13"
           enable-cache: true
-      - name: Install dependencies and build docs
+      - name: Build docs
         id: mkdocs
         run: |
           uv run --locked mkdocs build --strict
-      - name: Log
-        run: |
-          v=${{ steps.mkdocs.outcome }}
-          echo "Markdown links: $( [[ ${v} == success ]] && echo ✅ || echo ❌ )"

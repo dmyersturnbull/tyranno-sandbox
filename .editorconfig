@@ -20,11 +20,6 @@ insert_final_newline=true
 # We assume TypeScript to be 2-space because JavaScript and JSX so strongly are,
 # and we'd rather keep those two consistent.
 
-[justfile]
-indent_size=4
-max_line_length=120
-# https://github.com/casey/just
-
 [*.{julia,rs,d,cpp,c,m,mm,f99,inc,h,s,asm}]
 indent_size=4
 # prettier uses max_line_length for --print-width; it's not really the max

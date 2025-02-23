@@ -4,20 +4,21 @@
 
 name: format-pr
 run-name: >
-  ${{ github.workflow }} \
-  ${{ github.ref_name }} \
-  (triggered by ${{ github.ref_type }})
+  ${{ github.workflow }}
+  ::${{ github.event_name }}
+  ::${{ github.ref_type }}:${{ github.ref_name }}
+  ::@${{ github.actor }}
 
 on:
-  merge_group:
+  issue_comment:
     types:
-      - checks_requested
+      - created
+      - edited
 
 jobs:
   format:
     if: >
-      github.event_name == 'issue_comment'
-      && github.event.action == 'created'
+      contains(fromJSON('["created", "edited"]'), github.event.action)
       && github.event.comment.body == '/please-format'
     runs-on: ubuntu-latest
     steps:
@@ -31,25 +32,17 @@ jobs:
           enable-cache: true
 
       - name: Run pre-commit hooks
-        # Run once to format, etc.
-        # Run again to check.
+        # Run once to format, etc.; run again to check.
         run: |
           uvx pre-commit run --all-files || true
           uvx pre-commit run --all-files
-
-      # Compress images
-      - name: Compress Images
-        uses: calibreapp/image-actions@v1
-        with:
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          compressOnly: true # don't commit
 
       - name: Commit formatting changes
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add .
-          git commit -m "style: auto-format" || echo "No changes found."
+          git commit -m "style: auto-format" || printf "No changes found.\n"
 
       - name: Update UV lock file
         run: |
@@ -57,10 +50,9 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add uv.lock
-          git commit -m "build: update uv lock file" || echo "No changes found."
+          git commit -m "build: update uv lock file" || printf "No changes found.\n"
 
       - name: Push changes
         if: success() && steps.commit.outputs.commit != ''
         run: |
-          # we could use --force-with-lease if --amend -ing
           git push origin HEAD:${{ github.ref }}

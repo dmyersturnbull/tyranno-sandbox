@@ -2,11 +2,14 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# Tests building a Docker image.
+
 name: docker
 run-name: >
-  ${{ github.workflow }} \
-  ${{ github.ref_name }} \
-  (triggered by ${{ github.ref_type }})
+  ${{ github.workflow }}
+  ::${{ github.event_name }}
+  ::${{ github.ref_type }}:${{ github.ref_name }}
+  ::@${{ github.actor }}
 
 on:
   merge_group:
@@ -24,6 +27,7 @@ on:
   issue_comment:
     types:
       - created
+      - edited
 
 permissions:
   contents: read
@@ -46,11 +50,13 @@ jobs:
           || github.event.action == 'synchronize'
         )
       )
-      || github.event_name == 'issue_comment'
-      && github.event.action == 'created'
-      && (
-        github.event.comment.body == '/please-review'
-        || github.event.comment.body == '/please-check-docker'
+      || (
+        github.event_name == 'issue_comment'
+        && contains(fromJSON('["created", "edited"]'), github.event.action)
+        && (
+          github.event.comment.body == '/please-review'
+          || github.event.comment.body == '/please-check-docker'
+        )
       )
     strategy:
       matrix:
@@ -63,7 +69,4 @@ jobs:
           ref: ${{ github.event.inputs.ref }}
       - name: Build Docker image
         run: |
-          if [[ -f Dockerfile ]]; then
-            docker build .
-            echo "Docker build on ${{os}}: $( (( $? == 0 )) && echo ✅ || echo ❌ )"
-          fi
+          [[ -f Dockerfile ]] && docker build .

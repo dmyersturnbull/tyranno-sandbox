@@ -5,16 +5,20 @@
 # Deploys mkdocs documentation to GitHub Pages.
 
 name: deploy-docs
-run-name: ${{ github.workflow }} for ${{ github.ref_name }}
+run-name: >
+  ${{ github.workflow }}
+  ::${{ github.event_name }}
+  ::${{ github.ref_type }}:${{ github.ref_name }}
 
 on:
   push:
     tags:
-      # Mike handles the 'latest' tag
-      - '^v(\d+)\.(\d+)\.(\d+)(?:-(alpha|beta|preview|rc))?$' # match all semver, including prerelease
-      #- '^v(\d+)\.(\d+)\.(\d+)$' # match all non-prerelease semver
-      #- '^v(\d+)\.([1-9]\d*)\.(\d+)$' # OR: match only 0.1.0+ (non-prerelease)
-      #- '^(v[1-9]\d*)\.(\d+)\.(\d+)$' # OR: match only 1.0.0+ (non-prerelease)
+      - '^v\d+\.\d+\.\d+(-(alpha|beta|preview|rc)\d*)?$' # Match most semver-compatible PEP 440.
+    paths:
+      - "src/**/*.py"
+      - docs/
+      - pyproject.toml
+      - mkdocs.yaml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.sha }}
