@@ -73,31 +73,42 @@ RUN \
 # COPY --from=builder --chown=app:app /var/app/.venv /var/app/.venv
 # *****************************************************************
 
-# Expose HTTP 1.1 & 2.0 on TCP/80, HTTPS 1.1 & 2.0 on TCP/443, and HTTP/3 on UDP/443.
-EXPOSE 80
-EXPOSE 443
-EXPOSE 443/udp
-
 ENTRYPOINT [
-"/var/app/.venv/bin/hypercorn",
-"tyranno_sandbox.api:app"
+"/var/app/.venv/tyranno"
 ]
 CMD [
-"--bind",
-"[::]:80",
-"--bind",
-"[::]:443",
-"--quic-bind",
-"[::]:443"
+"--version"
 ]
 
-ARG HEALTHCHECK_INTERVAL=5m
-ARG HEALTHCHECK_TIMEOUT=3s
-ARG HEALTHCHECK_START_PERIOD=5s
+# -------------------------------------------------------------------------------------------------
+
+# An example of starting a hypercorn server.
+
+# Expose HTTP 1.1 & 2.0 on TCP/80, HTTPS 1.1 & 2.0 on TCP/443, and HTTP/3 on UDP/443.
+# EXPOSE 80
+# EXPOSE 443
+# EXPOSE 443/udp
+
+# ENTRYPOINT [
+# "/var/app/.venv/bin/hypercorn",
+# "tyranno_sandbox.api:app"
+# ]
+# CMD [
+# "--bind",
+# "[::]:80",
+# "--bind",
+# "[::]:443",
+# "--quic-bind",
+# "[::]:443"
+# ]
+
+# ARG HEALTHCHECK_INTERVAL=5m
+# ARG HEALTHCHECK_TIMEOUT=3s
+# ARG HEALTHCHECK_START_PERIOD=5s
 
 # Ubuntu curl doesn't support --http3 yet
-HEALTHCHECK \
-  --interval=$HEALTHCHECK_INTERVAL \
-  --timeout=$HEALTHCHECK_TIMEOUT \
-  --start-period=$HEALTHCHECK_START_PERIOD \
-  CMD curl --fail --http2-prior-knowledge http://localhost/ || exit 1
+# HEALTHCHECK \
+#   --interval=$HEALTHCHECK_INTERVAL \
+#   --timeout=$HEALTHCHECK_TIMEOUT \
+#   --start-period=$HEALTHCHECK_START_PERIOD \
+#   CMD curl --fail --http2-prior-knowledge http://localhost/ || exit 1
