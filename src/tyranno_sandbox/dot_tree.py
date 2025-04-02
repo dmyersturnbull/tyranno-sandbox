@@ -132,7 +132,7 @@ class Utils:
         However, won't complain if `items` contains nested items.
 
         Examples:
-            >>> from cicd.dot_tree import Utils
+            >>> from tyranno_sandbox.dot_tree import Utils
             >>> Utils.nest({"genus.species": "bat"})
             {"genus": {"species": "bat"}}
         """
@@ -174,7 +174,7 @@ class Utils:
         However, won't complain if a key in (or nested in) `items` contains `.`.
 
         Examples:
-            >>> from cicd.dot_tree import Utils
+            >>> from tyranno_sandbox.dot_tree import Utils
             >>> Utils.dotify({"genus": {"species": "bat"}})
             {"genus.species": "bat"}
         """
@@ -208,7 +208,7 @@ class DotTree(dict[str, Toml]):
     Keys must be strings and cannot contain `.`, which is reserved for nested access.
 
     Designed with JSON, YAML, and especially TOML in mind.
-    The [cicd.dot_tree.Primitive][] type includes the TOML-native `date`, `datetime`, and `time`.
+    The [tyranno_sandbox.dot_tree.Primitive][] type includes the TOML-native `date`, `datetime`, and `time`.
     JSON and YAML do not natively understand these types.
     This class's philosophy is that null/none values should be omitted instead.
 
@@ -268,7 +268,7 @@ class DotTree(dict[str, Toml]):
             ValueError: If a value (nested) is `None`.
 
         Examples:
-            >>> from cicd.dot_tree import DotTree
+            >>> from tyranno_sandbox.dot_tree import DotTree
             >>> DotTree.from_mixed({"books": [{"title": "Bats", "ids.isbn": "123-4-56-123456-0"}]})
             {"books": [{"title": "Bats", "ids": {"isbn": "123-4-56-123456-0"}}]}
         """
@@ -296,7 +296,7 @@ class DotTree(dict[str, Toml]):
             TypeError: If or `x` is not a `dict` or a key is not a `str`.
 
         Examples:
-            >>> from cicd.dot_tree import DotTree
+            >>> from tyranno_sandbox.dot_tree import DotTree
             >>> DotTree.from_dotted({"owner.name.first": "John"})
             {"owner": {"name": {"first": "John"}}}
             >>> DotTree.from_dotted({"books": [{"title": "Bats", "ids.isbn": "123-4-56-123456-0"}]})

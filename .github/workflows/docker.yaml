@@ -7,9 +7,9 @@
 name: docker
 run-name: >
   ${{ github.workflow }}
-  ::${{ github.event_name }}
-  ::${{ github.ref_type }}:${{ github.ref_name }}
-  ::@${{ github.actor }}
+  :: ${{ github.event_name }}
+  :: ${{ github.ref_type }}:${{ github.ref_name }}
+  : :@${{ github.actor }}
 
 on:
   merge_group:
@@ -69,4 +69,6 @@ jobs:
           ref: ${{ github.event.inputs.ref }}
       - name: Build Docker image
         run: |
-          [[ -f Dockerfile ]] && docker build .
+          if [[ -f Dockerfile ]]; then
+            docker build || exit $?
+          fi

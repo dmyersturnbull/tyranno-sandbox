@@ -1,0 +1,15 @@
+Installing {{ .Chart.Name }} to {{ .Release.Namespace }}...
+
+Deployment information:
+
+- Release: {{ .Release.Name }}
+- Namespace: {{ .Release.Namespace }}
+- Chart name: {{ .Chart.Name }}
+- Chart version: {{ .Chart.Version }}
+
+{{ .Chart.Name }} release {{ .Release.Name }} was installed in {{ .Release.Namespace }}.
+
+To learn more about the release, run:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}

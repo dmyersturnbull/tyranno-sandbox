@@ -62,24 +62,22 @@ jobs:
           name: dist
           path: dist/
 
-  check-dockerfile-exists:
-    # This job checks whether the Dockerfile exists.
+  check-exists:
     runs-on: ubuntu-latest
     needs: build-dist
     outputs:
-      found: ${{ steps.check-dockerfile.outputs.found }}
+      has-docker: ${{ steps.has-docker.outputs.ret }}
+      has-helm: ${{ steps.has-helm.outputs.ret }}
     steps:
       - uses: actions/checkout@v4
-      - name: Check for Dockerfile
-        id: check-dockerfile
+      - id: has-docker
         run: |
-          if [[ -f Dockerfile ]]; then
-            printf "Dockerfile exists.\n"
-            echo "found=true" >> ${GITHUB_OUTPUT}
-          else
-            printf "Dockerfile does not exist.\n"
-            echo "found=false" >> ${GITHUB_OUTPUT}
-          fi
+          [[ -f Dockerfile ]]
+          echo "ret=$?" >> ${GITHUB_OUTPUT}
+      - id: has-helm
+        run: |
+          [[ -d helm ]]
+          echo "ret=$?" >> ${GITHUB_OUTPUT}
 
   publish-github-release:
     # This job publishes the release on GitHub.
@@ -121,11 +119,14 @@ jobs:
       - name: Publish to PyPi using uv.
         # See: https://docs.pypi.org/trusted-publishers/adding-a-publisher/
         run: |
-          uv publish
+          uv publish || exit $?
 
   publish-docker:
     name: Publish to Docker container registries
     runs-on: ${{ os }}
+    needs:
+      - check-exists
+    if: ${{ needs.check-exists.outputs.has-helm == '0' }}
     steps:
       - name: Download Docker image
         uses: actions/download-artifact@v4
@@ -136,7 +137,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Extract Docker metadata
-        id: docker_metadata
+        id: docker-metadata
         uses: docker/metadata-action@v5
         with:
           images: ${{ GITHUB_REPOSITORY }}
@@ -162,8 +163,24 @@ jobs:
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.docker_metadata.outputs.tags }}
-          labels: ${{ steps.docker_metadata.outputs.labels }}
+          tags: ${{ steps.docker-metadata.outputs.tags }}
+          labels: ${{ steps.docker-metadata.outputs.labels }}
           cache-from: type=gha
           # type=gha,mode=max is meant to maximize cache hits.
           cache-to: type=gha,mode=max
+
+  publish-helm:
+    name: Publish Helm chart to GitHub Pages
+    runs-on: ${{ os }}
+    needs:
+      - check-exists
+    if: ${{ needs.check-exists.outputs.has-helm == '0' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set Git user and email
+        run: |
+          git config --global user.name 'github-actions[bot]' || exit $?
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com' || exit $?
+      - uses: helm/chart-releaser-action@v1.7.0
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

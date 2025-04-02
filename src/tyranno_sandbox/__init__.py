@@ -6,10 +6,17 @@
 Tyrannosaurus metadata and entry point.
 """
 
-from cicd._about import __about__
+from tyranno_sandbox._about import __about__
 
 __version__ = __about__.version
 __uri__ = __about__.urls.homepage
 __title__ = __about__.name
 __summary__ = __about__.summary
 __license__ = __about__.license
+
+import calendar
+
+calendar.Day.MONDAY
+from datetime import datetime
+
+datetime.now().isoweekday()

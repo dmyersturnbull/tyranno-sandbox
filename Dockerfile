@@ -5,21 +5,21 @@
 # Set the labels.
 # These are standard opencontainer labels; see:
 # https://github.com/opencontainers/image-spec/blob/master/annotations.md
-# :tyranno: LABEL org.opencontainers.image.version="${project.version}"
+# :tyranno: LABEL org.opencontainers.image.version="${{project.version}}"
 LABEL org.opencontainers.image.version="0.0.1-alpha0"
-# :tyranno: LABEL org.opencontainers.image.vendor="${.vendor}"
+# :tyranno: LABEL org.opencontainers.image.vendor="${{.vendor}}"
 LABEL org.opencontainers.image.vendor="dmyersturnbull"
-# :tyranno: LABEL org.opencontainers.image.title="${project.name}"
-LABEL org.opencontainers.image.title="cicd"
-# :tyranno: LABEL org.opencontainers.image.url="${project.urls.Homepage}"
-LABEL org.opencontainers.image.url="https://github.com/dmyersturnbull/cicd"
-# :tyranno: LABEL org.opencontainers.image.documentation="${project.urls.Documentation}"
-LABEL org.opencontainers.image.documentation="https://github.com/dmyersturnbull/cicd"
+# :tyranno: LABEL org.opencontainers.image.title="${{project.name}}"
+LABEL org.opencontainers.image.title="tyranno-sandbox"
+# :tyranno: LABEL org.opencontainers.image.url="${{project.urls.Homepage}}"
+LABEL org.opencontainers.image.url="https://github.com/dmyersturnbull/tyranno-sandbox"
+# :tyranno: LABEL org.opencontainers.image.documentation="${{project.urls.Documentation}}"
+LABEL org.opencontainers.image.documentation="https://github.com/dmyersturnbull/tyranno-sandbox"
 
 # Declare the core build args.
 # These must exist outside of any stage and be declared before the first FROM.
 ARG ALPINE_VERSION=""
-# :tyranno: ARG PYTHON_VERSION="${.default-python-version.vr_minor(@)}"
+# :tyranno: ARG PYTHON_VERSION="${{.main-python-version.vr_minor(@)}}"
 ARG PYTHON_VERSION="3.13"
 
 # -------------------- Download uv and set vars --------------------
@@ -79,16 +79,16 @@ EXPOSE 443
 EXPOSE 443/udp
 
 ENTRYPOINT [
-  "/var/app/.venv/bin/hypercorn",
-  "cicd.api:app"
+"/var/app/.venv/bin/hypercorn",
+"tyranno_sandbox.api:app"
 ]
 CMD [
-  "--bind",
-  "[::]:80",
-  "--bind",
-  "[::]:443",
-  "--quic-bind",
-  "[::]:443"
+"--bind",
+"[::]:80",
+"--bind",
+"[::]:443",
+"--quic-bind",
+"[::]:443"
 ]
 
 ARG HEALTHCHECK_INTERVAL=5m

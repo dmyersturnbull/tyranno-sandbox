@@ -2,6 +2,7 @@
 # https://cheatography.com/linux-china/cheat-sheets/justfile/
 
 list:
+  uv run pre-commit install
   just --list --unsorted
 
 # Delegate to `uv run --locked {}`.
@@ -11,25 +12,26 @@ run *args:
 ###################################################################################################
 
 # Upgrade the lock file, sync the venv, and install pre-commit hooks.
-install-hooks:
-  uv lock --refresh
-  uv sync --only-dev
+init:
+  uv lock --upgrade
+  uv sync --all-groups --all-extras --locked
   uv run pre-commit install --install-hooks --overwrite
 
+# Upgrade the lock file, sync, clean, and fix and format changes.
+refresh: lock bump-hooks fix-changes clean
+
 # Auto-upgrade pre-commit hooks.
-upgrade-hooks *args:
+bump-hooks *args:
   uv run pre-commit autoupdate {{args}}
   uv run pre-commit gc
 
-###################################################################################################
-
-# Upgrade the lock file, clean, and auto-fix+auto-format changes.
-refresh: lock fix-changes clean
-
 # Upgrade the lock file and sync the venv.
 lock:
-  uv lock --refresh
-  uv sync --only-dev --locked
+  uv sync --upgrade --all-groups --all-extras
+
+# Sync the venv. Includes all groups and all extras. Installs the project as editable.
+sync:
+  uv sync --all-groups --all-extras
 
 # Remove temporary files, including unlinked uv cache files and old Git hooks.
 clean:
@@ -39,7 +41,7 @@ clean:
 ###################################################################################################
 
 # Run pre-commit hooks on all files.
-fix-all *args:
+fix-all:
   uv run pre-commit run --all-files
 
 # Run pre-commit hooks on all files with uncommitted changes.
@@ -47,9 +49,13 @@ fix-changes:
   uv run pre-commit run
 alias fix := fix-changes
 
+# Auto-fix Ruff violations.
+fix-ruff *args:
+  uv run ruff check --fix-only --output-format grouped {{args}}
+
 # Auto-fix Ruff violations using `--preview`, `--unsafe-fixes`, and `--ignore-noqa`.
-fix-unsafe:
-  uv run ruff check --fix-only --preview --unsafe-fixes --ignore-noqa
+fix-ruff-unsafe *args:
+  uv run ruff check --fix-only --output-format grouped --preview --unsafe-fixes --ignore-noqa {{args}}
 
 ###################################################################################################
 
@@ -58,11 +64,11 @@ check: check-ruff check-pyright check-links
 
 # Find violations of Ruff lint rules.
 check-ruff *args:
-  uv run ruff check --no-fix {{args}}
+  uv run ruff check --no-fix --output-format concise {{args}}
 
 # Find violations of Bandit-derived `S` Ruff lint rules.
 check-bandit *args:
-  uv run ruff check --no-fix --select S {{args}}
+  uv run ruff check --no-fix --output-format concise --select S {{args}}
 
 # Find violations of Pyright typing rules.
 check-pyright *args:
@@ -76,12 +82,12 @@ check-links *args:
 ###################################################################################################
 
 # Run all PyTest tests.
-test *args:
+test-all *args:
   uv run pytest {{args}}
 
 # Run PyTest tests that are not marked `slow`, `net`, or `ux`.
 test-fast *args:
-  uv run pytest -m 'not (slow or net or ux)' {{args}]}
+  uv run pytest -m 'not (slow or net or ux)' {{args}}
 
 # List PyTest markers.
 test-markers *args:
@@ -99,6 +105,6 @@ docs-serve *args:
 
 ###################################################################################################
 
-# Creates a pull request on GitHub using the GitHub CLI.
-create-pr:
-  gh pr create --fill-verbose --web --draft
+# Opens a pull request on GitHub using the GitHub CLI.
+open-pr *args:
+  gh pr create --fill-verbose --web --draft {{args}}

@@ -12,9 +12,9 @@
 name: update-coverage
 run-name: >
   ${{ github.workflow }}
-  ::${{ github.event_name }}
-  ::${{ github.ref_type }}:${{ github.ref_name }}
-  ::@${{ github.actor }}
+  :: ${{ github.event_name }}
+  :: ${{ github.ref_type }}:${{ github.ref_name }}
+  :: @${{ github.actor }}
 
 on:
   push:
@@ -55,7 +55,8 @@ jobs:
         shell: bash
         run: |
           echo "is_last_report=(( ${{ strategy.job-index }} == ${{ strategy.job-total }} - 1 ))" \
-            >> "$GITHUB_OUTPUT"
+            >> "$GITHUB_OUTPUT" \
+            || exit $?
       - name: Download coverage artifact for ${{ matrix.os }} / Python ${{ matrix.python }}
         uses: actions/download-artifact@v4
         with:

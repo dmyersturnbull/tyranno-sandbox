@@ -1,7 +1,7 @@
 # This allows you to auto-assign reviewers for pull requests on matching code branches
 # https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
 
-# :tyranno: .github/settings.yaml @${.vendor}
+# :tyranno: .github/settings.yaml @${{.vendor}}
 .github/settings.yaml @dmyersturnbull
 
 # You can add other lines here to auto-assign reviewers

@@ -10,7 +10,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from cicd.context import Context
+from tyranno_sandbox.context import Context
 
 __all__ = ["Cleaner"]
 

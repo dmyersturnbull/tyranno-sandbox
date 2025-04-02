@@ -2,12 +2,12 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# :tyranno: site_name: "${project.name}"
+# :tyranno: site_name: "${{project.name}}"
 site_name: "tyranno-sandbox"
 
-# :tyranno: site_name: "${.copyright}"
+# :tyranno: site_name: "${{.copyright}}"
 copyright: Copyright 2025, Contributors to Tyrannosaurus
-# :tyranno: site_description: "${project.description}"
+# :tyranno: site_description: "${{project.description}}"
 site_description: "Sandbox for Tyrannosaurus"
 
 # Exclude from nav anything starting with `_`.
@@ -55,8 +55,8 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to system preference
-  # :tyranno: repo_url: ${project.urls.Source}
-  repo_url: https://github.com/dmyersturnbull/cicd
+  # :tyranno: repo_url: ${{project.urls.Source}}
+  repo_url: https://github.com/dmyersturnbull/tyranno-sandbox
 
 # Extensions
 markdown_extensions:
@@ -97,10 +97,10 @@ markdown_extensions:
       social_url_shorthand: true
       normalize_issue_symbols: true
       provider: github
-      # :tyranno: user: ${.vendor}
+      # :tyranno: user: ${{.vendor}}
       user: dmyersturnbull
-      # :tyranno: repo: ${project.name}
-      repo: cicd
+      # :tyranno: repo: ${{project.name}}
+      repo: tyranno-sandbox
   - pymdownx.progressbar
   - pymdownx.saneheaders # Makes `#22` (probably a GitHub Issue) not a valid header.
   - pymdownx.smartsymbols

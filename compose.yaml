@@ -9,7 +9,7 @@ services:
       - "443:443/udp"
     environment:
       - POSTGRES_URI=postgres://user:password@postgres:5432/app
-      - MONGODB_URI=mongodb://mongodb:27017/app
+      - MONGO_URI=mongodb://mongodb:27017/app
     depends_on:
       - mongodb
       - postgres

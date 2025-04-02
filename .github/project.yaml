@@ -3,16 +3,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # A short description of the repository that will show up on GitHub
-# :tyranno: description: ${project.description}
+# :tyranno: description: ${{project.description}}
 description: Sandbox for Tyrannosaurus
-# :tyranno: homepage: ${project.urls.Homepage}
-homepage: https://github.com/dmyersturnbull/cicd
+# :tyranno: homepage: ${{project.urls.Homepage}}
+homepage: https://github.com/dmyersturnbull/tyranno-sandbox
 
 topics:
-  # prettier-ignore-start
-  # :tyranno: ${project.keywords[*].unquote(@)}
-  [cookiecutter, conda-build, pyproject-toml, python-poetry, python-template]
-  # prettier-ignore-end
+  # :tyranno-start: ${{project.keywords[*].unquote(@)|unwrap_yaml(@)}}
+  - ci/cd
+  - cookiecutter
+  - github-workflow
+  - pyproject
+  - python-template
+  # :tyranno-end:
 
 labels:
   - name: "breaking"
@@ -102,15 +105,20 @@ labels:
   - name: "type: test"
     description: "🚨 Addition or modification of tests"
     color: "#90e0ff"
-  # ::: potentially useful labels :::
-  #- name: "bookmark"
+
+  # ============= unused labels ============= #
+
+  # Potentially useful labels
+  #- name: "sticky"
   # description: "🔖 Important for reference"
   # color: "#ffff44"
-  # ::: `chore` has no apparent use :::
+
+  # The Angular type `chore` has no obvious use.
   #- name: "type: chore"
   #  description: "️🧹 Other type of change"
   #  color: "#90e0ff"
-  # ::: examples of scopes :::
+
+  # Examples of scopes
   #- name: "scope: api"
   #  description: "🧩 Plugins"
   #  color: "#009000"

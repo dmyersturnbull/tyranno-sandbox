@@ -1,9 +1,9 @@
 blank_issues_enabled: true
 contact_links:
   - name: Ask a question
-    # :tyranno: url: https://github.com/${.vendor}/${project.name}/discussions/new?category=q-a
-    url: https://github.com/dmyersturnbull/cicd/discussions/new?category=q-a
+    # :tyranno: url: https://github.com/${{.frag}}/discussions/new?category=q-a
+    url: https://github.com/dmyersturnbull/tyranno-sandbox/discussions/new?category=q-a
     about: Get help with something
   - name: Security issue
-  - url: https://github.com/dmyersturnbull/cicd/security/advisories/new
+  - url: https://github.com/dmyersturnbull/tyranno-sandbox/security/advisories/new
     about: Report a security issue

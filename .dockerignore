@@ -1,16 +1,34 @@
 # NOTE: We're only including things that would already be checked in to the repo
 # So we're not including things like .tox -- that will never be committed
 # We're excluding docs and tests
-**/.*
-CITATION.cff
-CONTRIBUTING.md
-README.md
-SECURITY.md
-dist/
-docs
-htmlcov
-justfile
-mkdocs.yaml
-recipes
-site/
-tests
+
+# Gitignored files
+.*
+[~#$]*
+*[~#$]
+
+# Gitignored directories
+node_modules/
+
+# Directories
+/dist/
+/docs/
+/recipes/
+/site/
+/tests/
+
+# Files in the root directory
+/*.md
+/*.txt
+/CITATION.cff
+/compose.yaml
+/justfile
+/mkdocs.yaml
+
+# Keep .dockerignore and .gitignore
+!/.dockerignore
+!/.gitignore
+
+# Keep legal files
+!/LICENSE.*
+!/NOTICE.txt

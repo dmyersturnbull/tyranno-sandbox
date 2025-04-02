@@ -9,7 +9,7 @@ Tests.
 import pytest
 
 # noinspection PyUnresolvedReferences
-from cicd._about import __about__ as about
+from tyranno_sandbox._about import __about__ as about
 
 
 class TestAbout:

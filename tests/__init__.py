@@ -13,7 +13,8 @@ import time
 from collections.abc import Generator
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from pathlib import Path, PurePath
+from os import PathLike
+from pathlib import Path
 from types import TracebackType
 from typing import Self
 
@@ -78,7 +79,7 @@ class TestHelper:
             yield cap
 
     @classmethod
-    def resource(cls, *nodes: PurePath | str) -> Path:
+    def resource(cls, *nodes: PathLike | str) -> Path:
         """
         Gets a path of a test resource file under `resources/`.
 

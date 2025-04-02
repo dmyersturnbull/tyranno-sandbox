@@ -5,9 +5,9 @@
 name: format-pr
 run-name: >
   ${{ github.workflow }}
-  ::${{ github.event_name }}
-  ::${{ github.ref_type }}:${{ github.ref_name }}
-  ::@${{ github.actor }}
+  :: ${{ github.event_name }}
+  :: ${{ github.ref_type }}:${{ github.ref_name }}
+  :: @${{ github.actor }}
 
 on:
   issue_comment:
@@ -16,10 +16,12 @@ on:
       - edited
 
 jobs:
-  format:
+  bump-deps:
     if: >
       contains(fromJSON('["created", "edited"]'), github.event.action)
       && github.event.comment.body == '/please-format'
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,31 +30,44 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.13"
-          enable-cache: true
+          python-version: "3.10"
 
-      - name: Run pre-commit hooks
-        # Run once to format, etc.; run again to check.
+      - name: Configure Git
         run: |
-          uvx pre-commit run --all-files || true
-          uvx pre-commit run --all-files
+          git config --global user.name 'github-actions[bot]' || exit $?
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com' || exit $?
 
-      - name: Commit formatting changes
+      - name: Upgrade the lock file
+        id: pre-commit
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add .
-          git commit -m "style: auto-format" || printf "No changes found.\n"
+          uv lock --upgrade || exit $?
+          if git diff --quiet uv.lock; then
+            git commit --no-verify -m "build: update lock file" uv.lock || exit $?
+          else
+            printf "No changes to uv.lock to commit\n"
+          fi
 
-      - name: Update UV lock file
+      - name: Upgrade the pre-commit config
+        id: pre-commit
         run: |
-          uv lock
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add uv.lock
-          git commit -m "build: update uv lock file" || printf "No changes found.\n"
+          uv sync --only-dev || exit $?
+          uv run pre-commit install || exit $?
+          uv run pre-commit autoupdate || exit $?
+          if git diff --quiet .pre-commit-config.yaml; then
+            git commit --no-verify -m "ci: upgrade pre-commit config" .pre-commit-config.yaml || exit $?
+          else
+            printf "No changes to .pre-commit-config.yaml to commit\n"
+          fi
+
+      - name: Commit any formatting changes
+        run: |
+          uv run pre-commit run --all-files || exit $?
+          if git diff --quiet .; then
+            git commit -m "style: auto-fix lint violations and autoformat" . || exit $?
+          else
+            printf "No style changes to commit\n"
+          fi
 
       - name: Push changes
-        if: success() && steps.commit.outputs.commit != ''
         run: |
-          git push origin HEAD:${{ github.ref }}
+          git push || exit $?

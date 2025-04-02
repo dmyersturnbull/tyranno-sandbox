@@ -1,7 +1,9 @@
 # SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
-""" """
+"""
+JMESPath utilities.
+"""
 
 import math
 from datetime import datetime
@@ -74,7 +76,7 @@ def _get_license_uris(data: dict[str, Any]) -> list[str]:
 
 
 def _dl_pypi_metadata(name: str):
-    url = f"https://pypi.org/pypi/${name}/json"
+    url = f"https://pypi.org/pypi/{name}/json"
     # niquests `.json()` uses orjson if it's installed.
     return niquests.get(url).raise_for_status().json()
 
@@ -126,7 +128,7 @@ class TyrannoFunctions(functions.Functions):
             "id": spdx_id,
             "spdx-id": spdx_id,
             "name": data["name"],
-            "uri": f"https://spdx.org/licenses/${spdx_id}.html",
+            "uri": f"https://spdx.org/licenses/{spdx_id}.html",
             "uris": uris,
             "header": f"SPDX-License-Identifier: ${spdx_id}",
             "text": data["licenseText"],

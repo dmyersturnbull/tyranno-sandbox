@@ -69,4 +69,4 @@ jobs:
       - name: Build docs
         id: mkdocs
         run: |
-          uv run --locked mkdocs build --strict
+          uv run --locked mkdocs build --strict || exit $?

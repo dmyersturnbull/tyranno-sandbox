@@ -81,7 +81,7 @@ jobs:
       - name: Install dependencies and run tests
         id: test
         run: |
-          uv run --locked pytest -m 'not ux'
+          uv run --locked pytest -m 'not ux' || exit $?
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
         with:

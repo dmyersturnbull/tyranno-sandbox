@@ -5,29 +5,24 @@
 Wrapper around repo for Tyrannosaurus.
 """
 
-import glob
-import re
 import tomllib
 from collections.abc import Iterator
 from dataclasses import dataclass
-from pathlib import Path, PurePath
+from pathlib import Path
 
 import jmespath
+from pathspec import GitIgnoreSpec
 
-from cicd._global_vars import GlobalVars
-from cicd.dot_tree import DotTree, Toml
+from tyranno_sandbox.dot_tree import DotTree, Toml
 
 __all__ = ["Context", "ContextFactory", "Data", "DefaultContextFactory"]
-_PATTERN = re.compile(r"\$\{ *([-._A-Za-z0-9]*) *(?:~ *([^~]+) *~ *)?}")
-_TYRANNO = ":tyranno:"
-_SUBSTITUTION_PATTERN = re.compile(r"\${([^}]+)}")
 
 
 @dataclass(frozen=True, slots=True)
 class Data:
     """"""
 
-    data: DotTree
+    tree: DotTree
 
     def get(self, key: str) -> Toml | None:
         try:
@@ -40,7 +35,7 @@ class Data:
 
     def _sub(self, key: str, james: str | None) -> Toml:
         key = "tool.tyranno.data" if key == "." else "tool.tyranno.data" + key
-        result = self.data.demand(key)
+        result = self.tree.demand(key)
         return jmespath.search(james, result) if james else result
 
 
@@ -49,52 +44,52 @@ class Context:
     """"""
 
     repo_dir: Path
-    config: Data
+    data: Data
     dry_run: bool
-    global_vars: GlobalVars
-
-    @property
-    def data(self) -> Data:
-        return Data(self.config.data.demand_subtree("tool.tyranno.data"))
 
     @property
     def trash_dir(self) -> Path:
-        return self.repo_dir / self.global_vars.trash_dir_name
+        return self.repo_dir / _trash_dir_name
 
     def find_targets(self) -> Iterator[Path]:
-        include = self.config.data.demand_subtree("tool.tyranno.targets")
-        for pattern in include:
-            for p in glob.glob(pattern):
+        include = self.data.tree.demand_subtree("tool.tyranno.targets")
+        target_spec = GitIgnoreSpec.from_lines(include)
+        gitignore_spec = self._gitignore_spec()
+        for p in target_spec.match_tree(self.repo_dir):
+            if not gitignore_spec.match_file(p):
                 yield self.resolve_path(p)
 
     def find_trash(self) -> Iterator[Path]:
-        include = self.config.data.demand_subtree("tool.tyranno.trash")
-        for pattern in include:
-            for p in glob.glob(pattern):
-                yield self.resolve_path(p)
+        include = self.data.tree.demand_subtree("tool.tyranno.trash")
+        spec = GitIgnoreSpec.from_lines(include)
+        for p in spec.match_tree(self.repo_dir):
+            yield self.resolve_path(p)
 
-    def resolve_path(self, path: PurePath | str) -> Path:
+    def resolve_path(self, path: Path | str) -> Path:
         path = Path(path).resolve(strict=True)
         if not str(path).startswith(str(self.repo_dir)):
             msg = f"{path} is not a descendent of {self.repo_dir}"
             raise AssertionError(msg)
         return path.relative_to(self.repo_dir)
 
+    def _gitignore_spec(self):
+        lines = (self.repo_dir / ".gitignore").read_text().splitlines()
+        return GitIgnoreSpec.from_lines(lines)
+
 
 @dataclass(frozen=True, slots=True)
 class ContextFactory:
-    def __call__(self, cwd: Path, global_vars: GlobalVars, *, dry_run: bool) -> Context:
+    def __call__(self, cwd: Path, dry_run: bool) -> Context:
         raise NotImplementedError()
 
 
 @dataclass(frozen=True, slots=True)
 class DefaultContextFactory(ContextFactory):
-    def __call__(self, cwd: Path, global_vars: GlobalVars, *, dry_run: bool) -> Context:
+    def __call__(self, cwd: Path, *, dry_run: bool) -> Context:
         read = Path("pyproject.toml").read_text(encoding="utf-8")
         tree = DotTree.from_nested(tomllib.loads(read))
         return Context(
             repo_dir=cwd,
             config=Data(tree),
             dry_run=dry_run,
-            global_vars=global_vars,
         )

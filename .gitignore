@@ -1,153 +1,153 @@
-# Also see https://github.com/github/gitignore/blob/master/Python.gitignore
-# This is simpler and easier to understand
-# We'll ignore all .* files and then re-add some
+# .gitignore for Python, Java/Scala/Kotlin, C/C++, JavaScript/TypeScript, and Julia.
+# It also covers some common tools and IDEs, but it isn't meant to be comprehensive.
+# Note that it doesn't cover obsolete Python files like Eggs (`*.egg`).
+#
+# The approach is to blacklist `.*` and similar patterns, then to whitelist specific files.
+# This approach maeks the file much simpler and easier to understand.
+# Some of the rules are derived from <https://github.com/github/gitignore/>.
+#
+# Notes:
+#   - `x` is equivalent to `**/x`, in contrast to `.dockerignore` and `.prettierignore`.
+#   - Always mark directories with a `/` suffix.
+#   - Per section, place directories above files; then sort lexigraphically.
+#     (Order (using regex): `/` ≺ `*` ≺ `[^A-Za-z0-9]` ≺ `[0-9]` ≺ `[A-Za-z]`.)
+
+# Dotted files
+.*
 
 # General hidden or unwanted
-.*
-~*
-*~
-*#
-Thumbs.db
-*.bak
-*.swp
-null
+*[~#$]
+[~#$]*
+*[.~]bak
+*[.~]out
+*[.~]swp
+*[.~]temp
+*[.~]tmp
 *.log
 *.pid
-*.out
-
-# Temp dirs
-tmp/
-temp/
+Thumbs.db
 
 # Archives
-*.gz
-*.xz
-*.lzma
-*.lz4
-*.zstd
-*.zip
 *.7z
-*.rar
+*.ear
+*.gz
+*.jar
+*.lz4
+*.lzma
 *.tar
 *.tar.gz
 *.tgz
-*.jar
 *.war
-*.nar
-*.ear
+*.xz
+*.zip
+*.zstd
 
 # Executables and libraries
+*.dll
+*.dylib
 *.exe
 *.msi
 *.pkg
-*.dll
 *.so
-*.dylib
 
 # IDEs
 *.iml
+*.pch
+*.profdata
+misc.xml
 
 # Python
-env/
-venv/
-ENV/
+/build/
+/dist/
+/sdist/
 __pycache__/
 __pypackages__/
+cython_debug/
 *.py[cod]
-*$py.class
-*.egg-info
-pip-wheel-metadata
-share/python-wheels/
-build/
-dist/
-eggs/
-sdist/
 
 # Java
-hs_err_pid*
-replay_pid*
-*.class
 /target/
+/pom.xml.*
+*.class
+hs_err_pid*
+local.properties
+replay_pid*
 
-# C/C++
-*.o
+# C and C++
+*.a
+*.gch
 *.ko
+*.lib
+*.lo
+*.o
 
-# JavaScript
+# Make, CMake, automake, autoconf, pkg-config, etc.
+_deps/
+/_deps
+*.la
+*.pc
+cmake_install.cmake
+compile_commands.json
+install_manifest.txt
+
+# JavaScript and TypeScript
 node_modules/
-# Snowpack dependency directory (https://snowpack.dev/)
-web_modules/
 # TypeScript cache
 tsconfig.tsbuildinfo
 
 # Julia
-*.jl.cov
 *.jl.*.cov
+*.jl.cov
 *.jl.mem
 deps/deps.jl
 
-# Terraform
-override.tf
-override.tf.json
+# Documentation
+/docs/html/
+/docs/_build/
+/docs/autoapi/
+/htmlcov/
+/site/
 
-# Documentation and coverage
-site/
-docs/html/
-docs/_build
-cython_debug/
-docs/autoapi
-htmlcov
-coverage.xml
-coverage.json
-
-# Translations
-*.mo
-*.pot
+# Coverage
+/coverage.*
 
 # IPython
 profile_default/
 ipython_config.py
 
 # Django
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+/db.sqlite3
+/db.sqlite3-journal
+/local_settings.py
 
 # Celery
 celerybeat-schedule
 
+# Terraform
+override.tf
+override.tf.json
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                             whitelist                             #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 # Git
-!/.gitattributes
-!/.git/config
 !/.git-blame-ignore-revs
+!/.gitattributes
 
-# pre-commit
-!/.pre-commit-config.yaml
-!/.pre-commit-hooks.yaml
-
-# Ignore files
-!/.gitignore
-!/.helmignore
-!/.prettierignore
-!/.dockerignore
-!/.npmignore
+# `.ignore` files (e.g. `.dockerignore`, `.npmignore`)
+!.*ignore
 
 # GitHub
-!**/.nojekyll
-!/.github
-
-# NPM package files
-!**/.package.json
+!/.github/
+!/.nojekyll
 
 # Linters
-!/.cz.toml
-!/.flake8
 !/.editorconfig
-!.prettierrc.*
+!/.prettierrc*
 
 # External service config
-!/.readthedocs.yaml
-!/.scrutinizer.yaml
-!/.travis.yaml
-!/.circleci/config.yaml
-!/.appveyor.yaml
+!/.*.yaml
+!/.*.toml
+!/.*/[A-Za-z0-9_-]*.yaml
+!/.*/[A-Za-z0-9_-]*.toml

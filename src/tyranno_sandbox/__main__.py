@@ -13,14 +13,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated
 
-import typer
 from loguru import logger
-from typer import Argument, Exit, Option, Typer
+from typer import Argument, Exit, Option, Typer, colors, echo, style
 
-from cicd._about import __about__
-from cicd._global_vars import DefaultGlobalVarsFactory
-from cicd.clean import Cleaner
-from cicd.context import DefaultContextFactory
+from tyranno_sandbox._about import __about__
+from tyranno_sandbox._global_vars import DefaultGlobalVarsFactory
+from tyranno_sandbox.clean import Cleaner
+from tyranno_sandbox.context import DefaultContextFactory
 
 _GLOBAL_VARS = DefaultGlobalVarsFactory()()
 
@@ -29,17 +28,17 @@ _GLOBAL_VARS = DefaultGlobalVarsFactory()()
 class Messenger:
     """"""
 
-    success_color: str = typer.colors.GREEN
-    error_color: str = typer.colors.RED
+    success_color: str = colors.GREEN
+    error_color: str = colors.RED
 
     def success(self, msg: str) -> None:
-        typer.echo(typer.style(msg, fg=self.success_color, bold=True))
+        echo(style(msg, fg=self.success_color, bold=True))
 
     def info(self, msg: str) -> None:
-        typer.echo(msg)
+        echo(msg)
 
     def failure(self, msg: str) -> None:
-        typer.echo(typer.style(msg, fg=self.error_color, bold=True))
+        echo(style(msg, fg=self.error_color, bold=True))
 
     def show_project_info(self) -> None:
         self.info(f"{__about__.name} v{__about__.version}")
@@ -90,7 +89,7 @@ class CliCommands:
         if path is None and name is None:
             raise Exit()
         set_cli_state(verbose=verbose, quiet=quiet)
-        context = DefaultContextFactory()(Path(os.getcwd()), dry_run=dry_run, global_vars=_GLOBAL_VARS)
+        context = DefaultContextFactory()(Path(os.getcwd()), dry_run=dry_run)
         messenger.info(f"Done! Created a new repository under {name}")
         messenger.success("See https://dmyersturnbull.github.io/tyranno/guide.html")
 
@@ -106,7 +105,7 @@ class CliCommands:
         Sync project metadata between configured files.
         """
         set_cli_state(verbose=verbose, quiet=quiet)
-        context = DefaultContextFactory()(Path(os.getcwd()), dry_run=dry_run, global_vars=_GLOBAL_VARS)
+        context = DefaultContextFactory()(Path(os.getcwd()), dry_run=dry_run)
         messenger.info("Syncing metadata...")
         # targets = Sync(context).sync()
         # Msg.success(f"Done. Synced to {len(targets)} targets: {targets}")
@@ -120,7 +119,7 @@ class CliCommands:
         quiet: _Opts.quiet = False,
     ) -> None:
         set_cli_state(verbose=verbose, quiet=quiet)
-        context = DefaultContextFactory()(Path(os.getcwd()), dry_run=dry_run, global_vars=_GLOBAL_VARS)
+        context = DefaultContextFactory()(Path(os.getcwd()), dry_run=dry_run)
         trashed = list(Cleaner(context).run())
         messenger.info(f"Trashed {len(trashed)} paths.")
 
