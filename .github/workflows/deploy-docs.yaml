@@ -5,10 +5,10 @@
 # Deploys mkdocs documentation to GitHub Pages.
 
 name: deploy-docs
-run-name: >
+run-name: >-
   ${{ github.workflow }}
-  ::${{ github.event_name }}
-  ::${{ github.ref_type }}:${{ github.ref_name }}
+  :: ${{ github.event_name }}
+  :: ${{ github.ref_type }}:${{ github.ref_name }}
 
 on:
   push:

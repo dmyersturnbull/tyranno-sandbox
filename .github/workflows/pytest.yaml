@@ -5,11 +5,11 @@
 # Runs Pytest tests on a matrix of (OS, Python version).
 
 name: pytest
-run-name: >
+run-name: >-
   ${{ github.workflow }}
-  ::${{ github.event_name }}
-  ::${{ github.ref_type }}:${{ github.ref_name }}
-  ::@${{ github.actor }}
+  :: ${{ github.event_name }}
+  :: ${{ github.ref_type }}:${{ github.ref_name }}
+  :: @${{ github.actor }}
 
 on:
   merge_group:
@@ -44,7 +44,7 @@ jobs:
   pytest:
     name: Run tests for ${{ matrix.os }}, Python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
-    if: >
+    if: >-
       (
         github.event_name == 'pull_request'
         && (

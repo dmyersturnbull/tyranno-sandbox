@@ -16,7 +16,7 @@ class TestAbout:
     """Tests for running the app."""
 
     def test_about(self) -> None:
-        assert about.namespace == "tyranno"
+        assert about["namespace"] == "tyranno_sandbox"
 
 
 if __name__ == "__main__":

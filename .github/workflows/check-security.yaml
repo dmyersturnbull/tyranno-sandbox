@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: check-security
-run-name: >
+run-name: >-
   ${{ github.workflow }}
-  ::${{ github.event_name }}
-  ::${{ github.ref_type }}:${{ github.ref_name }}
-  ::@${{ github.actor }}
+  :: ${{ github.event_name }}
+  :: ${{ github.ref_type }}:${{ github.ref_name }}
+  :: @${{ github.actor }}
 
 on:
   pull_request:
@@ -31,7 +31,7 @@ jobs:
   security:
     name: Run security linters
     runs-on: ubuntu-latest
-    if: >
+    if: >-
       (
         github.event_name == 'pull_request'
         && (

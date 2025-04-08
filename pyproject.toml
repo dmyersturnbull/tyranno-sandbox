@@ -325,6 +325,14 @@ max-bool-expr = 8 # default is 5
 
 [tool.pytest.ini_options] # pending `[tool.pytest]`
 
+# ******************************* Notes for running tests ******************************************
+#
+# - When running tests, the working directory should be the project root.
+# - pytest-cov is not compatible with the PyCharm/IntelliJ debugger.
+#   See https://www.jetbrains.com/help/pycharm/run-debug-configuration-py-test.html
+#
+# **************************************************************************************************
+
 # This pytest 7+ option avoids repeating the package name in various options.
 pythonpath = ["src/"]
 
@@ -366,26 +374,21 @@ markers = [
 # So, we need to specify which directory to test via `--cov=src/{pkg}`.
 #
 # The `--cov-*` options are handled by pytest-cov.
-# `--import-mode=importlib` is recommended.
-# But!!! **Test classes must have unique names.**
-# `--quiet` hides 'rootdir', 'testpaths', etc.
+# `--import-mode=importlib` is recommended, but it **requires that test classes have unique names.**
 #
-# To show the slowest tests, add `--durations=5 --durations-min=0.1`.
-# Other useful options are:
-# - `--verbose` (full test names)
-# - `--full-trace --showlocals`
-# ---
-# :tyranno: addopts = """
-# :tyranno:   --cov=src/${{.namespace}} \
+# `--quiet` just hides ouptut about 'rootdir', 'testpaths', etc.
+# Add `--full-trace --showlocals` to get more info.
 addopts = """
-  --cov=src/tyrannobox \
+  --cov=src \
   --cov-report json:.coverage.json \
   --cov-report term \
   --cov-config=pyproject.toml \
   --import-mode=importlib \
   --strict-config \
   --strict-markers \
-  --quiet
+  --quiet \
+  --durations=3 \
+  --durations-min=0.5 \
 """
 
 #
@@ -512,13 +515,19 @@ trash = [
 # You can freely add, change, or remove keys.
 # Tyrannosaurus will fail if an undefined key is referenced.
 [tool.tyranno.data]
-# :tyranno: namespace = "${{project.name|to_namespace(@)}}"
-namespace = "tyranno_sandbox"
 vendor = "dmyersturnbull"
-frag = "${{.vendor}}/${{project.name}}"
-copyright = "Copyright ${{now_utc().year}}, Contributors to ${{project.name}}"
+# :tyranno: namespace = "${{project.name|replace(@, '_', '-')|lower(@)}}"
+namespace = "tyranno_sandbox"
+# :tyranno: frag = "${{vendor}}/${{project.name}}"
+frag = "dmyersturnbull/tyranno-sandbox"
+# :tyranno: copyright = "Copyright ${{now_utc().year}}, Contributors to ${{project.name}}"
+copyright = "Copyright 2025, Contributors to sandbox-tyranno"
 doi = "10.5281/zenodo.4485186" # <<<comment out for new
-# This is the version used in CD and some CI
-main-python-version = "3.13.1"
+# This is the version used in CD and some CI.
+# :tyranno: cicd-python = "${{ project.requires-python|pep440_spec_of('python', @)|pep440_spec_max(@) }}"
+cicd-python = "3.13.1"
+# :tyranno: cicd-python-major = "${{ .cicd-python|split(@, '.')|join('.', @[0:2]) }}"
+cicd-python-major = "3.13"
 # These are the versions to test in CI:
-python-versions = ["3.13.1"]
+# :tyranno: python-versions = ${{ project.requires-python|pep440_spec_of('python', @)|pep440_spec_max(@) }}
+python-versions = ["3.13.2"]

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: format-pr
-run-name: >
+run-name: >-
   ${{ github.workflow }}
   :: ${{ github.event_name }}
   :: ${{ github.ref_type }}:${{ github.ref_name }}
@@ -17,7 +17,7 @@ on:
 
 jobs:
   bump-deps:
-    if: >
+    if: >-
       contains(fromJSON('["created", "edited"]'), github.event.action)
       && github.event.comment.body == '/please-format'
     permissions:

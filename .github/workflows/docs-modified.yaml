@@ -2,14 +2,12 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# Tests building mkdocs docs.
-
-name: check-docs
-run-name: >
+name: docs-modified
+run-name: >-
   ${{ github.workflow }}
-  ::${{ github.event_name }}
-  ::${{ github.ref_type }}:${{ github.ref_name }}
-  ::@${{ github.actor }}
+  :: ${{ github.event_name }}
+  :: ${{ github.ref_type }}:${{ github.ref_name }}
+  :: @${{ github.actor }}
 
 on:
   merge_group:
@@ -40,7 +38,7 @@ jobs:
   check-docs:
     name: Test building docs
     runs-on: ubuntu-latest
-    if: >
+    if: >-
       (
         github.event_name == 'pull_request'
         && (
@@ -58,15 +56,4 @@ jobs:
         && contains(fromJSON('["created", "edited"]'), github.event.action)
         && contains(fromJSON('["/please-review", "/please-check-docs"]'), github.event.comment.body)
       )
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.ref }}
-      - uses: astral-sh/setup-uv@v5
-        with:
-          python-version: "3.13"
-          enable-cache: true
-      - name: Build docs
-        id: mkdocs
-        run: |
-          uv run --locked mkdocs build --strict || exit $?
+    uses: _check-docs.yaml

@@ -10,7 +10,7 @@
 # Generates and sends reports for multiple OSes and Python versions.
 
 name: update-coverage
-run-name: >
+run-name: >-
   ${{ github.workflow }}
   :: ${{ github.event_name }}
   :: ${{ github.ref_type }}:${{ github.ref_name }}
@@ -32,7 +32,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: >
+  group: >-
     ${{ github.workflow }}\
     -${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true

@@ -5,11 +5,11 @@
 # Tests building a Docker image.
 
 name: docker
-run-name: >
+run-name: >-
   ${{ github.workflow }}
   :: ${{ github.event_name }}
   :: ${{ github.ref_type }}:${{ github.ref_name }}
-  : :@${{ github.actor }}
+  :: @${{ github.actor }}
 
 on:
   merge_group:
@@ -39,7 +39,7 @@ jobs:
   docker:
     name: Run tests for ${{ matrix.os }}, Python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
-    if: >
+    if: >-
       github.event_name == 'pull_request'
       && (
         github.event.action == 'ready_for_review'

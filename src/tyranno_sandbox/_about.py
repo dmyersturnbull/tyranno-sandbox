@@ -43,8 +43,6 @@ class _FrozenList[T](Sequence[T]):
     def __eq__(self, other: object) -> bool:
         if isinstance(other, _FrozenList):
             return self.__items == other.__items
-        if isinstance(other, Sequence):
-            return self.__items == list(other)
         return NotImplemented
 
 

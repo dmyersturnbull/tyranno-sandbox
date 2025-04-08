@@ -5,11 +5,11 @@
 # Checks links.
 
 name: check-links
-run-name: >
+run-name: >-
   ${{ github.workflow }}
-  ::${{ github.event_name }}
-  ::${{ github.ref_type }}:${{ github.ref_name }}
-  ::@${{ github.actor }}
+  :: ${{ github.event_name }}
+  :: ${{ github.ref_type }}:${{ github.ref_name }}
+  :: @${{ github.actor }}
 
 on:
   merge_group:
@@ -36,7 +36,7 @@ jobs:
   check-links:
     name: Test building docs
     runs-on: ubuntu-latest
-    if: >
+    if: >-
       (
         github.event_name == 'pull_request'
         && (

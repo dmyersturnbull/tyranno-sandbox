@@ -19,7 +19,7 @@ LABEL org.opencontainers.image.documentation="https://github.com/dmyersturnbull/
 # Declare the core build args.
 # These must exist outside of any stage and be declared before the first FROM.
 ARG ALPINE_VERSION=""
-# :tyranno: ARG PYTHON_VERSION="${{.main-python-version.vr_minor(@)}}"
+# :tyranno: ARG PYTHON_VERSION="${{.cicd-python.pep440_str_minor(@)}}"
 ARG PYTHON_VERSION="3.13"
 
 # -------------------- Download uv and set vars --------------------

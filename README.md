@@ -135,30 +135,68 @@ is a popular alternative to GitHub’s feature.
 ### 🎨 More on `sync`
 
 Maybe you want your GitHub workflows to use your `pyproject.toml` Python version.
-Define `main-python-version` in `[tool.tyranno.data]`
-and reference it in a
-[JMESPath community](https://jmespath.site/)
-expression using the tyranno-defined function `vr_minor`.
+Define `cicd-python` in `[tool.tyranno.data]`
+and reference it in a JMESPath expression using a tyranno-defined `pep440_` function.
 
 ```yaml
 - uses: astral-sh/setup-uv@v5
   with:
-    # :tyranno: python-version: "${{.main-python-version|vr_minor(@)}}"
+    # :tyranno: python-version: "${{ .cicd-python|pep440_str_minor(@) }}"
     python-version: "3.13"
 ```
 
-If you wanted, you could define `main-python-version` dynamically, too.
-Find the max version compatible with `requires-python`:
+If wanted, you could define `cicd-python` dynamically as well,
+as the max version compatible with `requires-python`:
 
 ```toml
 [project]
 requires-python = ">=3.11,<4.0"
 
 [tool.tyranno.data]
-# uses two custom functions that Tyranno provides: vrspec_filter and vr_max
-# :tyranno: main-python-version = "${{project.requires-python|vrspec_filter('python',@)|vr_max(@)}}"
-main-python-version = "3.13.1"
+# :tyranno: cicd-python = "${{ project.requires-python|pep440_spec_of('python', @)|pep440_spec_max(@) }}"
+cicd-python = "3.13.1"
 ```
+
+If an expression gets too long, you can split over multiple lines.
+For example, to optimize the list of Python versions to test:
+
+```toml
+# :tyranno: ci-python-versions = ${{
+# project.requires-python
+# | pep440_spec_of('python', @)
+# | pep440_str_find_all(@)
+# | pep440_str_max_per(@, 'major.minor')
+# }}
+ci-python-versions = ["3.11.11", "3.12.8", "3.13.2"]
+```
+
+There are two ways to fill multiple lines:
+
+- consecutive `:tyranno:` lines, or
+- output surrounded by `:tyranno-block-start:` and `:tyranno-block-end:`.
+
+```java
+// :tyranno: public final String NOTICE = "${{project.name}}"
+// :tyranno:     + " version " + "${{project.version}}";
+public final String NOTICE = project.name
+    + " version " + project.version;
+```
+
+Or:
+
+```java
+// :tyranno-block-start:
+// :tyranno: List<String> command = List.of(${{.command|yaml_multiline(@, 4, true)}});
+List<String> command = List.of(
+    "#!/usr/bin/env bash",
+    "printf 'Hello, world!\\n'",
+    "exit 0"
+);
+// :tyranno-block-end:
+```
+
+`:tyranno-block-start:` and `:tyranno-block-end:` are needed whenever the number of lines can vary.
+Tyrannosaurus otherwise doesn't know how many existing lines it needs to replace.
 
 ### 🍁 Contributing
 
