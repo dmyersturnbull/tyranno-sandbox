@@ -1,0 +1,60 @@
+# Patterns to omit from charts
+# Uses Go's 'filepath.Match'.
+# Does NOT support `**` or `!`.
+# Does not implicitly ignore `.helmignore` itself.
+
+# Dotted files
+.*
+
+# General hidden or unwanted
+*[~#$]
+[~#$]*
+*[.~]bak
+*[.~]out
+*[.~]swp
+*[.~]temp
+*[.~]tmp
+*.log
+*.pid
+Thumbs.db
+
+# Python
+__pycache__/
+__pypackages__/
+cython_debug/
+*.py[cod]
+
+# C and C++
+*.a
+*.gch
+*.ko
+*.lib
+*.lo
+*.o
+
+# Make, CMake, automake, autoconf, pkg-config, etc.
+_deps/
+/_deps
+*.la
+*.pc
+cmake_install.cmake
+compile_commands.json
+install_manifest.txt
+
+# JavaScript and TypeScript
+node_modules/
+# TypeScript cache
+tsconfig.tsbuildinfo
+
+# Julia
+*.jl.*.cov
+*.jl.cov
+*.jl.mem
+deps/deps.jl
+
+# Documentation
+/docs/html/
+/docs/_build/
+/docs/autoapi/
+/htmlcov/
+/site/
