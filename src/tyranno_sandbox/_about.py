@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-Tyrannosaurus project metadata.
+Project metadata.
 
 This is a separate module so that it's easy to import.
 For example, your `mypkg/app.py` may want to write `"{__about__.name} (version v{__about__.version})"`,
@@ -11,14 +11,10 @@ while your `mypkg/__init__.py` includes lines like `from mypkg.app import Entry`
 (This would break if `mypkg.app` tried to `from mypkg import __about__`.)
 """
 
-import time
 from collections.abc import Sequence
-from datetime import UTC, datetime
-from typing import NotRequired, ReadOnly, TypedDict, overload
+from typing import Final, NotRequired, ReadOnly, TypedDict, overload
 
-__all__ = ["About", "UrlDict", "__about__", "start_time_monotonic"]
-start_time_monotonic = time.monotonic()
-start_time_utc = datetime.now().astimezone(UTC)
+__all__ = ["About", "UrlDict", "__about__"]
 
 
 class _FrozenList[T](Sequence[T]):
@@ -34,7 +30,7 @@ class _FrozenList[T](Sequence[T]):
     def __getitem__(self, index: int | slice) -> T | Sequence[T]:
         return self.__items[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.__items)
 
     def __hash__(self) -> int:
@@ -86,6 +82,7 @@ class About(TypedDict):
 
     name: ReadOnly[str]
     namespace: ReadOnly[str]
+    vendor: ReadOnly[str]
     version: ReadOnly[str]
     summary: ReadOnly[str]
     license: ReadOnly[str]
@@ -95,35 +92,37 @@ class About(TypedDict):
     urls: ReadOnly[UrlDict]
 
 
-__about__ = About(
-    # :tyranno: name="${{.namespace}}",
+__about__: Final[About] = About(
+    # ::tyranno:: name="$<<.namespace>>",
     namespace="tyranno_sandbox",
-    # :tyranno: name="${{project.name}}",
+    # ::tyranno:: name="$<<.vendor>>",
+    vendor="dmyersturnbull",
+    # ::tyranno:: name="$<<project.name>>",
     name="tyranno-sandbox",
-    # :tyranno: version="${{project.version}}",
+    # ::tyranno:: version="$<<project.version>>",
     version="0.0.1-alpha0",
-    # :tyranno: summary="${{project.summary}}",
+    # ::tyranno:: summary="$<<project.summary>>",
     summary="Sandbox to test CI/CD in Tyrannosaurus",
-    # :tyranno: authors=${{project.authors[*].name}},
+    # ::tyranno:: authors=$<<project.authors[*].name>>,
     authors=["Douglas Myers-Turnbull"],
-    # :tyranno: maintainers=${{project.maintainers[*].name}},
+    # ::tyranno:: maintainers=$<<project.maintainers[*].name>>,
     maintainers=["Douglas Myers-Turnbull"],
-    # :tyranno: name=${{project.keywords}},
+    # ::tyranno:: name=$<<project.keywords>>,
     keywords=["ci/cd", "cookiecutter", "github-workflow", "pyproject", "python-template"],
-    # :tyranno: license="${{project.license.text}}",
+    # ::tyranno:: license="$<<project.license.text>>",
     license="Apache-2.0",
     urls=UrlDict(
-        # :tyranno: homepage="${{project.urls.Homepage}}",
+        # ::tyranno:: homepage="$<<project.urls.Homepage>>",
         homepage="https://github.com/dmyersturnbull/tyranno-sandbox",
-        # :tyranno: source="${{project.urls.Source}}",
+        # ::tyranno:: source="$<<project.urls.Source>>",
         source="https://github.com/dmyersturnbull/tyranno-sandbox",
-        # :tyranno: documentation="${{project.urls.Documentation}}",
+        # ::tyranno:: documentation="$<<project.urls.Documentation>>",
         documentation="https://github.com/dmyersturnbull/tyranno-sandbox",
-        # :tyranno: changelog="${{project.urls.Release Notes}}",
+        # ::tyranno:: changelog="$<<project.urls.Release Notes>>",
         changelog="https://github.com/dmyersturnbull/tyranno-sandbox/releases",
-        # :tyranno: download="${{project.urls.Download}}",
+        # ::tyranno:: download="$<<project.urls.Download>>",
         download="https://pypi.org/project/tyranno-sandbox/",
-        # :tyranno: bug="${{project.urls.Tracker}}",
+        # ::tyranno:: bug="$<<project.urls.Tracker>>",
         bug="https://github.com/dmyersturnbull/tyranno-sandbox/issues",
     ),
 )

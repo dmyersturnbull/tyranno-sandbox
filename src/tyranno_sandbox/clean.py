@@ -17,7 +17,7 @@ __all__ = ["Cleaner"]
 
 @dataclass(frozen=True, slots=True)
 class Cleaner:
-    """"""
+    """Tool to trash unwanted files."""
 
     context: Context
 

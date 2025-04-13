@@ -67,9 +67,7 @@ class Checker:
 
     @classmethod
     def check_keys(cls, node: Branch | Array, /) -> Branch | Array:
-        """
-        Recursively, verifies that keys are `str` that don't contain `.`.
-        """
+        """Recursively, verifies that keys are `str` that don't contain `.`."""
         if isinstance(node, list):
             for v in node:
                 if isinstance(v, list | dict):
@@ -96,9 +94,7 @@ class Checker:
 
     @classmethod
     def check_values(cls, node: Branch | Array, /) -> Branch | Array:
-        """
-        Recursively, verifies that values have valid types.
-        """
+        """Recursively, verifies that values have valid types."""
         if isinstance(node, list):
             for v in node:
                 if isinstance(v, list | dict):
@@ -120,11 +116,13 @@ class Checker:
         return value
 
     @classmethod
-    def is_primitive(cls, value: Any, /) -> TypeGuard[Primitive]:
+    def is_primitive(cls, value: Any, /) -> TypeGuard[Primitive]:  # noqa: ANN401
         return isinstance(value, str | int | float | bool | date | datetime | time)
 
 
 class Utils:
+    """Utilities for working with nested dicts."""
+
     @classmethod
     def nest(cls, items: Branch, /) -> Branch:
         """
@@ -192,11 +190,11 @@ class Utils:
     def _dotify(cls, at: str, items: Branch | Array) -> Generator[tuple[str, Leaf] | Leaf]:
         if isinstance(items, dict):
             for k, v in items.items():
-                nxt = f"{at}.{k}" if at == "" else k
+                nxt = f"{at}.{k}" if not at else k
                 yield from cls._dotify(nxt, v)
         elif isinstance(items, list):
             yield at, [cls._dotify("", v) for v in items]
-        elif at == "":
+        elif not at:
             yield items
         else:
             yield at, items
@@ -219,24 +217,24 @@ class DotTree(dict[str, Toml]):
         - `from_mixed`: Can take a mixture of nested and dotted (uncommonly needed).
 
     General access:
-        - `demand`: Returns a value, or raises a `KeyError`.
-        - `request`: Returns a value, or `None`/default.
+        - `access`: Returns a value, or raises a `KeyError`.
+        - `get`: Returns a value, or `None`/default.
 
     Subtree access:
-        - `demand_subtree`: Returns an inner tree; e.g. `tree.demand_subtree("owner.friends")`.
-        - `request_subtree`: Falls back to `{}`/default.
+        - `access_subtree`: Returns an inner tree; e.g. `tree.access_subtree("owner.friends")`.
+        - `get_subtree`: Falls back to `{}`/default.
 
     Primitive value access:
-        - `demand_value`: Checks that the type is a primitive.
-        - `request_value`: Falls back to `None`/default.
-        - `demand_value_as`: Checks the type.
-        - `request_value_as`: ...
+        - `access_value`: Checks that the type is a primitive.
+        - `get_value`: Falls back to `None`/default.
+        - `access_value_as`: Checks the type.
+        - `get_value_as`: ...
 
     List access:
-        - `demand_list`: Equivalent to `demand_as("key", list)`.
-        - `request_list`: Falls back to `[]`/default
-        - `demand_list_as`: Checks the list element types.
-        - `request_list_as`: ...
+        - `access_list`: Equivalent to `access_as("key", list)`.
+        - `get_list`: Falls back to `[]`/default
+        - `access_list_as`: Checks the list element types.
+        - `get_list_as`: ...
 
     Traversal methods:
         - `walk`: Iterates over branches and leaves, depth-first.
@@ -271,7 +269,7 @@ class DotTree(dict[str, Toml]):
             >>> from tyranno_sandbox.dot_tree import DotTree
             >>> DotTree.from_mixed({"books": [{"title": "Bats", "ids.isbn": "123-4-56-123456-0"}]})
             {"books": [{"title": "Bats", "ids": {"isbn": "123-4-56-123456-0"}}]}
-        """
+        """  # noqa: DOC502
         return cls(Utils.nest(Utils.dotify(x)))
 
     @classmethod
@@ -283,7 +281,7 @@ class DotTree(dict[str, Toml]):
         Raises:
             ValueError: If a key contains `.`.
             TypeError: If or `x` is not a `dict`, a key is not a `str`, or a value is `None`.
-        """
+        """  # noqa: DOC502
         return cls(Checker.check(x))
 
     @classmethod
@@ -301,7 +299,7 @@ class DotTree(dict[str, Toml]):
             {"owner": {"name": {"first": "John"}}}
             >>> DotTree.from_dotted({"books": [{"title": "Bats", "ids.isbn": "123-4-56-123456-0"}]})
             {"books": [{"title": "Bats", "ids": {"isbn": "123-4-56-123456-0"}}]}
-        """
+        """  # noqa: DOC502
         return cls(Utils.nest(x))
 
     def transform_leaves(self, fn: Callable[[str, Leaf], Leaf | None], /) -> Self:
@@ -363,24 +361,24 @@ class DotTree(dict[str, Toml]):
                 dct[key] = value
         return dct
 
-    def demand_subtree(self, keys: str, /) -> Self:
+    def access_subtree(self, keys: str, /) -> Self:
         """
         Returns the subtree under the `.`-delimited key string, `keys`.
 
         Raises:
             TypeError: If the value is not a dict.
             KeyError: If `keys` is not found.
-        """
+        """  # noqa: DOC502
         return self.__class__(self._access(keys))
 
-    def request_subtree(self, keys: str, /, default: Branch | None = None) -> Self:
+    def get_subtree(self, keys: str, /, default: Branch | None = None) -> Self:
         """
         Returns the subtree under the `.`-delimited key string, `keys`.
         If `keys` is not found, returns `default`; returns `{}` if `default=None`.
 
         Raises:
             TypeError: If the value is not a dict.
-        """
+        """  # noqa: DOC502
         try:
             x = self._access(keys)
         except KeyError:
@@ -388,9 +386,9 @@ class DotTree(dict[str, Toml]):
         return self.__class__(x)
 
     @overload
-    def request_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T], default: T) -> T: ...
+    def get_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T], default: T) -> T: ...
 
-    def request_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T], default: T | None = None) -> T:
+    def get_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T], default: T | None = None) -> T:
         """
         Returns a primitive value after checking its type, or `default` if not found.
 
@@ -406,24 +404,27 @@ class DotTree(dict[str, Toml]):
             raise TypeError(msg)
         return x
 
-    def demand_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T]) -> T:
+    def access_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T]) -> T:
         """
         Returns a value after checking its type, or raises a `KeyError` if not found.
 
         Raises:
             KeyError: If `keys` is not found.
             TypeError: If not `isinstance(value, as_type)`.
-        """
+        """  # noqa: DOC502
         x = self._access(keys)
         if not isinstance(x, as_type):
             msg = f"Value {x} from {keys} is a {type(x)}, not {as_type}"
             raise TypeError(msg)
         return x
 
-    def request_list(self, keys: str, /, default: Array | None = None) -> Array:
+    def get_list(self, keys: str, /, default: Array | None = None) -> Array:
         """
         Returns a list, or `default` if not found.
         `default=None` is equivalent to `default=[]`.
+
+        Raises:
+            TypeError: If not `isinstance(value, as_type)`.
         """
         try:
             v = self._access(keys)
@@ -434,7 +435,7 @@ class DotTree(dict[str, Toml]):
             raise TypeError(msg)
         return v
 
-    def request_list_as[T: Primitive](self, keys: str, /, as_type: type[T], default: list[T] | None = None) -> list[T]:
+    def get_list_as[T: Primitive](self, keys: str, /, as_type: type[T], default: list[T] | None = None) -> list[T]:
         """
         Returns a list, or `default` if not found, checking the types of the list elements.
         `default=None` is equivalent to `default=[]`.
@@ -454,14 +455,14 @@ class DotTree(dict[str, Toml]):
             raise TypeError(msg)
         return x
 
-    def demand_list_as[T: Primitive](self, keys: str, /, as_type: type[T]) -> list[T]:
+    def access_list_as[T: Primitive](self, keys: str, /, as_type: type[T]) -> list[T]:
         """
         Returns a list after checking the types of its elements, or raises a `KeyError`.
 
         Raises:
             KeyError: If `keys` is not found.
             TypeError: If not `isinstance(value, as_type)` for all values in the list.
-        """
+        """  # noqa: DOC502
         x = self._access(keys)
         if not isinstance(x, list):
             msg = f"Value {x} is not a list for key {keys}"
@@ -472,47 +473,45 @@ class DotTree(dict[str, Toml]):
         return x
 
     @overload
-    def request_primitive[T: Primitive](self, keys: str, /, default: T) -> T: ...
+    def get_primitive[T: Primitive](self, keys: str, /, default: T) -> T: ...
 
-    def request_primitive[T: Primitive](self, keys: str, /, default: T | None = None) -> T | None:
+    def get_primitive[T: Primitive](self, keys: str, /, default: T | None = None) -> T | None:
         """
         Returns a primitive value, or `default` if not found.
 
         Raises:
             TypeError: If the value is not a primitive.
-        """
+        """  # noqa: DOC502
         try:
             v = self._access(keys)
         except KeyError:
             return default
         return Checker.check_primitive(v)
 
-    def demand_primitive(self, keys: str) -> Primitive:
+    def access_primitive(self, keys: str) -> Primitive:
         """
         Returns a primitive value, or raises a `KeyError`.
 
         Raises:
             KeyError: If the key is not found.
             TypeError: If the value is not a primitive.
-        """
+        """  # noqa: DOC502
         return Checker.check_primitive(self._access(keys))
 
-    def request(self, keys: str) -> Toml | None:
-        """
-        Returns a value from the `.`-delimited `keys`, falling back to `None`.
-        """
+    def get(self, keys: str) -> Toml | None:
+        """Returns a value from the `.`-delimited `keys`, falling back to `None`."""
         try:
             return self._access(keys)
         except KeyError:
             return None
 
-    def demand(self, keys: str) -> Toml:
+    def access(self, keys: str) -> Toml:
         """
         Returns a value from the `.`-delimited `keys`, or raises a `KeyError`.
 
         Raises:
             KeyError: If the key is not found.
-        """
+        """  # noqa: DOC502
         return self._access(keys)
 
     def _access(self, keys: str) -> Toml:
@@ -527,7 +526,7 @@ class DotTree(dict[str, Toml]):
         return x
 
     def __rich_repr__(self) -> str:
-        """See [print][]."""
+        """Pretty-prints for [Rich](https://github.com/Textualize/rich) via [print][]."""
         return self.print()
 
     def print(self) -> str:
@@ -536,6 +535,8 @@ class DotTree(dict[str, Toml]):
 
 
 class DotTrees:
+    """Static factory methods for `DotTree`."""
+
     @classmethod
     def from_json(cls, data: str, /) -> DotTree:
         """Builds a tree from a JSON string."""
