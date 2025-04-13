@@ -25,6 +25,9 @@ node_modules/
 /justfile
 /mkdocs.yaml
 
+# Keep README.md (needed for build)
+!/README.md
+
 # Keep .dockerignore and .gitignore
 !/.dockerignore
 !/.gitignore
