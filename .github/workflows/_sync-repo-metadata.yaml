@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+on:
+  workflow_call:
+
+jobs:
+  sync-repo-metadata:
+    # ::tyranno:: runs-on: "$<<.cicd.default-runner>>"
+    runs-on: ubuntu-latest
+    env:
+      SETTINGS_PATH: .github/project.yaml
+      # For historical reasons, the GH CLI uses GH_TOKEN instead of GITHUB_TOKEN
+      # https://github.com/github/docs/issues/21930
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install yq
+        run: sudo snap install yq || exit $?
+      - name: Set repo metadata
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+        run: |
+          # Read the metadata
+          description=$(yq eval '.description' "$SETTINGS_PATH" || exit $?)
+          homepage=$(yq eval '.homepage' "$SETTINGS_PATH" || exit $?)
+          topics=$(yq eval '.topics | join(",")' "$SETTINGS_PATH" || exit $?)
+          # Update the repo metadata.
+          gh repo edit "${{ github.repository }}" \
+            --description "$description" \
+            --homepage "$homepage" \
+            --add-topic "$topics" \
+            || exit $?
+          printf "Updated repo description, homepage, and topics.\n"

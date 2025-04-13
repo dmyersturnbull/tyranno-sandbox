@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+on:
+  workflow_call:
+    inputs:
+      to-docker-hub:
+        type: boolean
+        default: false
+      to-ghcr:
+        type: boolean
+        default: false
+
+jobs:
+  publish-docker:
+    name: Publish to Docker container registries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - name: Extract Docker metadata
+        id: docker-metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ GITHUB_REPOSITORY }}
+      - name: Log in to Docker Hub
+        if: ${{ inputs.to-docker-hub }}
+        uses: docker/login-action@v3
+        env:
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+        with:
+          username: ${{ env.dockerhub_username }}
+          password: ${{ env.dockerhub_token }}
+      - name: Log into GHCR
+        if: ${{ inputs.to-ghcr }}
+        uses: docker/login-action@v3
+        env:
+          ghcr_username: ${{ github.actor }}
+          ghcr_password: ${{ github.token }}
+        with:
+          registry: ghcr.io
+      - name: Publish Docker image to container registries
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          tags: ${{ steps.docker-metadata.outputs.tags }}
+          labels: ${{ steps.docker-metadata.outputs.labels }}
+          cache-from: type=gha
+          # type=gha,mode=max is meant to maximize cache hits.
+          cache-to: type=gha,mode=max

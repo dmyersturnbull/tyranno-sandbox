@@ -2,25 +2,19 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# Tests building mkdocs docs.
-
 on:
   workflow_call:
 
 jobs:
-  check-docs:
-    name: Test building docs
+  publish-mkdocs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.ref }}
       - uses: astral-sh/setup-uv@v5
-        with:
-          # :tyranno: "${{.
-          python-version: "3.13"
-          enable-cache: true
-      - name: Build docs
-        id: mkdocs
+      - name: Deploy docs for ${{ github.ref_name }}
         run: |
           uv run --locked mkdocs build --strict || exit $?
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - uses: actions/deploy-pages@v4

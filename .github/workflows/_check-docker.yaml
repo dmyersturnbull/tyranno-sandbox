@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+on:
+  workflow_call:
+
+jobs:
+  check-docker:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          # Don't test macOS because we'd need to set up Docker.
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: |
+          docker build || exit $?

@@ -3,17 +3,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 on:
+  merge_group:
+    types:
+      - checks_requested
   pull_request:
     types:
-      - ready_for_review
+      - review_requested
     paths:
-      - src/
-      - tests/
+      - "src/**/*"
+      - "tests/**/*"
+      - pyproject.toml
 
 permissions:
-  contents: read
-  statuses: write
+  contents: write
 
 jobs:
-  codeql:
-    uses: ./.github/workflows/_run-codeql.yaml
+  test:
+    uses: ./.github/workflows/_run-pytest.yaml

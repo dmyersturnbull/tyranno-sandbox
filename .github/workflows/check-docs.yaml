@@ -5,15 +5,15 @@
 on:
   pull_request:
     types:
-      - ready_for_review
+      - review_requested
     paths:
       - src/
-      - tests/
+      - docs/
+      - mkdocs.yaml
 
 permissions:
   contents: read
-  statuses: write
 
 jobs:
-  codeql:
-    uses: ./.github/workflows/_run-codeql.yaml
+  check-docs:
+    uses: ./.github/workflows/_check-mkdocs.yaml

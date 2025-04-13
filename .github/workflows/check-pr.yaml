@@ -4,16 +4,11 @@
 
 on:
   pull_request:
-    types:
-      - ready_for_review
-    paths:
-      - src/
-      - tests/
 
 permissions:
   contents: read
-  statuses: write
 
 jobs:
-  codeql:
-    uses: ./.github/workflows/_run-codeql.yaml
+  check-hooks:
+    if: ${{ !contains(github.event.pull_request, 'draft') || !github.event.pull_request.draft }}
+    uses: ./.github/workflows/_check-hooks.yaml

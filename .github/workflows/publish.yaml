@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+on:
+  push:
+    tags:
+      # ::tyranno:: - '$<<.cicd.git-release-regex>>'
+      - '^v(?P<major>\d+)\.(?P<minor>\d+)\.(?P<micro>\d+)$'
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  build-dist:
+    uses: ./.github/workflows/_build_dist.yaml
+  publish-github:
+    needs: build-dist
+    uses: .github/workflows/_publish-github.yaml
+  publish-docs:
+    needs: build-dist
+    permissions:
+      contents: write
+      pages: write
+    uses: .github/workflows/_publish-mkdocs.yaml
+  publish-pypi:
+    needs: publish-docs
+    uses: .github/workflows/_publish-pypi.yaml
+  publish-docker:
+    needs: publish-docs
+    uses: .github/workflows/_publish-docker.yaml

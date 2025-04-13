@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+on:
+  push:
+    paths:
+      - .github/project.yaml
+      - .github/workflows/sync-repo.yaml
+      - .github/workflows/_sync-repo-metadata.yaml
+      - .github/workflows/_sync-repo-labels.yaml
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sync-metadata:
+    uses: ./.github/workflows/_sync-repo-metadata.yaml
+  sync-labels:
+    uses: ./.github/workflows/_sync-repo-labels.yaml

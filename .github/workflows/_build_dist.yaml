@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+on:
+  workflow_call:
+
+jobs:
+  build-dist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install Hatch, and build
+        run: |
+          uv build --sdist --wheel
+      - name: Upload dist/ artifacts (wheels and sdists) as GH workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/

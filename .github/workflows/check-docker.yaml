@@ -5,15 +5,16 @@
 on:
   pull_request:
     types:
-      - ready_for_review
+      - review_requested
     paths:
       - src/
-      - tests/
+      - pyproject.toml
+      - Dockerfile
+      - .dockerignore
 
 permissions:
-  contents: read
-  statuses: write
+  contents: write
 
 jobs:
-  codeql:
-    uses: ./.github/workflows/_run-codeql.yaml
+  check-docker:
+    uses: ./.github/workflows/_check-docker.yaml

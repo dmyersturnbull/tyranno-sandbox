@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+on:
+  workflow_call:
+    inputs:
+      all-files:
+        type: boolean
+        default: false
+
+jobs:
+  reformat:
+    runs-on: ubuntu-latest
+    env:
+      # For historical reasons, the GH CLI uses GH_TOKEN instead of GITHUB_TOKEN
+      # https://github.com/github/docs/issues/21930
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Configure Git
+        run: |
+          # ::tyranno:: git config --global user.name "$<<.cicd.git-bot-name>>"
+          git config --global user.name 'github-actions[bot]' || exit $?
+          # ::tyranno:: git config --global user.email "$<<.cicd.git-bot-email>>"
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com' || exit $?
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Get a pre-commit run argument limiting the files
+        id: arg
+        run: |
+          if [[ "${{ inputs.all-files }}" == "true" ]]; then
+            arg=--all-files
+          else
+            arg=--from-ref ${{ github.event.pull_request.base.sha }}
+          fi
+          echo "arg=$arg" >> "$GITHUB_OUTPUT"
+      - name: Ruff auto-fix
+        run: |
+          uv run pre-commit run ruff ${{ steps.arg.outputs.arg }} || true
+      - name: Commit Ruff auto-fixes (if any)
+        run: |
+          if git diff --quiet . ; then
+            git commit -m "fix: auto-fix lint violations" . || exit $?
+          fi
+      - name: Reformat
+        run: |
+          uv run pre-commit run ruff-format ${{ steps.arg.outputs.arg }} || true
+          uv run pre-commit run prettier ${{ steps.arg.outputs.arg }} || true
+      - name: Commit formatter changes (if any)
+        run: |
+          if git diff --quiet . ; then
+            git commit -m "style: auto-fix lint violations and autoformat" . || exit $?
+          fi
+      - name: Push changes (if any)
+        run: |
+          git push || exit $?

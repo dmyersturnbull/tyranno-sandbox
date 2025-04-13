@@ -1,0 +1,49 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+on:
+  issue_comment:
+    types:
+      - created
+      - edited
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    if: ${{ contains(github.event.comment.body, '/please-audit') }}
+    uses: ./.github/workflows/_check-ruff.yaml
+    with:
+      rules: S
+
+  lint:
+    if: ${{ contains(github.event.comment.body, '/please-lint') }}
+    uses: ./.github/workflows/_check-ruff.yaml
+
+  check-docker:
+    if: ${{ contains(github.event.comment.body, '/please-check-docker') }}
+    uses: ./.github/workflows/_reformat.yaml
+
+  check-docs:
+    if: ${{ contains(github.event.comment.body, '/please-check-docs') }}
+    uses: ./.github/workflows/_check-mkdocs.yaml
+
+  upgrade:
+    if: ${{ contains(github.event.comment.body, '/please-upgrade') }}
+    uses: ./.github/workflows/_bump-deps.yaml
+
+  reformat:
+    if: ${{ contains(github.event.comment.body, '/please-reformat') }}
+    uses: ./.github/workflows/_reformat.yaml
+
+  test:
+    if: ${{ contains(github.event.comment.body, '/please-test') }}
+    uses: ./.github/workflows/_run-pytest.yaml
+
+  unit-test:
+    if: ${{ contains(github.event.comment.body, '/please-unit-test') }}
+    uses: ./.github/workflows/_run-pytest.yaml
+    with:
+      markers: not (ux or slow or net)

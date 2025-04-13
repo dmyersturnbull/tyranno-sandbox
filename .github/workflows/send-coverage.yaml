@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+on:
+  push:
+    paths:
+      - pyproject.toml
+      - src/
+      - tests/
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    uses: ./.github/workflows/_run-pytest.yaml
+    with:
+      store-coverage: true
+  update-codecov:
+    uses: ./.github/workflows/_update-codecov.yaml
+  update-coveralls:
+    uses: ./.github/workflows/_update-coveralls.yaml

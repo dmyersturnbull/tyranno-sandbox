@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+on:
+  workflow_call:
+
+jobs:
+  check-hooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Run some pre-commit hooks
+        run: |
+          uv run pre-commit run --all-files check-added-large-files || exit $?
+          uv run pre-commit run --all-files forbid-new-submodules || exit $?
+          uv run pre-commit run --all-files check-case-conflict || exit $?
+          uv run pre-commit run --all-files check-illegal-windows-names || exit $?
+          uv run pre-commit run --all-files check-merge-conflict || exit $?
+          uv run pre-commit run --all-files check-symlinks || exit $?
+          # These auto-fix, but we're only checking in this workflow:
+          uv run pre-commit run --all-files fix-byte-order-marker || exit $?
+          uv run pre-commit run --all-files end-of-file-fixer || exit $?
+          uv run pre-commit run --all-files trailing-whitespace || exit $?

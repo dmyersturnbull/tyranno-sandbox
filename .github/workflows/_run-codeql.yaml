@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+on:
+  workflow_call:
+
+jobs:
+  run-codeql:
+    runs-on: ubuntu-latest
+    # Runner size impacts CodeQL analysis time
+    # See https://gh.io/recommended-hardware-resources-for-running-codeql
+    timeout-minutes: 30
+    steps:
+      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3

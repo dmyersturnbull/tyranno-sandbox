@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+on:
+  workflow_call:
+
+jobs:
+  sync-repo-labels:
+    # ::tyranno:: runs-on: "$<<.cicd.default-runner>>"
+    runs-on: ubuntu-latest
+    env:
+      SETTINGS_PATH: .github/project.yaml
+      # For historical reasons, the GH CLI uses GH_TOKEN instead of GITHUB_TOKEN
+      # https://github.com/github/docs/issues/21930
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+      - name: Install yq
+        run: sudo snap install yq || exit $?
+      - name: Delete existing labels
+        run: |
+          # Fetch all existing labels using REST API.
+          labels_blob=$(gh api "/repos/${{ github.repository }}/labels" --jq '.[].name' || exit $?)
+          # Loop over the labels and delete them
+          while IFS= read -r label; do
+            printf "Deleting label: //%s//\n" "$label"
+            gh api --method DELETE "/repos/${{ github.repository }}/labels/$label" || exit $?
+          done <<< "$labels_blob"
+      - name: Wait for changes to be made
+        shell: bash
+        run: |
+          sleep 15
+          labels_blob=$(gh api "/repos/${{ github.repository }}/labels" --jq '.[].name' || exit $?)
+          if (( $(wc -l <<< "$labels_blob") > 0 )); then
+            printf "[ERROR] Labels were not deleted: %s.\n" "$labels_blob"
+            exit 1
+          fi
+      - name: Create new labels
+        run: |
+          # Extract the new labels into var ${labels}, a JSON string
+          labels=$(yq eval --output-format=json '.labels' "$SETTINGS_PATH" || exit $?)
+          # Iterate over the labels, adding one at a time.
+          echo "$labels" | jq --compact-output '.[]' | while read label; do
+            # Extract the keys out of the JSON entry
+            name=$(echo "$label" | jq --raw-output .name || exit $?)
+            description=$(echo "$label" | jq --raw-output .description || exit $?)
+            color=$(echo "$label" | jq --raw-output .color | sed 's/#//' || exit $?)
+            # Add the label via the REST API
+            gh api --method POST "/repos/${{ github.repository }}/labels" \
+              -f name="$name" \
+              -f color="$color" \
+              -f description="$description" \
+              -H "Accept: application/vnd.github+json" \
+              || exit $?
+          done

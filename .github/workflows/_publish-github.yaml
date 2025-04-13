@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+# Requires `_build_dist.yaml`.
+
+on:
+  workflow_call:
+    inputs:
+      is-latest:
+        type: boolean
+        default: false
+
+jobs:
+  tag-latest:
+    # This job tags the release as 'latest' and 'v<x>', where <x> is its major version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Actions-R-Us/actions-tagger@v2
+        with:
+          publish_latest_tag: ${{ inputs.is-latest }}
+
+  publish-github:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download dist/ GH workflow artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          token: ${{ secrets.github_token }}
+          files: dist/*
