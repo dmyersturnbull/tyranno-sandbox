@@ -2,31 +2,18 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# Set the labels.
-# These are standard opencontainer labels; see:
-# https://github.com/opencontainers/image-spec/blob/master/annotations.md
-# :tyranno: LABEL org.opencontainers.image.version="${{project.version}}"
-LABEL org.opencontainers.image.version="0.0.1-alpha0"
-# :tyranno: LABEL org.opencontainers.image.vendor="${{.vendor}}"
-LABEL org.opencontainers.image.vendor="dmyersturnbull"
-# :tyranno: LABEL org.opencontainers.image.title="${{project.name}}"
-LABEL org.opencontainers.image.title="tyranno-sandbox"
-# :tyranno: LABEL org.opencontainers.image.url="${{project.urls.Homepage}}"
-LABEL org.opencontainers.image.url="https://github.com/dmyersturnbull/tyranno-sandbox"
-# :tyranno: LABEL org.opencontainers.image.documentation="${{project.urls.Documentation}}"
-LABEL org.opencontainers.image.documentation="https://github.com/dmyersturnbull/tyranno-sandbox"
-
 # Declare the core build args.
 # These must exist outside of any stage and be declared before the first FROM.
 ARG ALPINE_VERSION=""
-# :tyranno: ARG PYTHON_VERSION="${{.cicd-python.pep440_str_minor(@)}}"
+# ::tyranno:: ARG PYTHON_VERSION="$<<.cicd.python-version>>"
 ARG PYTHON_VERSION="3.13"
 
 # -------------------- Download uv and set vars --------------------
 
 # Start the stage "builder", and download uv.
-FROM python:$PYTHON_VERSION:alpine$ALPINE_VERSION as builder
+FROM python:$PYTHON_VERSION-alpine$ALPINE_VERSION AS builder
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+RUN apk add --no-cache bash
 SHELL ["/bin/bash", "-c"]
 
 # Environment variables
@@ -42,6 +29,21 @@ ENV UV_LINK_MODE=copy
 ENV UV_COMPILE_BYTECODE=yes
 # Alternative we're not using:
 # ENV UV_NO_CACHE=yes
+ENV UV_COMPILE_BYTECODE=1
+
+# -------------------- Set the labels --------------------
+# These are standard opencontainer labels; see:
+# https://github.com/opencontainers/image-spec/blob/master/annotations.md
+# ::tyranno:: LABEL org.opencontainers.image.version="$<<project.version>>"
+LABEL org.opencontainers.image.version="0.0.1-alpha0"
+# ::tyranno:: LABEL org.opencontainers.image.vendor="$<<.vendor>>"
+LABEL org.opencontainers.image.vendor="dmyersturnbull"
+# ::tyranno:: LABEL org.opencontainers.image.title="$<<project.name>>"
+LABEL org.opencontainers.image.title="tyranno-sandbox"
+# ::tyranno:: LABEL org.opencontainers.image.url="$<<project.urls.Homepage>>"
+LABEL org.opencontainers.image.url="https://github.com/dmyersturnbull/tyranno-sandbox"
+# ::tyranno:: LABEL org.opencontainers.image.documentation="$<<project.urls.Documentation>>"
+LABEL org.opencontainers.image.documentation="https://github.com/dmyersturnbull/tyranno-sandbox"
 
 # -------------------- Install the project --------------------
 
@@ -66,19 +68,15 @@ RUN \
   uv sync --locked --no-dev --no-editable
 
 # ******************** In production only! ************************
-#
-# -------------------- Run in a fresh stage --------------------
+# -------------------- Run in a fresh stage -----------------------
 # Make a new stage that contains only the final venv.
 # FROM python:$PYTHON_VERSION:alpine$ALPINE_VERSION
 # COPY --from=builder --chown=app:app /var/app/.venv /var/app/.venv
 # *****************************************************************
 
-ENTRYPOINT [
-"/var/app/.venv/tyranno"
-]
-CMD [
-"--version"
-]
+# ::tyranno:: ENTRYPOINT ["/var/app/.venv/bin/$<<project.scripts.${{project.name>>}}"]
+ENTRYPOINT ["/var/app/.venv/bin/tyranno-sandbox"]
+CMD ["--version"]
 
 # -------------------------------------------------------------------------------------------------
 
@@ -89,10 +87,8 @@ CMD [
 # EXPOSE 443
 # EXPOSE 443/udp
 
-# ENTRYPOINT [
-# "/var/app/.venv/bin/hypercorn",
-# "tyranno_sandbox.api:app"
-# ]
+# ::tyranno:: ENTRYPOINT ["/var/app/.venv/bin/hypercorn", "$<<.namespace>>"]
+# ENTRYPOINT ["/var/app/.venv/bin/hypercorn", "tyranno_sandbox.api:app"]
 # CMD [
 # "--bind",
 # "[::]:80",

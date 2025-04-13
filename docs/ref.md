@@ -1,4 +1,4 @@
 # API references
 
-<!-- :tyranno: ::: ${{.namespace}}
+<!-- ::tyranno:: ::: $<<.namespace>>
 ::: cicd

@@ -3,19 +3,19 @@ Render a jagged grid of badges.
 Use line breaks to separate rows, not paragraphs; the latter looks ugly.
 In GitHub-flavored Markdown, do this by ending the line with `\` .
 -->
-<!-- :tyranno: [![Version status](https://img.shields.io/pypi/status/${{project.name}}?label=Status)](https://pypi.org/project/${{project.name}})-->
-<!-- :tyranno: [![Version on PyPi](https://badgen.net/pypi/v/${{project.name}}?label=PyPi)-->
-<!-- :tyranno: [![Version on GitHub](https://badgen.net/github/release/${{.frag}}/stable?label=GitHub)](${{.frag}}/releases)-->
-<!-- :tyranno: [![Version on Docker Hub](https://img.shields.io/docker/v/${{.frag}}?color=green&label=Docker%20Hub)](https://hub.docker.com/repository/docker/${{.frag}})\-->
-<!-- :tyranno: [![Build (Actions)](https://img.shields.io/github/workflow/status/${{.frag}}/test?label=Tests)](${{.frag}}/actions)-->
-<!-- :tyranno: [![Coverage (coveralls)](https://badgen.net/coveralls/c/github/${{project.name}}/${{project.name}}?label=Coveralls)](https://coveralls.io/github/${{.frag}}?branch=main)-->
-<!-- :tyranno: [![Coverage (codecov)](https://badgen.net/codecov/c/github/${{.frag}}?label=CodeCov)](https://codecov.io/gh/${{.frag}})\-->
-<!-- :tyranno: [![Maintainability (Code Climate)](https://badgen.net/codeclimate/maintainability/${{.frag}})](https://codeclimate.com/github/${{.frag}}/maintainability)-->
-<!-- :tyranno: [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/${{.frag}}/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/${{.frag}}/?branch=main)-->
-<!-- :tyranno: [![CodeFactor](https://www.codefactor.io/repository/github/${{.frag}}/badge)](https://www.codefactor.io/repository/github/${{.frag}})\-->
-<!-- :tyranno: [![License](https://badgen.net/pypi/license/${{project.name}}?label=License)](${{project.license.url}})-->
-<!-- :tyranno: [![DOI](https://zenodo.org/badge/DOI/${{.doi}}.svg)](https://doi.org/${{.doi}})-->
-<!-- :tyranno: [![Created with Tyrannosaurus](https://img.shields.io/badge/Created_with-tyranno-sandbox-0000ff.svg)](https://github.com/${{.frag}})-->
+<!-- ::tyranno:: [![Version status](https://img.shields.io/pypi/status/$<<project.name>>?label=Status)](https://pypi.org/project/$<<project.name>>)-->
+<!-- ::tyranno:: [![Version on PyPi](https://badgen.net/pypi/v/$<<project.name>>?label=PyPi)-->
+<!-- ::tyranno:: [![Version on GitHub](https://badgen.net/github/release/$<<.frag>>/stable?label=GitHub)]($<<.frag>>/releases)-->
+<!-- ::tyranno:: [![Version on Docker Hub](https://img.shields.io/docker/v/$<<.frag>>?color=green&label=Docker%20Hub)](https://hub.docker.com/repository/docker/$<<.frag>>)\-->
+<!-- ::tyranno:: [![Build (Actions)](https://img.shields.io/github/workflow/status/$<<.frag>>/test?label=Tests)]($<<.frag>>/actions)-->
+<!-- ::tyranno:: [![Coverage (coveralls)](https://badgen.net/coveralls/c/github/$<<project.name>>/$<<project.name>>?label=Coveralls)](https://coveralls.io/github/$<<.frag>>?branch=main)-->
+<!-- ::tyranno:: [![Coverage (codecov)](https://badgen.net/codecov/c/github/$<<.frag>>?label=CodeCov)](https://codecov.io/gh/$<<.frag>>)\-->
+<!-- ::tyranno:: [![Maintainability (Code Climate)](https://badgen.net/codeclimate/maintainability/$<<.frag>>)](https://codeclimate.com/github/$<<.frag>>/maintainability)-->
+<!-- ::tyranno:: [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/$<<.frag>>/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/$<<.frag>>/?branch=main)-->
+<!-- ::tyranno:: [![CodeFactor](https://www.codefactor.io/repository/github/$<<.frag>>/badge)](https://www.codefactor.io/repository/github/$<<.frag>>)\-->
+<!-- ::tyranno:: [![License](https://badgen.net/pypi/license/$<<project.name>>?label=License)]($<<project.license.url>>)-->
+<!-- ::tyranno:: [![DOI](https://zenodo.org/badge/DOI/$<<.doi>>.svg)](https://doi.org/$<<.doi>>)-->
+<!-- ::tyranno:: [![Created with Tyrannosaurus](https://img.shields.io/badge/Created_with-tyranno-sandbox-0000ff.svg)](https://github.com/$<<.frag>>)-->
 
 [![Version status](https://img.shields.io/pypi/status/tyranno-sandbox?label=Status)](https://pypi.org/project/tyranno-sandbox)
 [![Version on PyPi](https://badgen.net/pypi/v/tyranno-sandbox?label=PyPi)](https://pypi.org/project/tyranno-sandbox)
@@ -79,11 +79,11 @@ The CLI is invoked as `tyranno`.
 For example, assuming you’ve listed `README.md` as a target:
 
 ```markdown
-<!-- :tyranno: ${{project.description}} -->
+<!-- ::tyranno:: $<<project.description>> -->
 
 This next line is the string from pyproject.toml.
 
-<!-- :tyranno: By ${{project.authors[*].name|sort(@)|join(', ', @}} -->
+<!-- ::tyranno:: By $<<project.authors[*].name|sort(@)|join(', ', @>> -->
 
 By Kerri Johnson, Henry Chen
 ```
@@ -135,68 +135,71 @@ is a popular alternative to GitHub’s feature.
 ### 🎨 More on `sync`
 
 Maybe you want your GitHub workflows to use your `pyproject.toml` Python version.
-Define `cicd-python` in `[tool.tyranno.data]`
+Define `default-python` in `[tool.tyranno.data]`
 and reference it in a JMESPath expression using a tyranno-defined `pep440_` function.
 
 ```yaml
 - uses: astral-sh/setup-uv@v5
   with:
-    # :tyranno: python-version: "${{ .cicd-python|pep440_str_minor(@) }}"
+    # ::tyranno:: python-version: "$<< .default-python|pep440_minor(@) >>"
     python-version: "3.13"
 ```
 
-If wanted, you could define `cicd-python` dynamically as well,
-as the max version compatible with `requires-python`:
+#### Complex single-line expressions
+
+If wanted, you could define `default-python-version` dynamically as well,
+along with a list of Python versions to test in CI:
 
 ```toml
-[project]
-requires-python = ">=3.11,<4.0"
-
-[tool.tyranno.data]
-# :tyranno: cicd-python = "${{ project.requires-python|pep440_spec_of('python', @)|pep440_spec_max(@) }}"
-cicd-python = "3.13.1"
-```
-
-If an expression gets too long, you can split over multiple lines.
-For example, to optimize the list of Python versions to test:
-
-```toml
-# :tyranno: ci-python-versions = ${{
+# Get the highest patch version for each compatible Python minor version.
+# ::tyranno:: ci-python = ${{
 # project.requires-python
 # | pep440_spec_of('python', @)
-# | pep440_str_find_all(@)
-# | pep440_str_max_per(@, 'major.minor')
+# | pep440_find_matches(@)
+# | pep440_max_per(@, 'major.minor')
 # }}
-ci-python-versions = ["3.11.11", "3.12.8", "3.13.2"]
+test-python-versions = ["3.11.11", "3.12.8", "3.13.2"]
+# Use the highest version for main CI/CD tasks.
+# ::tyranno:: default-python-version = "$<< .test-python-versions|pep440_max(@) >>"
+default-python = "3.13.2"
 ```
+
+#### Multi-line expressions
 
 There are two ways to fill multiple lines:
 
-- consecutive `:tyranno:` lines, or
-- output surrounded by `:tyranno-block-start:` and `:tyranno-block-end:`.
+- consecutive `::tyranno::` lines, or
+- output surrounded by `::tyranno block start::` and `::tyranno block end::`. (**blocks**).
+
+<b>Consecutive `::tyranno::` lines:</b>
 
 ```java
-// :tyranno: public final String NOTICE = "${{project.name}}"
-// :tyranno:     + " version " + "${{project.version}}";
+// ::tyranno:: public final String NOTICE = "$<<project.name>>"
+// ::tyranno::     + " version " + "$<<project.version>>";
 public final String NOTICE = project.name
     + " version " + project.version;
 ```
 
-Or:
+<b>Blocks:</b>
 
 ```java
-// :tyranno-block-start:
-// :tyranno: List<String> command = List.of(${{.command|yaml_multiline(@, 4, true)}});
+// ::tyranno block start::
+// ::tyranno:: List<String> command = List.of($<<.command|yaml_multiline(@, 4, true)>>);
 List<String> command = List.of(
     "#!/usr/bin/env bash",
     "printf 'Hello, world!\\n'",
     "exit 0"
 );
-// :tyranno-block-end:
+// ::tyranno block end::
 ```
 
-`:tyranno-block-start:` and `:tyranno-block-end:` are needed whenever the number of lines can vary.
+`::tyranno block start::` and `::tyranno block end::` are needed whenever the number of lines can vary.
 Tyrannosaurus otherwise doesn't know how many existing lines it needs to replace.
+
+In `pyproject.toml` (or a file listed in `tool.tyranno.sources`), you can use
+`::tyranno alias:: key = value` as a shorthand for `::tyranno:: key = $<< value >>`.
+This can avoid storing a generated temporary value inside `pyproject.toml`.
+For example, you might use `::tyranno alias:: readme = $<<contents('readme.md')>>`.
 
 ### 🍁 Contributing
 

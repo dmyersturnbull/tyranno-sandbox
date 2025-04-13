@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # A short description of the repository that will show up on GitHub
-# :tyranno: description: ${{project.description}}
+# ::tyranno:: description: ${{project.description}}
 description: Sandbox for Tyrannosaurus
-# :tyranno: homepage: ${{project.urls.Homepage}}
+# ::tyranno:: homepage: ${{project.urls.Homepage}}
 homepage: https://github.com/dmyersturnbull/tyranno-sandbox
 
 topics:
-  # :tyranno-start: ${{project.keywords[*].unquote(@)|unwrap_yaml(@)}}
+  # :tyranno-start: ${{project.keywords[*].unquote(@)|yaml_long(@)}}
   - ci/cd
   - cookiecutter
   - github-workflow
@@ -54,6 +54,9 @@ labels:
   - name: "priority: 4-critical"
     description: "🟥 Must be fixed ASAP"
     color: "#f06600"
+  - name: "question"
+    description: "💬 Question or discussion (issues only)"
+    color: "#8800ff"
   - name: "state: awaiting triage"
     description: "🚦 Awaiting triage"
     color: "#f0f0f0"
@@ -105,6 +108,9 @@ labels:
   - name: "type: test"
     description: "🚨 Addition or modification of tests"
     color: "#90e0ff"
+  - name: "scope: docker"
+    description: "“🐬 Docker"
+    color: "#009000"
 
   # ============= unused labels ============= #
 
