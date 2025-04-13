@@ -310,6 +310,7 @@ flake8-bandit.check-typed-exception = true
 pydocstyle.convention = "google"
 flake8-tidy-imports.ban-relative-imports = "all"
 isort.detect-same-package = false # Use `tool.ruff.src` instead.
+isort.split-on-trailing-comma = false
 
 # -------------------------- delegated pylint options -------------------------
 [tool.ruff.lint.pylint]
