@@ -88,25 +88,25 @@ rich = [
 
 # -------------------------- scripts ------------------------------------------
 [project.scripts]
-# :tyranno: ${{project.name}} = "${{.namespace}}.__main__:cli"
+# ::tyranno:: $<<project.name>> = "$<<.namespace>>.__main__:cli"
 tyranno-sandbox = "tyranno_sandbox.__main__:cli"
 
 # -------------------------- project URIs -------------------------------------
 [project.urls]
-# :tyranno: "https://github.com/${{.frag}}"
+# ::tyranno:: "https://github.com/$<<.frag>>"
 Homepage = "https://github.com/dmyersturnbull/tyranno-sandbox"
-# :tyranno: "https://github.com/${{.frag}}"
+# ::tyranno:: "https://github.com/$<<.frag>>"
 Source = "https://github.com/dmyersturnbull/tyranno-sandbox"
-# :tyranno: Documentation = https://${{.vendor}}.github.io/${{project.name}}
+# ::tyranno:: Documentation = https://$<<.vendor>>.github.io/$<<project.name>>
 Documentation = "https://dmyersturnbull.github.io/tyranno-sandbox"
-# :tyranno: "Issue Tracker" = ${{.home}}/issues
+# ::tyranno:: "Issue Tracker" = $<<.home>>/issues
 Tracker = "https://github.com/dmyersturnbull/tyranno-sandbox/issues"
-# :tyranno: Download = "https://pypi.org/project/${{project.name}}"
+# ::tyranno:: Download = "https://pypi.org/project/$<<project.name>>"
 Download = "https://pypi.org/project/tyranno-sandbox/"
-# :tyranno: "Release Notes" = "https://github.com/${{.frag}}/releases"
+# ::tyranno:: "Release Notes" = "https://github.com/$<<.frag>>/releases"
 "Release Notes" = "https://github.com/dmyersturnbull/tyranno-sandbox/releases"
-# :tyranno: #Sponsor = "https://${{.vendor}}.github.io/${{project.name}}/placeholder#sponsor"
-#Sponsor = "https://dmyersturnbull.github.io/tyranno-sandbox/placeholder#sponsor"
+# ::tyranno:: # Sponsor = "https://$<<.vendor>>.github.io/$<<project.name>>/placeholder#sponsor"
+# Sponsor = "https://dmyersturnbull.github.io/tyranno-sandbox/placeholder#sponsor"
 
 #
 ###################################################################################################
@@ -119,38 +119,44 @@ Download = "https://pypi.org/project/tyranno-sandbox/"
 # `--only-dev` literally means only the `dev` group, so include everything.
 # Also define groups `test`, `docs`, and `lint` for use in CI.
 dev = [
-  "coverage[toml]>=7.6.10",
-  "hypothesis>=6.124",
+  "coverage[toml]>=7.8",
+  "hypothesis>=6.130",
   "mkdocs>=1.6",
   "mkdocs-material>=9.6",
   "mkdocs-minify-plugin>=0.8",
   "mkdocs-literate-nav>=0.6",
-  "mkdocs-api-autonav>=0.1",
-  "mkdocstrings[python]>=0.28",
+  "mkdocs-api-autonav>=0.2",
+  "mkdocstrings[python]>=0.29",
   "pre-commit>=4.2",
-  "pyright[nodejs]>=1.1",
+  "pyright[nodejs]>=1.1.350",
   "pytest>=8.3",
-  "pytest-cov>=6.0",
-  "ruff>=0.11.2",
+  "pytest-cov>=6.1",
+  "pytest-sugar>=1.0",
+  "ruff>=0.11.5",
 ]
 test = [
-  "coverage[toml]>=7.6.10",
-  "hypothesis>=6.124",
+  "coverage[toml]>=7.8",
+  "hypothesis>=6.130",
   "pytest>=8.3",
   "pytest-cov>=6.0",
+  "pytest-sugar>=1.0",
 ]
 docs = [
   "mkdocs>=1.6",
   "mkdocs-material>=9.6",
   "mkdocs-minify-plugin>=0.8",
   "mkdocs-literate-nav>=0.6",
-  "mkdocs-api-autonav>=0.1",
-  "mkdocstrings[python]>=0.28",
+  "mkdocs-api-autonav>=0.2",
+  "mkdocstrings[python]>=0.29",
 ]
+# "Lint" means detect/show(/fix) problems, **not** format (although `ruff` is included in this group).
 lint = [
+  "pyright[nodejs]>=1.1.350",
+  "ruff>=0.11.5",
+]
+# Sufficient to run `uv run pre-commit run (ruff|ruff-format|prettier|pyright)`.
+format = [
   "pre-commit>=4.2",
-  "pyright[nodejs]>=1.1",
-  "ruff>=0.11.2",
 ]
 
 #
@@ -227,7 +233,7 @@ select = [
   "E7",       # == True, bare except, lambda assignment, 'l' in names, etc.
   "E9",       # can't lint -- syntax error, etc.
   "EM",       # flake8-errmsg
-  #"ERA",     # eradicate (commented-out code) //DISABLED: catches code in comments, etc.//
+  "ERA",      # eradicate (commented-out code) (see https://github.com/astral-sh/ruff/pull/14069)
   #"EXE",     # flake8-executable //DISABLED: pre-commit shebang rules instead//
   "F",        # pyflakes
   "FA",       # flake8-future-annotations
@@ -271,7 +277,6 @@ select = [
   "TC005",    # remove empty TYPE_CHECKING blocks
   "TC008",    # remove quotes from type aliases
   #"TD",      # flake8-to*do //DISABLED: bans fix*me, needs specific syntax, nitpicky//
-  "TCH",      # flake8-type-checking
   "TID",      # flake8-tidy-imports (bans relative imports)
   "TRY",      # tryceratops (try-except-raise)
   "UP",       # pyupgrade
@@ -293,9 +298,11 @@ ignore = [
 
 # -------------------------- Ruff unfixable rules -----------------------------
 unfixable = [
+  "ERA001",   # commented-out code (not autofixable currently, but just in case)
   "F841",     # unused variable
   "SIM112",   # uncapitalized env var
   "RUF027",   # possible f-string -- can make mistakes
+  "RUF102",   # invalid noqa
 ]
 
 # -------------------------- Ruff delegated options ---------------------------
@@ -517,24 +524,54 @@ trash = [
   "THUMBS.db",
 ]
 
+# Files to merge into `[tool.tyranno.data]`
+sources = []
+
 #============================ [tool.tyranno.data] ============================#
-# These keys are used in `:tyranno:` comments; none have special meanings.
+
+# These keys are used in `::tyranno::` comments; none have special meanings.
 # You can freely add, change, or remove keys.
 # Tyrannosaurus will fail if an undefined key is referenced.
+
 [tool.tyranno.data]
+
 vendor = "dmyersturnbull"
-# :tyranno: namespace = "${{project.name|replace(@, '_', '-')|lower(@)}}"
+# ::tyranno:: namespace = "$<<project.name.replace(@, '_', '-').lower(@)>>"
 namespace = "tyranno_sandbox"
-# :tyranno: frag = "${{vendor}}/${{project.name}}"
+# ::tyranno:: frag = "$<<vendor>>/$<<project.name>>"
 frag = "dmyersturnbull/tyranno-sandbox"
-# :tyranno: copyright = "Copyright ${{now_utc().year}}, Contributors to ${{project.name}}"
+# ::tyranno:: copyright = "Copyright $<<now_utc().year>>, Contributors to $<<project.name>>"
 copyright = "Copyright 2025, Contributors to sandbox-tyranno"
 doi = "10.5281/zenodo.4485186" # <<<comment out for new
-# This is the version used in CD and some CI.
-# :tyranno: cicd-python = "${{ project.requires-python|pep440_spec_of('python', @)|pep440_spec_max(@) }}"
-cicd-python = "3.13.1"
-# :tyranno: cicd-python-major = "${{ .cicd-python|split(@, '.')|join('.', @[0:2]) }}"
-cicd-python-major = "3.13"
-# These are the versions to test in CI:
-# :tyranno: python-versions = ${{ project.requires-python|pep440_spec_of('python', @)|pep440_spec_max(@) }}
-python-versions = ["3.13.2"]
+
+# -------------------------- CI/CD and build daeta ----------------------------
+[tool.tyranno.data.cicd]
+
+github-bot-name = "github-actions[bot]"
+github-bot-email = "github-actions[bot]@users.noreply.github.com"
+
+# ::tyranno:: python-pep440 = "$<< project.requires-python .pep440_of('python', @) >>"
+python-pep440 = "python~=3.13"
+
+# E.g. if `python-pep440` is `python~=3.12`, then
+# valid-python-builds = ["3.12.0", [...], "3.12.10", "3.13.0", "3.13.1", "3.13.2"]
+# ::tyranno alias:: valid-python-builds = $<< .python-pep440 .pep440_find(@) >>
+
+# Version strings used by default in workflows:
+# ::tyranno:: python-build = "$<< .valid-python-builds | vr_max(@) >>"
+python-build = "3.13.2"
+# ::tyranno:: python-version = "$<< .python-build.pep440_minor(@) >>"
+python-version = "3.13"
+
+# Versions to test in CI:
+# E.g. if `python-pep440` is `python~=3.12`, then
+# `python-builds-to-test = ["3.12.10", "3.13.2"]`
+# ::tyranno alias:: python-builds = $<< .valid-python-builds | vr_max_per(@, 'minor') >>
+
+# Require the version to be compatible with BOTH PEP 440 AND semver.
+# See: https://peps.python.org/pep-0440/ and https://semver.org/
+# Unfortunately, that is just `<major>.<minor>.<patch==micro>`.
+# Semver allows pre-release suffixes of `-[a-z\d]+(.[a-z\d]+)*`, whereas
+# PEP 440 instead allows the suffixes `\.dev\d+`, `a\d+`, `b\d+`, `rc\d+`(==`c\d+`), ``, `\.post\d+`,
+# required to be in that order.
+git-release-regex = '^v(?P<major>\d+)\.(?P<minor>\d+)\.(?P<micro>\d+)$'

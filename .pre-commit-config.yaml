@@ -12,7 +12,7 @@ repos:
       - id: check-added-large-files
         args:
           - --maxkb=256
-      - id: forbid-submodules # ban Git submodules
+      - id: forbid-new-submodules # ban Git submodules
       - id: check-case-conflict # ban ABC and abc both existing
       - id: check-illegal-windows-names # ban filenames that are illegal on Windows
       - id: check-merge-conflict # ban merge conflict markers
@@ -25,36 +25,18 @@ repos:
 
   # UV lock and sync
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.6.13
+    rev: 0.6.14
     hooks:
       - id: uv-sync
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.4
+    rev: v0.11.5
     hooks:
       - id: ruff
         args:
           - --fix-only
       - id: ruff-format
-
-  - repo: https://github.com/adamtheturtle/doccmd-pre-commit
-    rev: v2025.4.8
-    hooks:
-      - id: doccmd
-        alias: docmd-ruff-format
-        args:
-          - --myst-extension=..
-          - --markdown-extension=.md
-          - --language=python
-          - --command=ruff
-          - --no-pad-file
-          - --no-pad-groups
-          - --temporary-file-name-prefix=.~doccmd-
-          - docs/
-          - README.md
-        additional_dependencies:
-          - ruff
 
   # Format various formats with Prettier
   - repo: https://github.com/JoC0de/pre-commit-prettier
