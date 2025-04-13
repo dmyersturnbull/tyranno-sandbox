@@ -2,18 +2,17 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-name: "📚 Documentation"
-description: "Documentation issue"
+name: "💬 Question"
+description: "Question"
 labels:
-  - "type: docs"
+  - "type: question"
   - "state: awaiting triage"
 
 body:
   - type: textarea
-    id: description
+    id: text
     attributes:
-      label: What documentation needs work?
-      placeholder: Describe the documentation issue.
+      label: What question do you have?
       render: markdown
     validations:
       required: true

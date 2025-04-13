@@ -13,6 +13,7 @@ body:
     id: description
     attributes:
       label: What is the feature request?
-      placeholder: Describe the feature you would like.
+      placeholder: Describe the feature.
+      render: markdown
     validations:
       required: true

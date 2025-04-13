@@ -12,36 +12,41 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: What is the performance issue?
-      placeholder: Detail your steps and where the performance dropped.
+      label: What happened?
+      placeholder: Detail what you tried and how performance was affected.
+      render: markdown
     validations:
       required: true
   - type: input
     id: version
     attributes:
       label: Version
-      description: What version are you running?
+      description: Which version(s) are affected?
+    validations:
+      required: true
   - type: dropdown
     id: os
     attributes:
-      label: What OS types are you seeing the problem on?
+      label: What operating system(s) do you see the problem on?
       multiple: true
       options:
-        - Windows
         - Linux
+        - Windows
         - macOS
+        - Android
+        - iOS
+        - other
   - type: dropdown
     id: browsers
     attributes:
-      label: What browsers are you seeing the problem on?
+      label: What browser(s) do you see the problem on?
       multiple: true
       options:
-        - Chrome
+        - Chrome / Chromium
         - Firefox
         - Edge
         - Safari
-        - Opera
-        - Samsung Internet
+        - other
   - type: textarea
     id: logs
     attributes:
