@@ -37,7 +37,7 @@ This is the prototype next-gen [tyranno-sandbox](https://github.com/dmyersturnbu
 When ready, that repository will be updated.
 
 > [!CAUTION]
-> :**🚧 Status:** The GitHub workflows and installable CLI package under construction.
+> :**🚧 Status:** The installable CLI package is under construction.
 
 **A template for post-modern Python projects**
 built with

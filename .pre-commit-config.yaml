@@ -58,3 +58,12 @@ repos:
         # It's ok to list unused suffixes, but Prettier or a plugin must understand them.
         # See: https://prettier.io/docs/en/plugins.html
         files: \.(md|mdx|json|yaml|yml|toml|ini|cfg|properties|sh|ts|js|html|less|css)$|^Dockerfile$|^\..+ignore$
+
+  - repo: https://github.com/tcort/markdown-link-check
+    rev: v3.13.7
+    hooks:
+      - id: markdown-link-check
+        args:
+          - -q
+        stages:
+          - manual

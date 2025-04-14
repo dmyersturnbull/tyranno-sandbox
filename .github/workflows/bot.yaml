@@ -9,41 +9,45 @@ on:
       - edited
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   audit:
-    if: ${{ contains(github.event.comment.body, '/please-audit') }}
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-audit') }}
     uses: ./.github/workflows/_check-ruff.yaml
     with:
       rules: S
 
   lint:
-    if: ${{ contains(github.event.comment.body, '/please-lint') }}
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-lint') }}
     uses: ./.github/workflows/_check-ruff.yaml
 
   check-docker:
-    if: ${{ contains(github.event.comment.body, '/please-check-docker') }}
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-check-docker') }}
     uses: ./.github/workflows/_reformat.yaml
 
   check-docs:
-    if: ${{ contains(github.event.comment.body, '/please-check-docs') }}
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-check-docs') }}
     uses: ./.github/workflows/_check-mkdocs.yaml
 
   upgrade:
-    if: ${{ contains(github.event.comment.body, '/please-upgrade') }}
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-upgrade') }}
+    permissions:
+      contents: write
     uses: ./.github/workflows/_bump-deps.yaml
 
   reformat:
-    if: ${{ contains(github.event.comment.body, '/please-reformat') }}
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-reformat') }}
+    permissions:
+      contents: write
     uses: ./.github/workflows/_reformat.yaml
 
   test:
-    if: ${{ contains(github.event.comment.body, '/please-test') }}
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-test') }}
     uses: ./.github/workflows/_run-pytest.yaml
 
   unit-test:
-    if: ${{ contains(github.event.comment.body, '/please-unit-test') }}
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-unit-test') }}
     uses: ./.github/workflows/_run-pytest.yaml
     with:
       markers: not (ux or slow or net)

@@ -6,11 +6,12 @@ on:
   push:
     paths:
       - pyproject.toml
-      - src/
-      - tests/
+      - src/**/*.py
+      - tests/**/*.py
     branches:
       - main
       - master
+      - releases/**
 
 permissions:
   contents: write

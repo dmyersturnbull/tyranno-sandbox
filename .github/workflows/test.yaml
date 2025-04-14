@@ -3,15 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 on:
-  merge_group:
-    types:
-      - checks_requested
   pull_request:
     types:
       - review_requested
     paths:
-      - "src/**/*"
-      - "tests/**/*"
+      - src/**
+      - tests/**
       - pyproject.toml
 
 permissions:

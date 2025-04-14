@@ -7,8 +7,8 @@ on:
     types:
       - review_requested
     paths:
-      - src/
-      - tests/
+      - src/**/*.py
+      - tests/**/*.py
       - pyproject.toml
 
 permissions:

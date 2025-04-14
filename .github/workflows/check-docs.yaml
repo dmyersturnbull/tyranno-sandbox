@@ -7,8 +7,8 @@ on:
     types:
       - review_requested
     paths:
-      - src/
-      - docs/
+      - src/**/*.py # for API docs
+      - docs/**
       - mkdocs.yaml
 
 permissions:

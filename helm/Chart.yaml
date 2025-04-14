@@ -1,13 +1,13 @@
 apiVersion: v2
 type: application
-# ::tyranno:: description: ${{project.name}}
+# ::tyranno:: name: $<<project.name>>
 name: tyranno-sandbox
-# ::tyranno:: description: ${{project.description}}
+# ::tyranno:: description: $<<project.description>>
 description: Sandbox to test CI/CD in Tyrannosaurus
-# ::tyranno:: home: ${{project.urls.Homepage}}
+# ::tyranno:: home: $<<project.urls.Homepage>>
 home: https://github.com/dmyersturnbull/tyranno-sandbox
 sources:
-  # ::tyranno:: - ${{project.urls.Source}}
+  # ::tyranno:: - $<<project.urls.Source>>
   - https://github.com/dmyersturnbull/tyranno-sandbox
 maintainers:
   # :tyranno-start: ${{project.maintainers[*].unquote(@)|unwrap_yaml(@)}}
@@ -27,7 +27,7 @@ appVersion: "0.0.1"
 # ::tyranno:: version: "$<<project.version>>"
 version: "0.0.1"
 annotations:
-  # ::tyranno:: license: ${{project.license.text}}
+  # ::tyranno:: license: $<<project.license.text>>
   license: Apache-2.0
   # ::tyranno:: requires-python: "$<<project.requires-python>>"
   requires-python: "~=3.13"

@@ -23,7 +23,7 @@ jobs:
           - windows-latest
           - macos-latest
         python:
-          # :tyranno-start: ${{.python-versions}}|yaml_long(@)
+          # :tyranno-start: $<<.python-versions|yaml_long(@)>>
           - "3.13"
           # :tyranno-end
     steps:

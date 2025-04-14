@@ -26,3 +26,6 @@ On Windows, you may need
 [Git for Windows](https://gitforwindows.org/),
 [posh-git](https://github.com/dahlbyk/posh-git),
 or similar.
+
+> [!TIP]
+> Consider setting `git config --global diff.algorithm histogram` for nicer diffs.

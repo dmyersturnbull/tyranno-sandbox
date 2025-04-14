@@ -4,14 +4,11 @@
 
 on:
   push:
-    paths:
-      - .github/project.yaml
-      - .github/workflows/sync-repo.yaml
-      - .github/workflows/_sync-repo-metadata.yaml
-      - .github/workflows/_sync-repo-labels.yaml
     branches:
       - main
       - master
+    paths:
+      - .github/project.yaml
 
 permissions:
   contents: write

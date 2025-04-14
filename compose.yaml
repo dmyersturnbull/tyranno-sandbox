@@ -2,33 +2,20 @@ services:
   web:
     build: .
     volumes:
-      - .:/var/lib/app/
+      - .:/var/app/
     ports:
       - "80:80"
       - "443:443"
       - "443:443/udp"
     environment:
-      - POSTGRES_URI=postgres://user:password@postgres:5432/app
       - MONGO_URI=mongodb://mongodb:27017/app
     depends_on:
       - mongodb
-      - postgres
     develop:
       watch:
         - action: sync
           path: .
-          target: /app
-
-  postgres:
-    image: postgres:17
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=app
-    restart: unless-stopped
-    volumes:
-      - postgres:/var/lib/postgresql/data
-      - ./src/sql/init.sql:/docker-entrypoint-initdb.d/0-init.sql # bind mount
+          target: /var/app
 
   mongodb:
     image: mongo:8
@@ -37,7 +24,7 @@ services:
       - mongo:/var/lib/mongodb
 
   elastic:
-    image: elasticsearch:8.17.1
+    image: elasticsearch:8.17.4
     environment:
       - node.name=elasticsearch
       - cluster.name=elasticsearch
@@ -55,7 +42,6 @@ services:
       - "9200:9200"
 
 volumes:
-  postgres:
   mongo:
   elastic:
 

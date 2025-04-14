@@ -981,8 +981,10 @@ docs = [
     { name = "mkdocs-minify-plugin" },
     { name = "mkdocstrings", extra = ["python"] },
 ]
-lint = [
+format = [
     { name = "pre-commit" },
+]
+lint = [
     { name = "pyright", extra = ["nodejs"] },
     { name = "ruff" },
 ]
@@ -1011,37 +1013,37 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "coverage", extras = ["toml"], specifier = ">=7.6.10" },
-    { name = "hypothesis", specifier = ">=6.124" },
+    { name = "coverage", extras = ["toml"], specifier = ">=7.8" },
+    { name = "hypothesis", specifier = ">=6.130" },
     { name = "mkdocs", specifier = ">=1.6" },
-    { name = "mkdocs-api-autonav", specifier = ">=0.1" },
+    { name = "mkdocs-api-autonav", specifier = ">=0.2" },
     { name = "mkdocs-literate-nav", specifier = ">=0.6" },
     { name = "mkdocs-material", specifier = ">=9.6" },
     { name = "mkdocs-minify-plugin", specifier = ">=0.8" },
-    { name = "mkdocstrings", extras = ["python"], specifier = ">=0.28" },
+    { name = "mkdocstrings", extras = ["python"], specifier = ">=0.29" },
     { name = "pre-commit", specifier = ">=4.2" },
-    { name = "pyright", extras = ["nodejs"], specifier = ">=1.1" },
+    { name = "pyright", extras = ["nodejs"], specifier = ">=1.1.350" },
     { name = "pytest", specifier = ">=8.3" },
-    { name = "pytest-cov", specifier = ">=6.0" },
+    { name = "pytest-cov", specifier = ">=6.1" },
     { name = "pytest-sugar", specifier = ">=1.0" },
     { name = "ruff", specifier = ">=0.11.5" },
 ]
 docs = [
     { name = "mkdocs", specifier = ">=1.6" },
-    { name = "mkdocs-api-autonav", specifier = ">=0.1" },
+    { name = "mkdocs-api-autonav", specifier = ">=0.2" },
     { name = "mkdocs-literate-nav", specifier = ">=0.6" },
     { name = "mkdocs-material", specifier = ">=9.6" },
     { name = "mkdocs-minify-plugin", specifier = ">=0.8" },
-    { name = "mkdocstrings", extras = ["python"], specifier = ">=0.28" },
+    { name = "mkdocstrings", extras = ["python"], specifier = ">=0.29" },
 ]
+format = [{ name = "pre-commit", specifier = ">=4.2" }]
 lint = [
-    { name = "pre-commit", specifier = ">=4.2" },
-    { name = "pyright", extras = ["nodejs"], specifier = ">=1.1" },
-    { name = "ruff", specifier = ">=0.11.2" },
+    { name = "pyright", extras = ["nodejs"], specifier = ">=1.1.350" },
+    { name = "ruff", specifier = ">=0.11.5" },
 ]
 test = [
-    { name = "coverage", extras = ["toml"], specifier = ">=7.6.10" },
-    { name = "hypothesis", specifier = ">=6.124" },
+    { name = "coverage", extras = ["toml"], specifier = ">=7.8" },
+    { name = "hypothesis", specifier = ">=6.130" },
     { name = "pytest", specifier = ">=8.3" },
     { name = "pytest-cov", specifier = ">=6.0" },
     { name = "pytest-sugar", specifier = ">=1.0" },
