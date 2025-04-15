@@ -2,15 +2,13 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# Sends code coverage reports to Coveralls.
-# Generates and sends reports for multiple OSes and Python versions.
-# YOU MUST FIRST RUN`_run-pytest`.
-
+# "Function" workflow that sends code coverage reports to Coveralls.
+# Requires `_run-pytest.yaml` and the secret `COVERALLS_TOKEN`.
 on:
   workflow_call:
 
 jobs:
-  send-to-coveralls:
+  send:
     name: Send reports to Coveralls
     runs-on: ${{ matrix.os }}
     strategy:
@@ -22,21 +20,23 @@ jobs:
           # :tyranno-start: $<<.cicd.python-versions|yaml_long(@)>>
           - "3.13"
           # :tyranno-end:
+    env:
+      ARTIFACT_NAME: coverage-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.python }}
     steps:
-      - name: Determine whether this is the last report.
-        id: last-report
-        shell: bash
-        run: |
-          echo "is_last_report=(( ${{ strategy.job-index }} == ${{ strategy.job-total }} - 1 ))" \
-            >> "$GITHUB_OUTPUT" \
-            || exit $?
-      - name: Download coverage artifact for ${{ matrix.os }} / Python ${{ matrix.python }}
+      - name: Download workflow artifact ${{ env.ARTIFACT_NAME }}
         uses: actions/download-artifact@v4
         with:
-          name: coverage-${{ matrix.os }}-${{ matrix.python }}
-      - name: Send coverage report for ${{ matrix.os }}-${{ matrix.python }} to Coveralls
+          name: ${{ env.ARTIFACT_NAME }}
+      - name: Send coverage report ${{ env.ARTIFACT_NAME }} to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           flag-name: run-${{ matrix.os }}-py${{ matrix.python }}
           parallel: true
-          parallel-finished: ${{ env.is_last_report }}
+  finish:
+    name: Tell Coveralls the reports were all sent
+    runs-on: ubuntu-latest
+    needs: send
+    steps:
+      - uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true

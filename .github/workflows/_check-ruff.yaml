@@ -2,12 +2,14 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# "Function" workflow that lints with Ruff.
+
 on:
   workflow_call:
     inputs:
       rules:
         type: string
-        default: ALL
+        default: ""
 
 jobs:
   check-ruff:
@@ -16,4 +18,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: |
-          uv run --locked ruff check --select "${{ inputs.rules }}" --no-fix . || exit $?
+          if [[ -z "${{ inputs.rules }}" ]]; then
+            uv run --locked ruff check --no-fix . || exit $?
+          else
+            uv run --locked ruff check --select "${{ inputs.rules }}" --no-fix . || exit $?
+          fi

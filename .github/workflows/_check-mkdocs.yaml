@@ -2,6 +2,8 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# "Function" workflow that checks we can build the docs.
+
 on:
   workflow_call:
 

@@ -2,6 +2,8 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# "Function" workflow that tests we can build Docker images on Ubuntu and Windows.
+
 on:
   workflow_call:
 

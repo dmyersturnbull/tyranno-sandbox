@@ -2,6 +2,8 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# "Function" workflow that runs formatters and auto-fixers, commits, and pushes the changes.
+
 on:
   workflow_call:
     inputs:

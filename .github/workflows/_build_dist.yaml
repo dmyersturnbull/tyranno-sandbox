@@ -2,6 +2,11 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# "Function" workflow: that uploads `dist/` as GH workflow artifact `dist-${{ github.ref_name }}`.
+
+# See: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does
+# See "Accessing contextual information about workflow runs".
+
 on:
   workflow_call:
 
@@ -13,9 +18,21 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - name: Install Hatch, and build
         run: |
-          uv build --sdist --wheel
-      - name: Upload dist/ artifacts (wheels and sdists) as GH workflow artifacts
+          uv build
+      - name: Upload 'dist/' (wheels and sdists) as artifact 'dist-${{ github.ref_name }}'
+        id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: dist
+          name: dist-${{ github.ref_name }}
           path: dist/
+          if-no-files-found: error
+          compression-level: 0 # they're already gzip-compressed
+          retention-days: 1
+      - name: Print artifact info
+        run: |
+          printf \
+            "Uploaded artifact '%s':\n  ID: %s\nURI: %s\nDigest: %s\n" \
+            "dist-${{ github.ref_name }}" \
+            "${{ steps.upload.outputs.artifact-id }}"
+            "${{ steps.upload.outputs.artifact-url }}"
+            "${{ steps.upload.outputs.artifact-digest }}"

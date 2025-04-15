@@ -2,6 +2,7 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# "Function" workflow that publishes a release to GitHub and creates alias Git tags like `v1`.
 # Requires `_build_dist.yaml`.
 
 on:
@@ -9,7 +10,7 @@ on:
     inputs:
       is-latest:
         type: boolean
-        default: false
+        default: true
 
 jobs:
   tag-latest:
@@ -26,12 +27,15 @@ jobs:
       - name: Download dist/ GH workflow artifacts
         uses: actions/download-artifact@v4
         with:
-          name: dist
+          name: dist-${{ github.ref_name }}
       - name: Publish to GitHub Releases
+        id: release
         uses: softprops/action-gh-release@v2
         with:
-          draft: ${{ contains(github.ref_name, '-') }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
           generate_release_notes: true
           fail_on_unmatched_files: true
-          token: ${{ secrets.github_token }}
           files: dist/*
+      - name: Print info
+        run: |
+          printf "Published release: %s\n" "${{ steps.release.outputs.url }}"

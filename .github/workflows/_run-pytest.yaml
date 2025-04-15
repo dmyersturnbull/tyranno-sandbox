@@ -2,6 +2,8 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# "Function" workflow that runs `_run-pytest-single` for each OS and Python version.
+
 on:
   workflow_call:
     inputs:
@@ -15,7 +17,6 @@ on:
 jobs:
   run-tests:
     name: Run tests for ${{ matrix.os }}, Python ${{ matrix.python }}
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os:
@@ -26,18 +27,9 @@ jobs:
           # :tyranno-start: $<<.python-versions|yaml_long(@)>>
           - "3.13"
           # :tyranno-end
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-        with:
-          python-version: "${{ matrix.python }}"
-      - name: Install dependencies and run tests
-        run: |
-          uv run --locked pytest -m "${{ inputs.markers }}" || exit $?
-      - name: Store coverage reports
-        if: ${{ inputs.store-coverage }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-${{ matrix.os }}-${{ matrix.python }}
-          path: coverage.json
-          if-no-files-found: error
+    uses: ./.github/workflows/_run-pytest-single.yaml
+    with:
+      os: ${{ matrix.os }}
+      python: ${{ matrix.python }}
+      store-coverage: ${{ inputs.store-coverage }}
+      markers: ${{ inputs.markers }}

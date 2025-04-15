@@ -2,6 +2,8 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# Syncs metadata and labels on GitHub to `.github/project.yaml`.
+
 on:
   push:
     branches:

@@ -2,6 +2,8 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# Checks that the Docker image is buildable on PRs with relevant changes.
+
 on:
   pull_request:
     types:

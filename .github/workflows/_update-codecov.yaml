@@ -2,16 +2,14 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# Sends code coverage reports to Codecov.
-# Generates and sends reports for multiple OSes and Python versions.
-# YOU MUST FIRST RUN`_run-pytest`.
-# You must also provide the secret CODECOV_TOKEN that Codecov generates.
+# "Function" workflow that sends code coverage reports to Codecov.
+# Requires `_run-pytest.yaml` and the secret `CODECOV_TOKEN`.
 
 on:
   workflow_call:
 
 jobs:
-  send-to-codecov:
+  send:
     name: Send reports to codecov
     continue-on-error: true
     runs-on: ${{ matrix.os }}
@@ -23,22 +21,20 @@ jobs:
           # :tyranno-start: $<<.cicd.python-versions|yaml_long(@)>>
           - "3.13"
           # :tyranno-end:
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python }}
+      ARTIFACT_NAME: coverage-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.python }}
     steps:
-      - name: Send coverage report for ${{ matrix.os }}-${{ matrix.python }} to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Download workflow artifact ${{ env.ARTIFACT_NAME }}
+        uses: actions/download-artifact@v4
         with:
-          env_vars: matrix.os,matrix.python
+          name: ${{ env.ARTIFACT_NAME }}
+      - name: Upload coverage report ${{ env.ARTIFACT_NAME }} to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          env_vars: OS,PYTHON
           fail_ci_if_error: true
-
-  finalize-codecov-send:
-    # This job sends final data to Coveralls to mark the parallel runs as finished.
-    # Will not run if the 'send-to-codecov' job was not cancelled.
-    needs: send-to-codecov
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send final data to Coveralls to mark the set completed
-        uses: coverallsapp/github-action@v2
-        with:
-          parallel-finished: true
-          file: .coverage.json
+          files: ./.coverage.json
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true

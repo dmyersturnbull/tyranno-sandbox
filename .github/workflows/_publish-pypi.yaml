@@ -2,6 +2,7 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# "Function" workflow that publishes a release to PyPI.
 # Requires `_build_dist.yaml`.
 
 on:
@@ -11,6 +12,7 @@ jobs:
   publish-pypi:
     # This job publishes the package to PyPI.
     name: Publish to PyPi
+    if: ${{ ! contains(github.ref_name, '-') }} # Ignore prereleases
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,7 +20,7 @@ jobs:
       - name: Download dist/ GH workflow artifacts
         uses: actions/download-artifact@v4
         with:
-          name: dist
+          name: dist-${{ github.ref_name }}
       - name: Publish to PyPi using uv.
         # See: https://docs.pypi.org/trusted-publishers/adding-a-publisher/
         run: |

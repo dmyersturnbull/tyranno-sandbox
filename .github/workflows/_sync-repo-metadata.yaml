@@ -2,6 +2,8 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# "Function" workflow that syncs some GitHub repo metadata to `.github/project.yaml`.
+
 on:
   workflow_call:
 

@@ -2,6 +2,9 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
+# Runs CodeQL on pull requests.
+# This file MUST be named `.github/workflows/codeql.yaml`, or GitHub won't recognize it.
+
 on:
   pull_request:
     types:
