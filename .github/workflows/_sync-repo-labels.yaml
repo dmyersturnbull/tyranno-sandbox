@@ -18,8 +18,6 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.ref }}
       - name: Install yq
         run: sudo snap install yq || exit $?
       - name: Delete existing labels

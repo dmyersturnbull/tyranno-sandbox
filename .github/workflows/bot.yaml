@@ -30,7 +30,7 @@ jobs:
 
   check-docs:
     if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-check-docs') }}
-    uses: ./.github/workflows/_check-mkdocs.yaml
+    uses: .github/workflows/_check-docs.yaml
 
   upgrade:
     if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-upgrade') }}

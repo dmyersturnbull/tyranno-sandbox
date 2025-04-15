@@ -14,10 +14,11 @@ on:
 
 permissions:
   contents: write
-  issues: write
 
 jobs:
   sync-metadata:
     uses: ./.github/workflows/_sync-repo-metadata.yaml
   sync-labels:
+    permissions:
+      issues: write
     uses: ./.github/workflows/_sync-repo-labels.yaml

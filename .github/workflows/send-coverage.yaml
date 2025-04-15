@@ -15,14 +15,21 @@ on:
       - master
 
 permissions:
-  contents: write
+  contents: read
+
+env:
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  COVERALLS_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
 jobs:
   test:
     uses: ./.github/workflows/_run-pytest.yaml
     with:
-      store-coverage: true
+      ref: ${{ github.ref }}
+      retention-days: 1
   update-codecov:
+    if: ${{ env.CODECOV_TOKEN != '' }}
     uses: ./.github/workflows/_update-codecov.yaml
   update-coveralls:
+    if: ${{ env.COVERALLS_TOKEN != '' }}
     uses: ./.github/workflows/_update-coveralls.yaml

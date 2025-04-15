@@ -13,6 +13,8 @@ on:
 
 jobs:
   reformat:
+    name: Reformat and auto-fix modified files
+    if: ${{ github.event_name == 'pull_request' || inputs.all-files == true }}
     runs-on: ubuntu-latest
     env:
       # For historical reasons, the GH CLI uses GH_TOKEN instead of GITHUB_TOKEN

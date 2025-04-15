@@ -8,25 +8,33 @@
 on:
   workflow_call:
     inputs:
+      ref:
+        type: string
+        description: The branch or tag
       os:
         type: string
         required: true
       python:
         type: string
         required: true
-      store-coverage:
-        type: boolean
-        default: false
       markers:
         type: string
         default: not ux
+      retention-days:
+        type: number
+        default: 0
+
+env:
+  REF: ${{ inputs.ref || github.ref_name }}
 
 jobs:
   run-tests:
-    name: Run tests for ${{ inputs.os }}, Python ${{ inputs.python }}
+    name: Test ${{ env.REF }} on ${{ inputs.os }}, Python ${{ inputs.python }}
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "${{ inputs.python }}"
@@ -38,12 +46,12 @@ jobs:
             uv run --locked pytest || exit $?
           fi
       - name: Store coverage report
-        if: ${{ inputs.store-coverage }}
+        if: ${{ inputs.store-coverage > 0 }}
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ github.ref_name }}-${{ inputs.os }}-${{ inputs.python }}
+          name: coverage-${{ env.REF }}-${{ inputs.os }}-${{ inputs.python }}
           include-hidden-files: true
           path: .coverage.json
           compression-level: 8 # highly compressible
           if-no-files-found: error
-          retention-days: 1
+          retention-days: ${{ inputs.retention-days }}

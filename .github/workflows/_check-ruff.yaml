@@ -10,6 +10,9 @@ on:
       rules:
         type: string
         default: ""
+      glob:
+        type: string
+        default: .
 
 jobs:
   check-ruff:
@@ -17,9 +20,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: |
+      - name: Check Ruff formatting
+        run: |
+          uv run --locked ruff format --exit-non-zero-on-format ${{ inputs.glob }} || exit $?
+      - name: Check Ruff rules
+        run: |
           if [[ -z "${{ inputs.rules }}" ]]; then
-            uv run --locked ruff check --no-fix . || exit $?
+            uv run --locked ruff check --no-fix ${{ inputs.glob }} || exit $?
           else
-            uv run --locked ruff check --select "${{ inputs.rules }}" --no-fix . || exit $?
+            uv run --locked ruff check --select "${{ inputs.rules }}" --no-fix ${{ inputs.glob }} || exit $?
           fi

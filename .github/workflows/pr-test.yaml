@@ -14,8 +14,14 @@ on:
       - pyproject.toml
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
+  check-security:
+    name: Check security
+    uses: ./.github/workflows/_check-ruff.yaml
+    with:
+      rules: S
   test:
+    name: Run PyTest tests
     uses: ./.github/workflows/_run-pytest.yaml

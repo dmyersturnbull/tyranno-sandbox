@@ -9,30 +9,41 @@
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+      retention-days:
+        type: number
+        default: 1
+
+env:
+  REF: ${{ inputs.ref || github.ref_name }}
 
 jobs:
   build-dist:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.REF }}
       - uses: astral-sh/setup-uv@v5
       - name: Install Hatch, and build
         run: |
           uv build
-      - name: Upload 'dist/' (wheels and sdists) as artifact 'dist-${{ github.ref_name }}'
+      - name: Upload 'dist/' (wheels and sdists) as artifact 'dist-${{ env.REF }}'
         id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ github.ref_name }}
+          name: dist-${{ env.REF }}
           path: dist/
           if-no-files-found: error
           compression-level: 0 # they're already gzip-compressed
-          retention-days: 1
+          retention-days: ${{ inputs.retention-days }}
       - name: Print artifact info
         run: |
           printf \
             "Uploaded artifact '%s':\n  ID: %s\nURI: %s\nDigest: %s\n" \
-            "dist-${{ github.ref_name }}" \
+            "dist-${{ env.REF }}" \
             "${{ steps.upload.outputs.artifact-id }}"
             "${{ steps.upload.outputs.artifact-url }}"
             "${{ steps.upload.outputs.artifact-digest }}"

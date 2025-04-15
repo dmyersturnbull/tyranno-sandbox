@@ -7,16 +7,22 @@
 on:
   workflow_call:
     inputs:
-      store-coverage:
-        type: boolean
-        default: false
+      ref:
+        type: string
+        description: The branch or tag
       markers:
         type: string
         default: not ux
+      retention-days:
+        type: number
+        default: 0
+
+env:
+  REF: ${{ inputs.ref || github.ref_name }}
 
 jobs:
   run-tests:
-    name: Run tests for ${{ matrix.os }}, Python ${{ matrix.python }}
+    name: Test ${{ env.REF }}
     strategy:
       matrix:
         os:
@@ -29,7 +35,8 @@ jobs:
           # :tyranno-end
     uses: ./.github/workflows/_run-pytest-single.yaml
     with:
+      ref: ${{ env.REF }}
       os: ${{ matrix.os }}
       python: ${{ matrix.python }}
-      store-coverage: ${{ inputs.store-coverage }}
+      retention-days: ${{ inputs.retention-days }}
       markers: ${{ inputs.markers }}

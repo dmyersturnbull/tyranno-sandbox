@@ -2,33 +2,44 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# Triggers the release process when a tag `v<major>.<minor>.<build>` is pushed.
+# Runs the release process when `validate` completes successfully (after a tag is pushed).
 
 on:
-  push:
-    tags:
-      # ::tyranno:: - '$<<.cicd.git-release-regex>>'
-      - '^v(?P<major>\d+)\.(?P<minor>\d+)\.(?P<micro>\d+)$'
+  workflow_run:
+    types:
+      - completed
+    workflows:
+      - validate
 
 permissions:
-  id-token: write
-  contents: write
+  contents: read
 
 jobs:
-  build-dist:
-    uses: ./.github/workflows/_build_dist.yaml
-  publish-github:
-    needs: build-dist
-    uses: .github/workflows/_publish-github.yaml
+  accept:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          printf "Accepted %s for release.\n" "${{ github.ref_name }}"
+  update-codecov:
+    needs: accept
+    uses: ./.github/workflows/_update-codecov.yaml
+  update-coveralls:
+    needs: accept
+    uses: ./.github/workflows/_update-coveralls.yaml
   publish-docs:
-    needs: build-dist
+    needs: accept
     permissions:
-      contents: write
       pages: write
-    uses: .github/workflows/_publish-mkdocs.yaml
+    uses: .github/workflows/_publish-docs.yaml
+  publish-github:
+    needs: accept
+    permissions:
+      pages: write
+    uses: .github/workflows/_publish-github.yaml
   publish-pypi:
-    needs: publish-docs
+    needs: accept
     uses: .github/workflows/_publish-pypi.yaml
   publish-docker:
-    needs: publish-docs
+    needs: accept
     uses: .github/workflows/_publish-docker.yaml

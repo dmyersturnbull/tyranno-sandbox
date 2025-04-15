@@ -2,21 +2,20 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# Checks that the Docker image is buildable on PRs with relevant changes.
+# Checks that the docs are buildable on PRs with relevant changes.
 
 on:
   pull_request:
     types:
       - review_requested
     paths:
-      - src/**
-      - pyproject.toml
-      - Dockerfile
-      - .dockerignore
+      - docs/**
+      - mkdocs.yaml
+      - src/**/*.py # for API docs
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  check-docker:
-    uses: ./.github/workflows/_check-docker.yaml
+  check-docs:
+    uses: .github/workflows/_check-docs.yaml

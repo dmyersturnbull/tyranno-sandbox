@@ -21,13 +21,13 @@ jobs:
           - "3.13"
           # :tyranno-end:
     env:
-      ARTIFACT_NAME: coverage-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.python }}
+      artifact_name: coverage-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.python }}
     steps:
-      - name: Download workflow artifact ${{ env.ARTIFACT_NAME }}
+      - name: Download workflow artifact ${{ env.artifact_name }}
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
-      - name: Send coverage report ${{ env.ARTIFACT_NAME }} to Coveralls
+          name: ${{ env.artifact_name }}
+      - name: Send coverage report ${{ env.artifact_name }} to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           flag-name: run-${{ matrix.os }}-py${{ matrix.python }}
