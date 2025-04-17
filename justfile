@@ -94,29 +94,29 @@ ruff-fix-unsafe *args:
 ###################################################################################################
 
 # Checks Ruff and Pyright rules.
-[group('lint')]
-lint: lint-ruff lint-pyright lint-links
+[group('check')]
+check: check-ruff check-pyright check-links
 
-# Checks Ruff rules (`ruff check ...`).
-[group('lint')]
-lint-ruff *args:
+# Checks Ruff rules (`ruff check --no-fix ...`).
+[group('check')]
+check-ruff *args:
   uv run ruff check --no-fix --output-format concise {{args}}
 
-# Checks Bandit-derived 'S' (security) rules (`ruff check ...`).
-[group('lint')]
-lint-bandit *args:
+# Checks Bandit-derived 'S' (security) rules (`ruff check --no-fix ...`).
+[group('check')]
+check-bandit *args:
   uv run ruff check --no-fix --output-format concise --select S {{args}}
 
 # Find violations of Pyright typing rules (`pyright ...`).
-[group('lint')]
-lint-pyright *args:
+[group('check')]
+check-pyright *args:
   uv run pyright {{args}}
 # Soon: https://github.com/astral-sh/ruff/issues/3893
 
 # Find broken hyperlinks in Markdown docs (`pre-commit run markdown-link-check ...`).
-[group('lint')]
-lint-links *args:
-  uv run pre-commit run markdown-link-check {{args}}
+[group('check')]
+check-links *args:
+  uv run pre-commit run markdown-link-check --hook-stage manual {{args}}
 
 ###################################################################################################
 
