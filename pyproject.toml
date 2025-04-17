@@ -295,6 +295,7 @@ ignore = [
   "RUF002",   # confusable characters
   "RUF003",   # confusable characters
   "PLC0415",  # imports at top (sometimes want lazy import)
+  "RUF021",   # demands parentheses in `or (x and y)`
 ]
 
 # -------------------------- Ruff unfixable rules -----------------------------
