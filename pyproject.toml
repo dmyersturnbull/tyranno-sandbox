@@ -71,6 +71,7 @@ dependencies = [
   "packaging>=24.0",
   "platformdirs>=4.3.2",
   "pathspec>=0.12",
+  "semver>=3.0",
   "typer-slim>=0.15",
   # /usr/share/zoneinfo uses IANA zones; Windows does not
   "tzdata>=2025.1; platform_system == 'Windows'",
