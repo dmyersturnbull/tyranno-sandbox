@@ -6,9 +6,6 @@
 
 on:
   workflow_call:
-    inputs:
-      ref:
-        type: string
 
 jobs:
   check-docker:

@@ -13,6 +13,10 @@ on:
       - tests/**
       - pyproject.toml
 
+concurrency:
+  group: test-${{ github.ref_name }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 

@@ -13,6 +13,10 @@ on:
       - mkdocs.yaml
       - src/**/*.py # for API docs
 
+concurrency:
+  group: check-docs-${{ github.ref_name }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 

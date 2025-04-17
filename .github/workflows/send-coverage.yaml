@@ -14,6 +14,10 @@ on:
       - main
       - master
 
+concurrency: # More restrictive groups defined on jobs.
+  group: coverage-${{ github.ref_name }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -29,7 +33,13 @@ jobs:
       retention-days: 1
   update-codecov:
     if: ${{ env.CODECOV_TOKEN != '' }}
+    concurrency:
+      group: codecov # Don't harass CodeCov.
+      # DO NOT cancel.
     uses: ./.github/workflows/_update-codecov.yaml
   update-coveralls:
     if: ${{ env.COVERALLS_TOKEN != '' }}
+    concurrency:
+      group: codecov # Don't harass Coveralls.
+      # DO NOT cancel.
     uses: ./.github/workflows/_update-coveralls.yaml

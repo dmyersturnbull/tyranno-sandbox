@@ -11,6 +11,13 @@ on:
     workflows:
       - validate
 
+concurrency:
+  # Only allow one publish workflow to run at a time.
+  # This prevents accidental double-publishes and avoids upsetting external services.
+  # There's also little reason to run more than one at a time.
+  group: publish
+  # DO NOT cancel this workflow if it's already running.
+
 permissions:
   contents: read
 
@@ -21,12 +28,6 @@ jobs:
     steps:
       - run: |
           printf "Accepted %s for release.\n" "${{ github.ref_name }}"
-  update-codecov:
-    needs: accept
-    uses: ./.github/workflows/_update-codecov.yaml
-  update-coveralls:
-    needs: accept
-    uses: ./.github/workflows/_update-coveralls.yaml
   publish-docs:
     needs: accept
     permissions:

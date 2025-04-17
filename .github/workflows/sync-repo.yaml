@@ -12,6 +12,10 @@ on:
     paths:
       - .github/project.yaml
 
+concurrency:
+  group: sync
+  cancel-in-progress: true
+
 permissions:
   contents: write
 

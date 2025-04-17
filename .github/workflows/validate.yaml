@@ -13,6 +13,14 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  # In contrast, the `publish` workflow uses the constant group `publish`
+  # (with `cancel-in-progress` set to FALSE).
+  # It's safe to cancel runs of `validate`, but not of `publish`.
+  # We'll let runs proceed here, then bottle up against the start of `publish`.
+  group: validate-${{ github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   check-hooks:
     uses: ./.github/workflows/_check-hooks.yaml

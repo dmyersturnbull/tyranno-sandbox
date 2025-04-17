@@ -19,6 +19,7 @@ repos:
         args:
           - --assume-in-merge # otherwise skipped in rebase
       - id: check-symlinks # ban *broken* symlinks
+      - id: check-shebang-scripts-are-executable # ensures all shebangs are executable
       - id: end-of-file-fixer # auto-add final \n
       - id: fix-byte-order-marker # auto-remove BOMs
       - id: trailing-whitespace # auto-remove end-of-line whitespace
@@ -27,11 +28,11 @@ repos:
   - repo: https://github.com/astral-sh/uv-pre-commit
     rev: 0.6.14
     hooks:
-      - id: uv-sync
+      - id: uv-sync # first locks (without `--upgrade`)
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.5
+    rev: v0.11.6
     hooks:
       - id: ruff
         args:
