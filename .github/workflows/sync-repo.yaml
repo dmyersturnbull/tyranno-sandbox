@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Syncs metadata and labels on GitHub to `.github/project.yaml`.
+name: Sync-repo
+run-name: Sync repo metadata to ${{ github.ref_name }}
 
 on:
   push:

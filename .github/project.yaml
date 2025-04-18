@@ -9,13 +9,13 @@ description: Sandbox for Tyrannosaurus
 homepage: https://github.com/dmyersturnbull/tyranno-sandbox
 
 topics:
-  # :tyranno-start: ${{project.keywords[*].unquote(@)|yaml_long(@)}}
+  # ::tyranno-start:: ${{project.keywords[*].unquote(@)|yaml_long(@)}}
   - ci/cd
   - cookiecutter
   - github-workflow
   - pyproject
   - python-template
-  # :tyranno-end:
+  # ::tyranno-end::
 
 labels:
   - name: "breaking"

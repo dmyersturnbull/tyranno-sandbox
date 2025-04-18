@@ -17,9 +17,9 @@ jobs:
         os:
           - ubuntu-latest
         python:
-          # :tyranno-start: $<<.cicd.python-versions|yaml_long(@)>>
+          # ::tyranno-start:: $<<.cicd.python-versions|yaml_long(@)>>
           - "3.13"
-          # :tyranno-end:
+          # ::tyranno-end::
     env:
       artifact_name: coverage-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.python }}
     steps:
@@ -33,9 +33,9 @@ jobs:
           flag-name: run-${{ matrix.os }}-py${{ matrix.python }}
           parallel: true
   finish:
+    needs: send
     name: Tell Coveralls the reports were all sent
     runs-on: ubuntu-latest
-    needs: send
     steps:
       - uses: coverallsapp/github-action@v2
         with:

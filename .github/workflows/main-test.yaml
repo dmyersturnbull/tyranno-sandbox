@@ -1,0 +1,71 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+# When a commit is pushed to main or releases/**, runs tests and either opens an issue or uploads coverage reports.
+name: Main-test
+run-name: Test ${{ github.ref_name }} (${{ github.sha }})
+
+on:
+  push:
+    paths:
+      - pyproject.toml
+      - src/**/*.py
+      - tests/**/*.py
+    branches:
+      - main
+      - master
+      - releases/**
+
+concurrency: # More restrictive groups defined on jobs.
+  group: main-test-${{ github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  COVERALLS_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  IS_MAIN: ${{ github.ref_name == 'main' || github.ref_name == 'master' }}
+
+jobs:
+  test:
+    uses: ./.github/workflows/_run-pytest.yaml
+    with:
+      ref: ${{ github.ref }}
+      retention-days: 1 # Only to upload coverage reports.
+  create-issue:
+    if: ${{ failure() }}
+    needs: test
+    name: Open a GitHub issue if tests failed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub issue
+        env:
+          # For historical reasons, the GH CLI uses GH_TOKEN instead of GITHUB_TOKEN
+          # https://github.com/github/docs/issues/21930
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "Test failure(s) on ${{ github.ref_name }}" \
+            --body "See: [run #${{ github.run_id }}](${{ env.RUN_URL }})" \
+            --label "type: bug"
+          exit 1
+  update-codecov:
+    if: ${{ success() && env.IS_MAIN && env.CODECOV_TOKEN != '' }}
+    needs: test
+    concurrency:
+      group: codecov # Don't harass CodeCov.
+      cancel-in-progress: true
+    uses: ./.github/workflows/_update-codecov.yaml
+    secrets: inherit
+  update-coveralls:
+    if: ${{ success() && env.IS_MAIN && env.COVERALLS_TOKEN != '' }}
+    needs: test
+    concurrency:
+      group: codecov # Don't harass Coveralls.
+      cancel-in-progress: true
+    uses: ./.github/workflows/_update-coveralls.yaml
+    secrets: inherit

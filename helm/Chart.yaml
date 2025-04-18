@@ -10,18 +10,18 @@ sources:
   # ::tyranno:: - $<<project.urls.Source>>
   - https://github.com/dmyersturnbull/tyranno-sandbox
 maintainers:
-  # :tyranno-start: ${{project.maintainers[*].unquote(@)|unwrap_yaml(@)}}
+  # ::tyranno-start:: ${{project.maintainers[*].unquote(@)|unwrap_yaml(@)}}
   - name: Douglas Myers-Turnbull
     email: dmyersturnbull@gmail.com
-  # :tyranno-end:
+  # ::tyranno-end::
 keywords:
-  # :tyranno-start: ${{project.keywords[*].unquote(@)|unwrap_yaml(@)}}
+  # ::tyranno-start:: ${{project.keywords[*].unquote(@)|unwrap_yaml(@)}}
   - ci/cd
   - cookiecutter
   - github-workflow
   - pyproject
   - python-template
-  # :tyranno-end:
+  # ::tyranno-end::
 # ::tyranno:: appVersion: "$<<project.version>>"
 appVersion: "0.0.1"
 # ::tyranno:: version: "$<<project.version>>"

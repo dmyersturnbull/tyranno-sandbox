@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow that runs `_run-pytest-single` for each OS and Python version.
+# See:
+# https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategyfail-fast
 
 on:
   workflow_call:
@@ -16,6 +18,14 @@ on:
       retention-days:
         type: number
         default: 0
+      fail-fast:
+        type: boolean
+        default: true
+        description: "Potentially useful if coverage reports are generated (`retention-days` > 0)."
+      max-parallel:
+        type: number
+        default: 1
+        description: "Increase when testing important branches; leave at 1 for PRs."
 
 env:
   REF: ${{ inputs.ref || github.ref_name }}
@@ -25,12 +35,14 @@ jobs:
     name: Test ${{ env.REF }}
     strategy:
       matrix:
+        fail-fast: ${{ inputs.fail-fast }} # Doesn't affect the status of the `run-tests` job.
+        max-parallel: ${{ inputs.max-parallel }}
         os:
           - ubuntu-latest
           - windows-latest
           - macos-latest
         python:
-          # :tyranno-start: $<<.python-versions|yaml_long(@)>>
+          # ::tyranno-start:: $<<.python-versions|yaml_long(@)>>
           - "3.13"
           # :tyranno-end
     uses: ./.github/workflows/_run-pytest-single.yaml

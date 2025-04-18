@@ -18,9 +18,9 @@ jobs:
         os:
           - ubuntu-latest
         python:
-          # :tyranno-start: $<<.cicd.python-versions|yaml_long(@)>>
+          # ::tyranno-start:: $<<.cicd.python-versions|yaml_long(@)>>
           - "3.13"
-          # :tyranno-end:
+          # ::tyranno-end::
     env:
       os: ${{ matrix.os }}
       python: ${{ matrix.python }}

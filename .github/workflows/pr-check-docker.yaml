@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Checks that the Docker image is buildable on PRs with relevant changes.
+name: PR-check-Docker
+run-name: Check Docker on PR ${{ github.event.pull_request.number }} by ${{ github.event.pull_request.user.login }}
 
 on:
   pull_request:

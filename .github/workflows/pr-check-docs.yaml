@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Checks that the docs are buildable on PRs with relevant changes.
+name: PR-check-docs
+run-name: Check docs on PR ${{ github.event.pull_request.number }} by ${{ github.event.pull_request.user.login }}
 
 on:
   pull_request:

@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Runs the release process when `validate` completes successfully (after a tag is pushed).
+name: Publish
+run-name: >-
+  ${{ github.event.workflow_run.conclusion == 'success' && 'Publish' || 'Ignore' }} ${{ github.ref_name }}
 
 on:
   workflow_run:
@@ -41,6 +44,8 @@ jobs:
   publish-pypi:
     needs: accept
     uses: .github/workflows/_publish-pypi.yaml
+    secrets: inherit
   publish-docker:
     needs: accept
     uses: .github/workflows/_publish-docker.yaml
+    secrets: inherit

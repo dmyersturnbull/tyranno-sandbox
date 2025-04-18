@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Runs tests on PRs with relevant changes.
+name: PR-test
+run-name: >-
+  Test PR ${{ github.event.pull_request.number }} by ${{ github.event.pull_request.user.login }}
 
 on:
   pull_request:
