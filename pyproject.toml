@@ -121,7 +121,9 @@ Download = "https://pypi.org/project/tyranno-sandbox/"
 # Also define groups `test`, `docs`, and `lint` for use in CI.
 dev = [
   "coverage[toml]>=7.8",
-  "hypothesis>=6.130",
+  "deal>=4.24",
+  "hypofuzz>=25.4",
+  "hypothesis[cli,codemods]>=6.130",
   "mkdocs>=1.6",
   "mkdocs-material>=9.6",
   "mkdocs-minify-plugin>=0.8",
@@ -137,7 +139,9 @@ dev = [
 ]
 test = [
   "coverage[toml]>=7.8",
-  "hypothesis>=6.130",
+  "deal>=4.24",
+  "hypofuzz>=25.4",
+  "hypothesis[cli,codemods]>=6.130",
   "pytest>=8.3",
   "pytest-cov>=6.1",
   "pytest-sugar>=1.0",
@@ -383,18 +387,15 @@ markers = [
   "slow: marks tests that take a long time to run (select with `-m slow`)",
   "net: marks tests that require network access (select with `-m net`)",
   "ux: marks tests that require live interaction (select with `-m ux`)",
+  "property: marks tests that use Hypothesis or otherwise generate test data (select with `-m property`)",
 ]
 
 # -------------------------- Pytest CLI args ----------------------------------
-# `coverage` stops recursing after it finds one dir without an __init__.py
-# So, if it finds `src/java-app` before `src/pyapp`, it won't find `pyapp`.
-# So, we need to specify which directory to test via `--cov=src/{pkg}`.
-#
-# The `--cov-*` options are handled by pytest-cov.
-# `--import-mode=importlib` is recommended, but it **requires that test classes have unique names.**
-#
-# `--quiet` just hides ouptut about 'rootdir', 'testpaths', etc.
-# Add `--full-trace --showlocals` to get more info.
+# Notes:
+# - The `--cov-*` options are handled by pytest-cov.
+# - `--import-mode=importlib` is recommended, but it **requires that test classes have unique names.**
+# - `--quiet` just hides ouptut about 'rootdir', 'testpaths', etc.
+# - `--durations n` shows the slowest `n` tests that took ≥ `--durations-min` seconds.
 addopts = """
   --cov=src \
   --cov-report json:.coverage.json \
