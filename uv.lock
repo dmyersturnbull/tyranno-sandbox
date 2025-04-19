@@ -1190,6 +1190,7 @@ rich = [
 
 [package.dev-dependencies]
 check = [
+    { name = "pre-commit" },
     { name = "pyright", extra = ["nodejs"] },
     { name = "ruff" },
 ]
@@ -1219,8 +1220,11 @@ docs = [
     { name = "mkdocs-minify-plugin" },
     { name = "mkdocstrings", extra = ["python"] },
 ]
-format = [
+precommit = [
     { name = "pre-commit" },
+]
+ruff = [
+    { name = "ruff" },
 ]
 test = [
     { name = "coverage" },
@@ -1250,6 +1254,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 check = [
+    { name = "pre-commit", specifier = ">=4.2" },
     { name = "pyright", extras = ["nodejs"], specifier = ">=1.1.350" },
     { name = "ruff", specifier = ">=0.11.6" },
 ]
@@ -1279,7 +1284,8 @@ docs = [
     { name = "mkdocs-minify-plugin", specifier = ">=0.8" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.29" },
 ]
-format = [{ name = "pre-commit", specifier = ">=4.2" }]
+precommit = [{ name = "pre-commit", specifier = ">=4.2" }]
+ruff = [{ name = "ruff", specifier = ">=0.11.6" }]
 test = [
     { name = "coverage", extras = ["toml"], specifier = ">=7.8" },
     { name = "deal", specifier = ">=4.24" },

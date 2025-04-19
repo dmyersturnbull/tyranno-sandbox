@@ -34,9 +34,9 @@ jobs:
   run-tests:
     name: Test ${{ env.REF }}
     strategy:
+      fail-fast: ${{ inputs.fail-fast }} # Doesn't affect the status of the `run-tests` job.
+      max-parallel: ${{ inputs.max-parallel }}
       matrix:
-        fail-fast: ${{ inputs.fail-fast }} # Doesn't affect the status of the `run-tests` job.
-        max-parallel: ${{ inputs.max-parallel }}
         os:
           - ubuntu-latest
           - windows-latest

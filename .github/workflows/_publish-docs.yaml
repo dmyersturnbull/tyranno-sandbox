@@ -11,10 +11,10 @@ jobs:
   publish-mkdocs:
     runs-on: ubuntu-latest
     steps:
-      - name: Download dist/ GH workflow artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: docs-${{ github.ref_name }}
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: |
+          uv run --only-group docs mkdocs build --strict || exit $?
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .

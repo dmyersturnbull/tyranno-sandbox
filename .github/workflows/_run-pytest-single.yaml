@@ -49,7 +49,7 @@ jobs:
             uv run pytest || exit $?
           fi
       - name: Store coverage report
-        if: ${{ inputs.store-coverage > 0 }}
+        if: ${{ inputs.retention-days > 0 }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ env.REF }}-${{ inputs.os }}-${{ inputs.python }}

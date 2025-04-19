@@ -28,32 +28,40 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com' || exit $?
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - name: Get a pre-commit run argument limiting the files
-        id: arg
-        run: |
-          if [[ "${{ inputs.all-files }}" == "true" ]]; then
-            arg=--all-files
-          else
-            arg=--from-ref ${{ github.event.pull_request.base.sha }}
-          fi
-          echo "arg=$arg" >> "$GITHUB_OUTPUT"
       - run: |
           uv sync --locked --only-group precommit || exit $?
-      - name: Ruff auto-fix
+      - name: Run Ruff auto-fix
         run: |
-          uv run pre-commit run ruff ${{ steps.arg.outputs.arg }} || true
+          if [[ "${{ inputs.all-files }}" == "true" ]]; then
+            uv run pre-commit run ruff --all-files || exit $?
+          else
+            uv run pre-commit run ruff \
+              --from-ref ${{ github.event.pull_request.base.sha }} \
+              --to-ref ${{ github.event.pull_request.head.sha }} \
+              || exit $?
+          fi
       - name: Commit Ruff auto-fixes (if any)
         run: |
-          if git diff --quiet . ; then
+          if ! git diff --quiet . ; then
             git commit -m "fix: auto-fix lint violations" . || exit $?
           fi
       - name: Reformat
         run: |
-          uv run pre-commit run ruff-format ${{ steps.arg.outputs.arg }} || true
-          uv run pre-commit run prettier ${{ steps.arg.outputs.arg }} || true
+          if [[ "${{ inputs.all-files }}" == "true" ]]; then
+            uv run pre-commit run ruff-format --all-files
+            uv run pre-commit run prettier --all-files
+          else
+            uv run pre-commit run ruff-format
+              --from-ref ${{ github.event.pull_request.base.sha }} \
+              --to-ref ${{ github.event.pull_request.head.sha }} \
+              || true
+            uv run pre-commit run prettier
+              --from-ref ${{ github.event.pull_request.base.sha }} \
+              --to-ref ${{ github.event.pull_request.head.sha }} \
+              || true
       - name: Commit formatter changes (if any)
         run: |
-          if git diff --quiet . ; then
+          if ! git diff --quiet . ; then
             git commit -m "style: auto-fix lint violations and autoformat" . || exit $?
           fi
       - name: Push changes (if any)

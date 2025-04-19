@@ -4,7 +4,7 @@
 
 # Responds to "command" comments on pull requests.
 name: PR-bot
-run-name: Comment by ${{ github.event.comment.triggering_actor }} on PR ${{ github.event.pull_request.number }}
+run-name: Comment by ${{ github.sender.login }} on PR ${{ github.event.pull_request.number }}
 
 on:
   issue_comment:
@@ -37,7 +37,7 @@ jobs:
     concurrency:
       group: check-docker-${{ github.ref_name }}
       cancel-in-progress: true
-    uses: ./.github/workflows/_reformat.yaml
+    uses: ./.github/workflows/_check-docker.yaml
 
   check-docs:
     if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-check-docs') }}

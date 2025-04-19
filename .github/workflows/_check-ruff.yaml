@@ -26,7 +26,7 @@ jobs:
           uv sync --locked --only-group ruff || exit $?
       - name: Check Ruff formatting
         run: |
-          uv run ruff format --exit-non-zero-on-format ${{ inputs.glob }} || exit $?
+          uv run ruff format --check ${{ inputs.glob }} || exit $?
       - name: Check Ruff rules
         run: |
           if [[ -z "${{ inputs.rules }}" ]]; then
