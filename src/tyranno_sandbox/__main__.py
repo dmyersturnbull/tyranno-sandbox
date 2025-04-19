@@ -17,7 +17,6 @@ from typer import Argument, Exit, Option, Typer, echo, style
 
 from tyranno_sandbox._about import __about__
 from tyranno_sandbox._global_vars import EnvGlobalVarsFactory, GlobalVars
-from tyranno_sandbox.clean import Cleaner
 from tyranno_sandbox.context import ContextFactory, DefaultContextFactory
 
 try:
@@ -100,14 +99,6 @@ class CliCommands:
         messenger.info("Syncing metadata...")
         # targets = Sync(context).sync()
         # Msg.success(f"Done. Synced to {len(targets)} targets: {targets}")
-
-    @staticmethod
-    @cli.command(help="Removes unwanted files")
-    def clean(*, dry_run: _Opts.dry_run = False, verbose: _Opts.verbose = False, quiet: _Opts.quiet = False) -> None:
-        set_cli_state(verbose=verbose, quiet=quiet)
-        context = context_factory(Path.cwd(), _ENV, dry_run=dry_run)
-        trashed = list(Cleaner(context).run())
-        messenger.info(f"Trashed {len(trashed)} paths.")
 
 
 if __name__ == "__main__":

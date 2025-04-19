@@ -94,12 +94,6 @@ class Context:
             if not gitignore_spec.match_file(p):
                 yield self.resolve_path(p)
 
-    def find_trash(self) -> Iterator[Path]:
-        include = self.data.tree.access_subtree("tool.tyranno.trash")
-        spec = GitIgnoreSpec.from_lines(include)
-        for p in spec.match_tree(self.repo_dir):
-            yield self.resolve_path(p)
-
     def resolve_path(self, path: Path | str) -> Path:
         path = Path(path).resolve(strict=True)
         if not str(path).startswith(str(self.repo_dir)):

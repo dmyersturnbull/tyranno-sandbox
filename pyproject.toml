@@ -118,7 +118,7 @@ Download = "https://pypi.org/project/tyranno-sandbox/"
 [dependency-groups]
 
 # `--only-dev` literally means only the `dev` group, so include everything.
-# Also define groups `test`, `docs`, and `lint` for use in CI.
+# Also define groups for use in CI.
 dev = [
   "coverage[toml]>=7.8",
   "deal>=4.24",
@@ -156,13 +156,12 @@ docs = [
 ]
 # Detect and mark problems; shouldn't make changes (albeit `ruff check --fix` works).
 check = [
+  "pre-commit>=4.2",
   "pyright[nodejs]>=1.1.350",
   "ruff>=0.11.6",
 ]
-# Sufficient to run `uv run pre-commit run (ruff|ruff-format|prettier)`.
-format = [
-  "pre-commit>=4.2",
-]
+ruff = ["ruff>=0.11.6"]
+precommit = ["pre-commit>=4.2"]
 
 #
 ###################################################################################################
@@ -358,11 +357,8 @@ allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 pythonpath = ["src/"]
 
 # Set the default path to `tests/` so that it can be omitted on CLI.
-# Don't use `.` or `["tests/", "src/"]`:
-# That would mistakenly pick up `src/**/Test*.py`.
-# Any doctests in `src/**/*.py` won't be found.
-# Doctests must be run manually like this:
-# `pytest --doctest-modules src/`
+# Don't use `.` or `["tests/", "src/"]`, which would run `src/**/test*.py`.
+# For doctests, run `pytest --doctest-modules src/`
 testpaths = ["tests/"]
 
 # -------------------------- Logging config -----------------------------------
@@ -391,11 +387,9 @@ markers = [
 ]
 
 # -------------------------- Pytest CLI args ----------------------------------
-# Notes:
-# - The `--cov-*` options are handled by pytest-cov.
-# - `--import-mode=importlib` is recommended, but it **requires that test classes have unique names.**
-# - `--quiet` just hides ouptut about 'rootdir', 'testpaths', etc.
-# - `--durations n` shows the slowest `n` tests that took ≥ `--durations-min` seconds.
+# The `--cov-*` options are handled by pytest-cov.
+# `--import-mode=importlib` is recommended but **requires test classes to have unique names**.
+# `--quiet` just hides ouptut about 'rootdir', 'testpaths', etc.
 addopts = """
   --cov=src \
   --cov-report json:.coverage.json \
@@ -405,8 +399,6 @@ addopts = """
   --strict-config \
   --strict-markers \
   --quiet \
-  --durations=3 \
-  --durations-min=0.5 \
 """
 
 #
@@ -419,9 +411,7 @@ addopts = """
 data_file = ".coverage.json"
 branch = true # Quantify the % coverage of execution branches.
 relative_files = true # See <https://coverage.readthedocs.io/en/7.6.12/config.html#run-relative-files>
-omit = [
-  "**/__main__.py",
-]
+omit = ["**/__main__.py"]
 
 #============================ [tool.coverage.paths] ==========================#
 [tool.coverage.paths]
@@ -487,7 +477,7 @@ reportUnusedCallResult = "information"
 [tool.tyranno]
 
 # These are `.gitignore`-type patterns.
-# All `trash` globs are automatically excluded from `targets`.
+# All `.gitignore`-ed files are automatically excluded.`
 
 # Target files to sync on `tyranno sync`
 targets = [
@@ -505,31 +495,6 @@ targets = [
   "*.yaml",
   "Dockerfile",
 ]
-
-# Files to delete/trash on `tyranno clean`
-trash = [
-  "*[~#$]",
-  "[~#$]*",
-  ".[~#$]*",
-  "*[.~]bak",
-  "*[.~]swp",
-  "*[.~]temp",
-  "*[.~]tmp",
-  ".*[_-]cache",
-  "*.class",
-  "*.py[codi]",
-  "__pycache__/",
-  ".coverage.json",
-  ".directory",
-  ".DS_STORE",
-  "*.egg-info",
-  ".localized",
-  "cython_debug",
-  "THUMBS.db",
-]
-
-# Files to merge into `[tool.tyranno.data]`
-sources = []
 
 #============================ [tool.tyranno.data] ============================#
 
@@ -551,31 +516,22 @@ doi = "10.5281/zenodo.4485186" # <<<comment out for new
 # -------------------------- CI/CD and build daeta ----------------------------
 [tool.tyranno.data.cicd]
 
-github-bot-name = "github-actions[bot]"
-github-bot-email = "github-actions[bot]@users.noreply.github.com"
-
 # ::tyranno:: python-pep440 = "$<< project.requires-python .pep440_of('python', @) >>"
 python-pep440 = "python~=3.13"
 
-# E.g. if `python-pep440` is `python~=3.12`, then
-# valid-python-builds = ["3.12.0", [...], "3.12.10", "3.13.0", "3.13.1", "3.13.2"]
-# ::tyranno alias:: valid-python-builds = $<< .python-pep440 .pep440_find(@) >>
+# E.g. if `python-pep440 == python~=3.12`: `["3.12.0", [...], "3.12.10", "3.13.0", "3.13.1", "3.13.2"]`.
+# ::tyranno alias:: valid-python-builds = $<< .cicd.python-pep440 .pep440_find(@) >>
 
 # Version strings used by default in workflows:
-# ::tyranno:: python-build = "$<< .valid-python-builds | vr_max(@) >>"
+# ::tyranno:: python-build = "$<< .cicd.valid-python-builds | vr_max(@) >>"
 python-build = "3.13.2"
-# ::tyranno:: python-version = "$<< .python-build.pep440_minor(@) >>"
+# ::tyranno:: python-version = "$<< .cicd.python-build.pep440_minor(@) >>"
 python-version = "3.13"
 
 # Versions to test in CI:
-# E.g. if `python-pep440` is `python~=3.12`, then
-# `python-builds-to-test = ["3.12.10", "3.13.2"]`
-# ::tyranno alias:: python-builds = $<< .valid-python-builds | vr_max_per(@, 'minor') >>
+# E.g. if `python-pep440 == python~=3.12`: `["3.12.10", "3.13.2"]`.
+# ::tyranno alias:: python-builds = $<< .cicd.valid-python-builds | vr_max_per(@, 'minor') >>
 
-# Require the version to be compatible with BOTH PEP 440 AND semver.
-# See: https://peps.python.org/pep-0440/ and https://semver.org/
-# Unfortunately, that is just `<major>.<minor>.<patch==micro>`.
-# Semver allows pre-release suffixes of `-[a-z\d]+(.[a-z\d]+)*`, whereas
-# PEP 440 instead allows the suffixes `\.dev\d+`, `a\d+`, `b\d+`, `rc\d+`(==`c\d+`), ``, `\.post\d+`,
-# required to be in that order.
+# Require compatibility with both PEP 440 (https://peps.python.org/pep-0440/) and semver (https://semver.org/).
+# That's `<major>.<minor>.<patch==micro>`.
 git-release-regex = '^v(?P<major>\d+)\.(?P<minor>\d+)\.(?P<micro>\d+)$'
