@@ -20,12 +20,11 @@ jobs:
       # For historical reasons, the GH CLI uses GH_TOKEN instead of GITHUB_TOKEN
       # https://github.com/github/docs/issues/21930
       GH_TOKEN: ${{ github.token }}
+      UV_NO_SYNC: true
     steps:
       - name: Configure Git
         run: |
-          # ::tyranno:: git config --global user.name "$<<.cicd.git-bot-name>>"
           git config --global user.name 'github-actions[bot]' || exit $?
-          # ::tyranno:: git config --global user.email "$<<.cicd.git-bot-email>>"
           git config --global user.email 'github-actions[bot]@users.noreply.github.com' || exit $?
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -38,6 +37,8 @@ jobs:
             arg=--from-ref ${{ github.event.pull_request.base.sha }}
           fi
           echo "arg=$arg" >> "$GITHUB_OUTPUT"
+      - run: |
+          uv sync --locked --only-group precommit || exit $?
       - name: Ruff auto-fix
         run: |
           uv run pre-commit run ruff ${{ steps.arg.outputs.arg }} || true

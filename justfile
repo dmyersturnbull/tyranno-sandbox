@@ -29,16 +29,16 @@ init:
 [group('project')]
 revamp: bump-lock bump-hooks fix-changes format-changes clean
 
-# Sync the venv exactly (includes all extras).
+# Lock and sync the venv exactly with all extras.
 [group('project')]
 sync:
   uv sync --all-extras --exact
 
-# Update pre-commit hooks and the lock file (syncs).
+# Update pre-commit hooks, update the lock file, and sync the venv.
 [group('project')]
 bump: bump-lock bump-hooks
 
-# Update the lock file (syncs).
+# Update the lock file and sync the venv.
 [group('project')]
 bump-lock:
   uv sync --upgrade --all-extras --exact
@@ -56,24 +56,29 @@ clean: && trash
   uv cache prune
   uv run pre-commit gc
 
-# Delete temporary project files.
+# Delete temporary project files and directories.
 [group('project'), private]
 @trash:
   - rm .coverage.json
-  - rm .ruff_cache/
+  - rm -r .ruff_cache/
+  - rm -r .hypothesis/
   - rm -r **/__pycache__/
   - rm -r **/.pytest_cache/
   - rm -r **/cython_debug/
+  - rm -r **/*.egg-info/
   - rm **/*.py[codi]
 
 # Delete files whose names indicate they're temporary.
 [group('project'), private]
 @trash-unsafe:
   - rm **/.DS_Store
+  - rm **/Thumbs.db
   - rm **/*.tmp
   - rm **/*.temp
+  - rm **/*.swp
   - rm **/.#*
-  - rm **/*~
+  - rm **/*[~\$]
+  - rm **/*.directory
 
 ###################################################################################################
 
@@ -188,12 +193,22 @@ test-stepwise *args: (test-debug "--no-cov" "--stepwise" args)
 test-pdb *args:
   uv run pytest --no-cov --pdb {{args}}
 
-# List PyTest fixtures and their associated tests.
+# Run PyTest tests and highlight test durations.
+[group('test')]
+test-durations *args:
+  uv run pytest --quiet --log-level WARNING --durations=0 --durations-min=0.0 {{args}}
+
+# Run doctest tests through PyTest.
+[group('test')]
+doctest *args:
+  uv run pytest --doctest-modules src/ {{args}}
+
+# Show available PyTest fixtures and their associated tests.
 [group('test')]
 show-test-fixtures:
   uv run pytest --setup-plan
 
-# List PyTest markers.
+# Show available PyTest markers.
 [group('test')]
 show-test-markers:
   uv run pytest --markers

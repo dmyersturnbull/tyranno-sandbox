@@ -31,6 +31,8 @@ jobs:
   run-tests:
     name: Test ${{ env.REF }} on ${{ inputs.os }}, Python ${{ inputs.python }}
     runs-on: ${{ inputs.os }}
+    env:
+      UV_NO_SYNC: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,10 +42,11 @@ jobs:
           python-version: "${{ inputs.python }}"
       - name: Install dependencies and run tests
         run: |
+          uv sync --locked --only-group test || exit $?
           if [[ -n "${{ inputs.markers }}" ]]; then
-            uv run --locked pytest -m "${{ inputs.markers }}" || exit $?
+            uv run pytest -m "${{ inputs.markers }}" || exit $?
           else
-            uv run --locked pytest || exit $?
+            uv run pytest || exit $?
           fi
       - name: Store coverage report
         if: ${{ inputs.store-coverage > 0 }}

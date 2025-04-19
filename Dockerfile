@@ -59,13 +59,13 @@ RUN \
   --mount=type=cache,target=/root/.cache/uv \
   --mount=type=bind,source=uv.lock,target=uv.lock \
   --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-  uv sync --locked --no-dev --no-editable --no-install-project
+  uv sync --frozen --no-dev --no-editable --no-install-project
 
 # Copy the source and build/install it in another layer.
 COPY . /var/app/
 RUN \
   --mount=type=cache,target=/root/.cache/uv \
-  uv sync --locked --no-dev --no-editable
+  uv sync --frozen --no-dev --no-editable
 
 # ******************** In production only! ************************
 # -------------------- Run in a fresh stage -----------------------

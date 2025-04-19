@@ -10,13 +10,14 @@ on:
 jobs:
   check-hooks:
     runs-on: ubuntu-latest
+    env:
+      UV_NO_SYNC: true
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - name: Run some pre-commit hooks
-        env:
-          UV_NO_SYNC: true
         run: |
+          uv sync --frozen --only-group precommit || exit $?
           uv run pre-commit run --all-files check-added-large-files || exit $?
           uv run pre-commit run --all-files forbid-new-submodules || exit $?
           uv run pre-commit run --all-files check-case-conflict || exit $?

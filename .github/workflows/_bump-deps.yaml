@@ -10,14 +10,14 @@ on:
 jobs:
   bump-deps:
     runs-on: ubuntu-latest
+    env:
+      UV_NO_SYNC: true
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - name: Configure Git
         run: |
-          # ::tyranno:: git config --global user.name "$<<.cicd.git-bot-name>>"
           git config --global user.name 'github-actions[bot]' || exit $?
-          # ::tyranno:: git config --global user.email "$<<.cicd.git-bot-email>>"
           git config --global user.email 'github-actions[bot]@users.noreply.github.com' || exit $?
       - name: Upgrade the lock file
         run: |
@@ -29,7 +29,7 @@ jobs:
           fi
       - name: Upgrade the pre-commit config
         run: |
-          uv sync --only-dev || exit $?
+          uv sync --locked --only-group precommit || exit $?
           uv run pre-commit install || exit $?
           uv run pre-commit autoupdate || exit $?
           if git diff --quiet .pre-commit-config.yaml; then
