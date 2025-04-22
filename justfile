@@ -13,7 +13,7 @@ set ignore-comments	:= true
 # List available recipes.
 [group('help')]
 list:
-  @just --list --unsorted
+  @just --list
 alias help := list
 
 ###################################################################################################
@@ -27,28 +27,32 @@ init:
 
 # Update the lock file, sync the venv, auto-fix + format changes, and clean.
 [group('project')]
-revamp: bump-lock bump-hooks fix-changes format-changes clean
+revamp: update-lock update-hooks fix-changes format-changes clean
 
 # Lock and sync the venv exactly with all extras.
 [group('project')]
 sync:
   uv sync --all-extras --exact
+alias lock := sync
 
 # Update pre-commit hooks, update the lock file, and sync the venv.
 [group('project')]
-bump: bump-lock bump-hooks
+update: update-lock update-hooks
+alias upgrade := update
 
 # Update the lock file and sync the venv.
 [group('project')]
-bump-lock:
+update-lock:
   uv sync --upgrade --all-extras --exact
   uv run pre-commit gc
+alias upgrade-lock := update-lock
 
 # Auto-update commit hooks.
 [group('project')]
-bump-hooks:
+update-hooks:
   uv run pre-commit autoupdate
   uv run pre-commit gc
+alias upgrade-hooks := update-hooks
 
 # Remove temporary files.
 [group('project')]
@@ -158,60 +162,65 @@ check-links:
 
 ###################################################################################################
 
-# Run all PyTest tests.
+# Run PyTest tests (except 'ux').
 [group('test')]
-test-full *args:
-  uv run pytest {{args}}
-alias test := test-full
+test *args:
+  uv run --locked pytest --no-cov -m "not ux" {{args}}
 
 # Run PyTest tests not marked 'slow', 'net', or 'ux'.
 [group('test')]
-test-fast *args:
-  uv run pytest -m "not (slow or net or ux)" {{args}}
+test-main *args:
+  uv run pytest -m "not (slow or net or ux)" --tb=short {{args}}
 
-# Run PyTest tests marked 'property', with Hypothesis explain phase enabled.
+# Run PyTest tests marked 'ux' (interaction or manual review).
+[group('test')]
+test-ux *args:
+  uv run --locked pytest --no-cov -m ux {{args}}
+
+# Run PyTest tests marked 'property', with Hypothesis "explain phase" enabled.
 [group('test')]
 test-property *args:
-  uv run pytest -m "property" --hypothesis-explain {{args}}
+  uv run pytest -m property --hypothesis-explain --hypothesis-show-statistics --tb=short {{args}}
 
-# Run PyTest tests with verbose options.
+# Run PyTest tests (except 'ux') stepwise (starting with last failure).
 [group('test')]
-test-debug *args:
-  uv run pytest \
-    --full-trace \
-    --showlocals \
-    --hypothesis-explain \
-    --log-level DEBUG \
-    {{args}}
+test-stepwise *args:
+  uv run --locked pytest --no-cov -m "not ux" {{args}}
 
-# Run tests with verbose options and stepwise mode.
+# Run PyTest tests marked 'ux' stepwise (starting with last failure).
 [group('test')]
-test-stepwise *args: (test-debug "--no-cov" "--stepwise" args)
+test-ux-stepwise *args:
+  uv run --locked pytest --no-cov -m ux {{args}}
+
+# Run PyTest tests (except 'ux'), showing minimal output.
+[group('test')]
+test-quietly *args:
+  uv run --locked pytest --no-cov -m "not ux" --capture=no --tb=line {{args}}
+
+# Run PyTest tests (except 'ux'), showing tracebacks, locals, and INFO.
+[group('test')]
+test-loudly *args:
+  uv run --locked pytest --no-cov -m "not ux" --showlocals --full-trace --log-level INFO {{args}}
 
 # Run PyTest tests with pdb debugger.
 [group('test')]
-test-pdb *args:
-  uv run pytest --no-cov --pdb {{args}}
+test-with-pdb *args:
+  uv run --locked pytest --no-cov --pdb {{args}}
 
-# Run PyTest tests and highlight test durations.
+# Run all PyTest tests, highlighting test durations.
 [group('test')]
 test-durations *args:
-  uv run pytest --quiet --log-level WARNING --durations=0 --durations-min=0.0 {{args}}
+  uv run --locked pytest --no-cov --durations=0 --durations-min=0 {{args}}
 
-# Run doctest tests through PyTest.
+# Run doctest tests (via PyTest).
 [group('test')]
 doctest *args:
-  uv run pytest --doctest-modules src/ {{args}}
+  uv run --locked pytest --doctest-modules src/ {{args}}
 
-# Show available PyTest fixtures and their associated tests.
+# List PyTest fixtures.
 [group('test')]
-show-test-fixtures:
-  uv run pytest --setup-plan
-
-# Show available PyTest markers.
-[group('test')]
-show-test-markers:
-  uv run pytest --markers
+list-fixtures:
+  uv run pytest --fixtures
 
 ###################################################################################################
 
