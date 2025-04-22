@@ -74,7 +74,7 @@ RUN \
 # COPY --from=builder --chown=app:app /var/app/.venv /var/app/.venv
 # *****************************************************************
 
-# ::tyranno:: ENTRYPOINT ["/var/app/.venv/bin/$<<project.scripts.${{project.name>>}}"]
+# ::tyranno:: ENTRYPOINT ["/var/app/.venv/bin/$<<project.scripts.$<<project.name>>>>"]
 ENTRYPOINT ["/var/app/.venv/bin/tyranno-sandbox"]
 CMD ["--version"]
 

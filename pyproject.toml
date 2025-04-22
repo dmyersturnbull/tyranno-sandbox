@@ -134,7 +134,7 @@ dev = [
   "pyright[nodejs]>=1.1.350",
   "pytest>=8.3",
   "pytest-cov>=6.1",
-  "pytest-sugar>=1.0",
+  "pytest-datadir>=1.6",
   "ruff>=0.11.6",
 ]
 test = [
@@ -144,7 +144,7 @@ test = [
   "hypothesis[cli,codemods]>=6.130",
   "pytest>=8.3",
   "pytest-cov>=6.1",
-  "pytest-sugar>=1.0",
+  "pytest-datadir>=1.6",
 ]
 docs = [
   "mkdocs>=1.6",
@@ -237,7 +237,7 @@ select = [
   "E7",       # == True, bare except, lambda assignment, 'l' in names, etc.
   "E9",       # can't lint -- syntax error, etc.
   "EM",       # flake8-errmsg
-  "ERA",      # eradicate (commented-out code) (see https://github.com/astral-sh/ruff/pull/14069)
+  #"ERA",      # eradicate (commented-out code) //DISABLED: error-prone//
   #"EXE",     # flake8-executable //DISABLED: pre-commit shebang rules instead//
   "F",        # pyflakes
   "FA",       # flake8-future-annotations
@@ -364,7 +364,7 @@ testpaths = ["tests/"]
 # -------------------------- Logging config -----------------------------------
 # Configure logging, and send it "live" (in realtime) to stdout with `log_cli`.
 # In `tests/**/*.py`, append `-TEST` to logger names to distinguish them.
-log_level = "INFO"
+log_level = "WARNING"
 log_cli = true
 log_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s (%(filename)s:%(lineno)s)"
 log_date_format = "%Y-%m-%d %H:%M:%S"
@@ -393,12 +393,13 @@ markers = [
 addopts = """
   --cov=src \
   --cov-report json:.coverage.json \
-  --cov-report term \
+  --cov-report=term \
   --cov-config=pyproject.toml \
   --import-mode=importlib \
   --strict-config \
   --strict-markers \
   --quiet \
+  --tb=short \
 """
 
 #
@@ -507,7 +508,7 @@ targets = [
 vendor = "dmyersturnbull"
 # ::tyranno:: namespace = "$<<project.name.replace(@, '_', '-').lower(@)>>"
 namespace = "tyranno_sandbox"
-# ::tyranno:: frag = "$<<vendor>>/$<<project.name>>"
+# ::tyranno:: frag = "$<<.vendor>>/$<<project.name>>"
 frag = "dmyersturnbull/tyranno-sandbox"
 # ::tyranno:: copyright = "Copyright $<<now_utc().year>>, Contributors to $<<project.name>>"
 copyright = "Copyright 2025, Contributors to sandbox-tyranno"

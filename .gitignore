@@ -7,13 +7,13 @@
 # Note that it doesn't cover obsolete Python files like Eggs (`*.egg`).
 #
 # The approach is to blacklist `.*` and similar patterns, then to whitelist specific files.
-# This approach maeks the file much simpler and easier to understand.
+# This approach makes the file much simpler and easier to understand.
 # Some of the rules are derived from <https://github.com/github/gitignore/>.
 #
 # Notes:
 #   - `x` is equivalent to `**/x`, in contrast to `.dockerignore` and `.prettierignore`.
 #   - Always mark directories with a `/` suffix.
-#   - Per section, place directories above files; then sort lexigraphically.
+#   - Per section, place directories above files; then sort lexicographically.
 #     (Order (using regex): `/` ≺ `*` ≺ `[^A-Za-z0-9]` ≺ `[0-9]` ≺ `[A-Za-z]`.)
 
 # Dotted files
@@ -44,7 +44,7 @@ Thumbs.db
 *.war
 *.xz
 *.zip
-*.zstd
+*.zst
 
 # Executables and libraries
 *.dll
@@ -114,6 +114,7 @@ deps/deps.jl
 
 # Coverage
 /coverage.*
+/coverage/
 
 # IPython
 profile_default/
@@ -138,13 +139,20 @@ override.tf.json
 # Git
 !/.git-blame-ignore-revs
 !/.gitattributes
+!/.gitmodules
+
+# Template files
+.env.template
 
 # `.ignore` files (e.g. `.dockerignore`, `.npmignore`)
-!.*ignore
+!/.*ignore
 
 # GitHub
 !/.github/
 !/.nojekyll
+
+# CI
+!/.circleci/
 
 # Linters
 !/.editorconfig
@@ -152,6 +160,8 @@ override.tf.json
 
 # External service config
 !/.*.yaml
+!/.*.yml
 !/.*.toml
 !/.*/[A-Za-z0-9_-]*.yaml
+!/.*/[A-Za-z0-9_-]*.yml
 !/.*/[A-Za-z0-9_-]*.toml

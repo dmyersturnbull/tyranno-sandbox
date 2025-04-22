@@ -2,7 +2,7 @@ apiVersion: v2
 type: application
 # ::tyranno:: name: $<<project.name>>
 name: tyranno-sandbox
-# ::tyranno:: description: $<<project.description>>
+# ::tyranno:: description: $<<project.description.yaml(@)>>
 description: Sandbox to test CI/CD in Tyrannosaurus
 # ::tyranno:: home: $<<project.urls.Homepage>>
 home: https://github.com/dmyersturnbull/tyranno-sandbox
@@ -10,12 +10,12 @@ sources:
   # ::tyranno:: - $<<project.urls.Source>>
   - https://github.com/dmyersturnbull/tyranno-sandbox
 maintainers:
-  # ::tyranno-start:: ${{project.maintainers[*].unquote(@)|unwrap_yaml(@)}}
+  # ::tyranno-start:: $<<project.maintainers|yaml(@, 2)>>
   - name: Douglas Myers-Turnbull
     email: dmyersturnbull@gmail.com
   # ::tyranno-end::
 keywords:
-  # ::tyranno-start:: ${{project.keywords[*].unquote(@)|unwrap_yaml(@)}}
+  # ::tyranno-start:: $<<project.keywords|yaml(@, 2)>>
   - ci/cd
   - cookiecutter
   - github-workflow

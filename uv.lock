@@ -914,17 +914,15 @@ wheels = [
 ]
 
 [[package]]
-name = "pytest-sugar"
-version = "1.0.0"
+name = "pytest-datadir"
+version = "1.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "packaging" },
     { name = "pytest" },
-    { name = "termcolor" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f5/ac/5754f5edd6d508bc6493bc37d74b928f102a5fff82d9a80347e180998f08/pytest-sugar-1.0.0.tar.gz", hash = "sha256:6422e83258f5b0c04ce7c632176c7732cab5fdb909cb39cca5c9139f81276c0a", size = 14992 }
+sdist = { url = "https://files.pythonhosted.org/packages/bb/0e/63301415b9233f0131339799d49ce0c0e8804d82f3f12615056a70e563c5/pytest_datadir-1.6.1.tar.gz", hash = "sha256:4d204cf93cfe62ddc37b19922df6c8c0f133c2899c224bd339b24920e84e7fd3", size = 9391 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/92/fb/889f1b69da2f13691de09a111c16c4766a433382d44aa0ecf221deded44a/pytest_sugar-1.0.0-py3-none-any.whl", hash = "sha256:70ebcd8fc5795dc457ff8b69d266a4e2e8a74ae0c3edc749381c64b5246c8dfd", size = 10171 },
+    { url = "https://files.pythonhosted.org/packages/55/f1/5e4d95ce96c03332726d7fd87b7b500f178994b638ca6a88b4ed3ca64438/pytest_datadir-1.6.1-py3-none-any.whl", hash = "sha256:aa427f6218d3fc7481129d59c892bd7adfb8822613a2726ffc97f51968879cdb", size = 5156 },
 ]
 
 [[package]]
@@ -1116,15 +1114,6 @@ wheels = [
 ]
 
 [[package]]
-name = "termcolor"
-version = "3.0.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f8/b6/8e2aaa8aeb570b5cc955cd913b083d96c5447bbe27eaf330dfd7cc8e3329/termcolor-3.0.1.tar.gz", hash = "sha256:a6abd5c6e1284cea2934443ba806e70e5ec8fd2449021be55c280f8a3731b611", size = 12935 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a6/7e/a574ccd49ad07e8b117407bac361f1e096b01f1b620365daf60ff702c936/termcolor-3.0.1-py3-none-any.whl", hash = "sha256:da1ed4ec8a5dc5b2e17476d859febdb3cccb612be1c36e64511a6f2485c10c69", size = 7157 },
-]
-
-[[package]]
 name = "trio"
 version = "0.29.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1209,7 +1198,7 @@ dev = [
     { name = "pyright", extra = ["nodejs"] },
     { name = "pytest" },
     { name = "pytest-cov" },
-    { name = "pytest-sugar" },
+    { name = "pytest-datadir" },
     { name = "ruff" },
 ]
 docs = [
@@ -1233,7 +1222,7 @@ test = [
     { name = "hypothesis", extra = ["cli", "codemods"] },
     { name = "pytest" },
     { name = "pytest-cov" },
-    { name = "pytest-sugar" },
+    { name = "pytest-datadir" },
 ]
 
 [package.metadata]
@@ -1273,7 +1262,7 @@ dev = [
     { name = "pyright", extras = ["nodejs"], specifier = ">=1.1.350" },
     { name = "pytest", specifier = ">=8.3" },
     { name = "pytest-cov", specifier = ">=6.1" },
-    { name = "pytest-sugar", specifier = ">=1.0" },
+    { name = "pytest-datadir", specifier = ">=1.6" },
     { name = "ruff", specifier = ">=0.11.6" },
 ]
 docs = [
@@ -1293,7 +1282,7 @@ test = [
     { name = "hypothesis", extras = ["cli", "codemods"], specifier = ">=6.130" },
     { name = "pytest", specifier = ">=8.3" },
     { name = "pytest-cov", specifier = ">=6.1" },
-    { name = "pytest-sugar", specifier = ">=1.0" },
+    { name = "pytest-datadir", specifier = ">=1.6" },
 ]
 
 [[package]]

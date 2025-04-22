@@ -68,14 +68,14 @@ jobs:
     if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-test') }}
     concurrency:
       group: test-${{ github.ref_name }} # Group shared with `unit-test`.
-      cancel-in-progress: true # Let `test` cancel `unit-test` (and `test`).
+      cancel-in-progress: true # Let `test` cancel `test-fast` (and `test`).
     uses: ./.github/workflows/_run-pytest.yaml
 
-  unit-test:
-    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-unit-test') }}
+  test-fast:
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-test-fast') }}
     concurrency:
       group: test-${{ github.ref_name }} # Group shared with `test`.
-      # Don't let `unit-test` cancel `test`.
+      # Don't let `test-fast` cancel `test`.
     uses: ./.github/workflows/_run-pytest.yaml
     with:
       markers: not (ux or slow or net)

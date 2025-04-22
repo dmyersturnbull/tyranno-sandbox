@@ -17,5 +17,5 @@ jobs:
           uv run --only-group docs mkdocs build --strict || exit $?
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: .site
       - uses: actions/deploy-pages@v4

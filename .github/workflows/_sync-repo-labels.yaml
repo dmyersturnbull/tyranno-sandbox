@@ -9,7 +9,6 @@ on:
 
 jobs:
   sync-repo-labels:
-    # ::tyranno:: runs-on: "$<<.cicd.default-runner>>"
     runs-on: ubuntu-latest
     env:
       SETTINGS_PATH: .github/project.yaml

@@ -2,13 +2,15 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# ::tyranno:: site_name: "$<<project.name>>"
-site_name: "tyranno-sandbox"
+# ::tyranno:: site_name: $<<project.name>>
+site_name: tyranno-sandbox
 
-# ::tyranno:: site_name: "$<<.copyright>>"
+# ::tyranno:: site_name: $<<.copyright.yaml(@)>>
 copyright: Copyright 2025, Contributors to Tyrannosaurus
-# ::tyranno:: site_description: "$<<project.description>>"
-site_description: "Sandbox for Tyrannosaurus"
+# ::tyranno:: site_description: $<<project.description.yaml(@)>>
+site_description: Sandbox for Tyrannosaurus
+
+site_dir: .site
 
 # Exclude from nav anything starting with `_`.
 not_in_nav: _*.md

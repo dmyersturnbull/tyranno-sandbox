@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # A short description of the repository that will show up on GitHub
-# ::tyranno:: description: $<<project.description>>
+# ::tyranno:: description: $<<project.description.yaml(@)>>
 description: Sandbox for Tyrannosaurus
 # ::tyranno:: homepage: $<<project.urls.Homepage>>
 homepage: https://github.com/dmyersturnbull/tyranno-sandbox
 
 topics:
-  # ::tyranno-start:: ${{project.keywords[*].unquote(@)|yaml_long(@)}}
+  # ::tyranno-start:: ${{project.keywords[*].unquote(@)|yaml(@)}}
   - ci/cd
   - cookiecutter
   - github-workflow

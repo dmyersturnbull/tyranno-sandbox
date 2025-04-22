@@ -35,7 +35,7 @@ jobs:
           if git diff --quiet .pre-commit-config.yaml; then
             git commit --no-verify -m "ci: upgrade pre-commit config" .pre-commit-config.yaml || exit $?
           else
-            printf "No changes to .pre-commit-config.yaml to commit\n"
+            printf "No changes to .pre-commit-config.yaml to commit.\n"
           fi
       - name: Push changes
         run: |

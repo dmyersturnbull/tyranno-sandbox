@@ -1,11 +1,11 @@
 cff-version: 1.2.0
 message: Please use the following citation.
-# ::tyranno:: title: $<<project.name>>
+# ::tyranno:: title: $<<project.name.yaml(@)>>
 title: tyranno-sandbox
-# ::tyranno:: abstract: $<<project.description>>
+# ::tyranno:: abstract: $<<project.description.yaml(@)>>
 abstract: Sandbox to test CI/CD in Tyrannosaurus
-# ::tyranno:: version: "$<<project.version>>"
-version: "0.0.1-alpha0"
+# ::tyranno:: version: "$<<project.version.yaml(@)>>"
+version: 0.0.1-alpha0
 # ::tyranno:: license: $<<project.license.text>>
 license: Apache-2.0
 # ::tyranno:: repository-code: $<<project.urls.Source>>
@@ -19,7 +19,7 @@ authors:
 date-released: 2020-05-10
 
 keywords:
-  # ::tyranno-start:: ${{project.keywords|yaml_long(@)}}
+  # ::tyranno-start:: ${{project.keywords|yaml(@)}}
   - ci/cd
   - cookiecutter
   - github-workflow
