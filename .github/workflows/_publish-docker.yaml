@@ -13,6 +13,7 @@ on:
 
 jobs:
   publish-docker:
+    if: ${{ ! contains(github.ref_name, '-') }} # Ignore prereleases
     name: Publish to container registries
     runs-on: ubuntu-latest
     env:

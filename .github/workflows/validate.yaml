@@ -13,7 +13,7 @@ on:
       - '^v(?P<major>\d+)\.(?P<minor>\d+)\.(?P<micro>\d+)$'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   # In contrast, the `publish` workflow uses the constant group `publish`
@@ -25,16 +25,21 @@ concurrency:
 
 jobs:
   check-hooks:
-    uses: ./.github/workflows/_check-hooks.yaml
+    uses: .github/workflows/_check-hooks.yaml
   run-tests:
-    uses: ./.github/workflows/_run-pytest.yaml
+    uses: .github/workflows/_run-pytest.yaml
   check-security:
-    uses: ./.github/workflows/_check-ruff.yaml
+    uses: .github/workflows/_check-ruff.yaml
     with:
       rules: S
+  check-docker:
+    uses: .github/workflows/_check-docker.yaml
   build-dist:
     needs:
       - check-hooks
       - run-tests
       - check-security
-    uses: ./.github/workflows/_build_dist.yaml
+      - check-docker
+    permissions:
+      contents: write
+    uses: .github/workflows/_build_dist.yaml

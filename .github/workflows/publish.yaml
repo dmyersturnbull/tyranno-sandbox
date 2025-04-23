@@ -34,13 +34,16 @@ jobs:
   publish-docs:
     needs: accept
     permissions:
+      contents: write
       pages: write
     uses: .github/workflows/_publish-docs.yaml
+    secrets: inherit
   publish-github:
     needs: accept
     permissions:
-      pages: write
+      contents: write
     uses: .github/workflows/_publish-github.yaml
+    secrets: inherit
   publish-pypi:
     needs: accept
     uses: .github/workflows/_publish-pypi.yaml

@@ -13,8 +13,11 @@ on:
 jobs:
   check-mkdocs:
     runs-on: ubuntu-latest
+    env:
+      UV_NO_SYNC: true
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: |
-          uv run --only-group docs mkdocs build --strict || exit $?
+          uv sync --locked --only-group docs || exit $?
+          uv run mkdocs build --strict || exit $?

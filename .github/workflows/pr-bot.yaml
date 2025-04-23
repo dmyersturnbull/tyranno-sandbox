@@ -21,7 +21,7 @@ jobs:
     concurrency:
       group: audit-${{ github.ref_name }}
       cancel-in-progress: true
-    uses: ./.github/workflows/_check-ruff.yaml
+    uses: .github/workflows/_check-ruff.yaml
     with:
       rules: S
 
@@ -30,14 +30,14 @@ jobs:
     concurrency:
       group: lint-${{ github.ref_name }}
       cancel-in-progress: true
-    uses: ./.github/workflows/_check-ruff.yaml
+    uses: .github/workflows/_check-ruff.yaml
 
   check-docker:
     if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-check-docker') }}
     concurrency:
       group: check-docker-${{ github.ref_name }}
       cancel-in-progress: true
-    uses: ./.github/workflows/_check-docker.yaml
+    uses: .github/workflows/_check-docker.yaml
 
   check-docs:
     if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-check-docs') }}
@@ -53,7 +53,7 @@ jobs:
       # DO NOT cancel this workflow if it's already running.
     permissions:
       contents: write
-    uses: ./.github/workflows/_bump-deps.yaml
+    uses: .github/workflows/_bump-deps.yaml
 
   reformat:
     if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-reformat') }}
@@ -62,20 +62,20 @@ jobs:
       # DO NOT cancel this workflow if it's already running.
     permissions:
       contents: write
-    uses: ./.github/workflows/_reformat.yaml
+    uses: .github/workflows/_reformat.yaml
 
   test:
     if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-test') }}
     concurrency:
       group: test-${{ github.ref_name }} # Group shared with `unit-test`.
       cancel-in-progress: true # Let `test` cancel `test-fast` (and `test`).
-    uses: ./.github/workflows/_run-pytest.yaml
+    uses: .github/workflows/_run-pytest.yaml
 
   test-fast:
     if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/please-test-fast') }}
     concurrency:
       group: test-${{ github.ref_name }} # Group shared with `test`.
       # Don't let `test-fast` cancel `test`.
-    uses: ./.github/workflows/_run-pytest.yaml
+    uses: .github/workflows/_run-pytest.yaml
     with:
       markers: not (ux or slow or net)

@@ -45,7 +45,7 @@ jobs:
           # ::tyranno-start:: $<<.python-builds|yaml(@)>>
           - "3.13"
           # :tyranno-end
-    uses: ./.github/workflows/_run-pytest-single.yaml
+    uses: .github/workflows/_run-pytest-single.yaml
     with:
       ref: ${{ env.REF }}
       os: ${{ matrix.os }}

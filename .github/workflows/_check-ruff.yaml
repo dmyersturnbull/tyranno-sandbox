@@ -32,5 +32,5 @@ jobs:
           if [[ -z "${{ inputs.rules }}" ]]; then
             uv run ruff check --no-fix ${{ inputs.glob }} || exit $?
           else
-            uv run ruff check --select "${{ inputs.rules }}" --no-fix ${{ inputs.glob }} || exit $?
+            uv run ruff check --no-fix --select "${{ inputs.rules }}" ${{ inputs.glob }} || exit $?
           fi

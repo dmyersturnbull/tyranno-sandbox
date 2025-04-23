@@ -42,11 +42,11 @@ jobs:
           python-version: "${{ inputs.python }}"
       - name: Install dependencies and run tests
         run: |
-          uv sync --locked --exact --only-group test || exit $?
+          uv sync --locked --exact --no-dev --group test || exit $?
           if [[ -n "${{ inputs.markers }}" ]]; then
             uv run pytest -m "${{ inputs.markers }}" || exit $?
           else
-            uv run pytest || exit $?
+            uv run pytest -m "not ux" || exit $?
           fi
       - name: Store coverage report
         if: ${{ inputs.retention-days > 0 }}

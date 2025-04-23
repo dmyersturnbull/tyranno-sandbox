@@ -29,7 +29,7 @@ jobs:
           fi
       - name: Upgrade the pre-commit config
         run: |
-          uv sync --locked --only-group precommit || exit $?
+          uv sync --frozen --only-group precommit || exit $?
           uv run pre-commit install || exit $?
           uv run pre-commit autoupdate || exit $?
           if git diff --quiet .pre-commit-config.yaml; then

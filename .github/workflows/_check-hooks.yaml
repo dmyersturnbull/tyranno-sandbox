@@ -18,13 +18,16 @@ jobs:
       - name: Run some pre-commit hooks
         run: |
           uv sync --frozen --only-group precommit || exit $?
-          uv run pre-commit run --all-files check-added-large-files || exit $?
-          uv run pre-commit run --all-files forbid-new-submodules || exit $?
-          uv run pre-commit run --all-files check-case-conflict || exit $?
-          uv run pre-commit run --all-files check-illegal-windows-names || exit $?
-          uv run pre-commit run --all-files check-merge-conflict || exit $?
-          uv run pre-commit run --all-files check-symlinks || exit $?
-          # These auto-fix, but we're only checking in this workflow:
-          uv run pre-commit run --all-files fix-byte-order-marker || exit $?
-          uv run pre-commit run --all-files end-of-file-fixer || exit $?
-          uv run pre-commit run --all-files trailing-whitespace || exit $?
+          chk() {
+            uv run pre-commit run --all-files $1 || exit $?
+          }
+          chk check-added-large-files
+          chk forbid-new-submodules
+          chk check-case-conflict
+          chk check-illegal-windows-names
+          chk check-merge-conflict
+          chk check-symlinks
+          # These auto-fix, but we're not committing the changes:
+          chk fix-byte-order-marker
+          chk end-of-file-fixer
+          chk trailing-whitespace

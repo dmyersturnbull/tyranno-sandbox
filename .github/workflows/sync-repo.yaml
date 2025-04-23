@@ -19,12 +19,15 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   sync-metadata:
-    uses: ./.github/workflows/_sync-repo-metadata.yaml
+    permissions:
+      contents: write
+    uses: .github/workflows/_sync-repo-metadata.yaml
   sync-labels:
     permissions:
+      contents: write
       issues: write
-    uses: ./.github/workflows/_sync-repo-labels.yaml
+    uses: .github/workflows/_sync-repo-labels.yaml

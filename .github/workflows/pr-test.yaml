@@ -26,9 +26,9 @@ permissions:
 jobs:
   check-security:
     name: Check security
-    uses: ./.github/workflows/_check-ruff.yaml
+    uses: .github/workflows/_check-ruff.yaml
     with:
       rules: S
   test:
     name: Run PyTest tests
-    uses: ./.github/workflows/_run-pytest.yaml
+    uses: .github/workflows/_run-pytest.yaml

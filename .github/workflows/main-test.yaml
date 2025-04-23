@@ -32,15 +32,16 @@ env:
 
 jobs:
   test:
-    uses: ./.github/workflows/_run-pytest.yaml
+    uses: .github/workflows/_run-pytest.yaml
     with:
-      ref: ${{ github.ref }}
       retention-days: 1 # Only to upload coverage reports.
   create-issue:
     if: ${{ failure() }}
     needs: test
     name: Open a GitHub issue if tests failed
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - name: Create GitHub issue
         env:
@@ -59,7 +60,7 @@ jobs:
     concurrency:
       group: codecov # Don't harass CodeCov.
       cancel-in-progress: true
-    uses: ./.github/workflows/_update-codecov.yaml
+    uses: .github/workflows/_update-codecov.yaml
     secrets: inherit
   update-coveralls:
     if: ${{ success() && env.IS_MAIN && env.COVERALLS_TOKEN != '' }}
@@ -67,5 +68,5 @@ jobs:
     concurrency:
       group: codecov # Don't harass Coveralls.
       cancel-in-progress: true
-    uses: ./.github/workflows/_update-coveralls.yaml
+    uses: .github/workflows/_update-coveralls.yaml
     secrets: inherit

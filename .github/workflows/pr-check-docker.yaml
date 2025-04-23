@@ -25,4 +25,4 @@ permissions:
 
 jobs:
   check-docker:
-    uses: ./.github/workflows/_check-docker.yaml
+    uses: .github/workflows/_check-docker.yaml
