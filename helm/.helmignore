@@ -1,14 +1,15 @@
 # Patterns to omit from charts
-# Uses Go's 'filepath.Match'.
-# Does NOT support `**` or `!`.
+# Uses Go's `filepath.Match`, which does NOT support `**` or `!`.
 # Does not implicitly ignore `.helmignore` itself.
 
-# Dotted files
+# Dotted files and directories
 .*
 
-# General hidden or unwanted
+# Paths starting or ending in `~`, `$`, or `#` (normally temp files; e.g. `~$doc.docx`, `.profile#`, etc.)
 *[~#$]
 [~#$]*
+
+# Temp and misc. unwanted files
 *[.~]bak
 *[.~]out
 *[.~]swp
@@ -18,14 +19,54 @@
 *.pid
 Thumbs.db
 
+# Databases
+*.sqlite3
+*.sqlite3-journal
+
+# Archives
+*.7z
+*.ear
+*.gz
+*.jar
+*.lz4
+*.lzma
+*.tar
+*.tar.gz
+*.tgz
+*.war
+*.xz
+*.zip
+*.zst
+
+# Executables and libraries
+*.dll
+*.dylib
+*.exe
+*.msi
+*.pkg
+*.so
+
+# IDEs
+*.iml
+pch.h
+
 # Python
+/build/
+/dist/
+/sdist/
 __pycache__/
 __pypackages__/
 cython_debug/
 *.py[cod]
 
+# Java
+/target/
+/pom.xml.*
+*.class
+
 # C and C++
 *.a
+*.pch
 *.gch
 *.ko
 *.lib
@@ -33,17 +74,15 @@ cython_debug/
 *.o
 
 # Make, CMake, automake, autoconf, pkg-config, etc.
-_deps/
-/_deps
+_deps
 *.la
 *.pc
-cmake_install.cmake
-compile_commands.json
-install_manifest.txt
+/cmake_install.cmake
+/compile_commands.json
+/install_manifest.txt
 
 # JavaScript and TypeScript
 node_modules/
-# TypeScript cache
 tsconfig.tsbuildinfo
 
 # Julia
@@ -56,5 +95,24 @@ deps/deps.jl
 /docs/html/
 /docs/_build/
 /docs/autoapi/
+
+# Coverage
+/coverage.*
+/coverage/
 /htmlcov/
-/site/
+
+# IPython
+profile_default/
+ipython_config.py
+
+# Django
+/local_settings.py
+
+# Celery
+celerybeat-schedule
+
+# Terraform
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
