@@ -13,7 +13,7 @@ ARG PYTHON_VERSION="3.13"
 # Start the stage "builder", and download uv.
 FROM python:$PYTHON_VERSION-alpine$ALPINE_VERSION AS builder
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-RUN apk add --no-cache bash
+RUN apk add --no-cache bash==5.*
 SHELL ["/bin/bash", "-c"]
 
 # Environment variables
@@ -44,6 +44,8 @@ LABEL org.opencontainers.image.title="tyranno-sandbox"
 LABEL org.opencontainers.image.url="https://github.com/dmyersturnbull/tyranno-sandbox"
 # ::tyranno:: LABEL org.opencontainers.image.documentation="$<<project.urls.Documentation>>"
 LABEL org.opencontainers.image.documentation="https://github.com/dmyersturnbull/tyranno-sandbox"
+# ::tyranno:: LABEL org.opencontainers.image.licenses="$<<project.license.text>>"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
 
 # -------------------- Install the project --------------------
 
