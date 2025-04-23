@@ -180,11 +180,6 @@ packages = ["src/tyranno_sandbox"]
 ###################################################################################################
 
 [tool.ruff]
-include = [
-  "*.py",           # Source
-  "pyproject.toml", # This file (RUF rules only)
-  "*.ipynb",        # Jupyter notebooks
-]
 exclude = [] # Rely on https://docs.astral.sh/ruff/settings/#respect-gitignore
 src = ["src"] # Needed for import sorting
 line-length = 120 # 120 is hatch's default via 'hatch init'
