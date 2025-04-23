@@ -24,4 +24,4 @@ permissions:
 
 jobs:
   check-docs:
-    uses: .github/workflows/_check-docs.yaml
+    uses: ./.github/workflows/_check-docs.yaml

@@ -25,9 +25,9 @@ jobs:
   sync-metadata:
     permissions:
       contents: write
-    uses: .github/workflows/_sync-repo-metadata.yaml
+    uses: ./.github/workflows/_sync-repo-metadata.yaml
   sync-labels:
     permissions:
       contents: write
       issues: write
-    uses: .github/workflows/_sync-repo-labels.yaml
+    uses: ./.github/workflows/_sync-repo-labels.yaml

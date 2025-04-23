@@ -19,4 +19,4 @@ permissions:
 jobs:
   check-hooks:
     if: ${{ !contains(github.event.pull_request, 'draft') || !github.event.pull_request.draft }}
-    uses: .github/workflows/_check-hooks.yaml
+    uses: ./.github/workflows/_check-hooks.yaml

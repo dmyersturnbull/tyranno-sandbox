@@ -36,5 +36,5 @@ permissions:
 
 jobs:
   codeql:
-    uses: .github/workflows/_run-codeql.yaml
+    uses: ./.github/workflows/_run-codeql.yaml
     secrets: inherit
