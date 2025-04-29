@@ -7,13 +7,13 @@
 on:
   workflow_call:
     inputs:
-      dry-run:
+      push:
         type: boolean
-        default: false
+        required: true
+        description: If false, doesn't push the image to container registries (dry run).
 
 jobs:
   publish-docker:
-    if: ${{ ! contains(github.ref_name, '-') }} # Ignore prereleases
     name: Publish to container registries
     runs-on: ubuntu-latest
     env:
@@ -52,4 +52,4 @@ jobs:
           cache-from: type=gha
           # type=gha,mode=max is meant to maximize cache hits.
           cache-to: type=gha,mode=max
-          push: ${{ ! inputs.dry-run }}
+          push: ${{ inputs.push }}

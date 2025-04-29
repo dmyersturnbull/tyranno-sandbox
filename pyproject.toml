@@ -10,7 +10,7 @@
 [build-system]
 
 build-backend = "hatchling.build"
-requires = ["hatchling>=1.26"]
+requires = ["hatchling>=1.27"]
 
 #
 ###################################################################################################
@@ -521,13 +521,24 @@ python-pep440 = "python~=3.13"
 # Version strings used by default in workflows:
 # ::tyranno:: python-build = "$<< .cicd.valid-python-builds | vr_max(@) >>"
 python-build = "3.13.2"
-# ::tyranno:: python-version = "$<< .cicd.python-build.pep440_minor(@) >>"
+# ::tyranno:: python-version = "$<< .cicd.python-build.pep440(@).minor >>"
 python-version = "3.13"
 
 # Versions to test in CI:
 # E.g. if `python-pep440 == python~=3.12`: `["3.12.10", "3.13.2"]`.
 # ::tyranno alias:: python-builds = $<< .cicd.valid-python-builds | vr_max_per(@, 'minor') >>
 
-# Require compatibility with both PEP 440 (https://peps.python.org/pep-0440/) and semver (https://semver.org/).
-# That's `<major>.<minor>.<patch==micro>`.
-git-release-regex = '^v(?P<major>\d+)\.(?P<minor>\d+)\.(?P<micro>\d+)$'
+# Tags that trigger a full release.
+release-trigger = 'v[0-9]+\.[0-9]+\.[0-9]+'
+
+# Tags that trigger a test/preview release only.
+# ::tyranno:: easy-trigger = '$<<.cicd.release-trigger>>-((alpha|beta|rc)\.)?\d+'
+prerelease-trigger = 'v[0-9]+\.[0-9]+\.[0-9]+-((alpha|beta|rc)\.)?\d+'
+
+# Why these patterns?
+# We want compatibility with both SemVer and PyPa Version Scheme.
+# Requiring that PyPa versions are in their normal forms is preferred.
+# See: https://semver.org/ and https://packaging.python.org/en/latest/specifications/version-specifiers
+# That set of versions is: `<major>.<minor>.<patch(=micro)>`.
+# It may seem like the (non-normalized) PyPa pre-release strings of the form `-(a|b|rc)[0-9]+` would be ok.
+# But those wouldn't sort correctly under SemVer: e.g. `1.0.0-rc15 ≺ 1.0.0-rc2` (we'd need `1.0.0-rc.2`, etc.).

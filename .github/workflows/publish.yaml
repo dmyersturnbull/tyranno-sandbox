@@ -28,9 +28,17 @@ jobs:
   accept:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    outputs:
+      is_real: ${{ steps.check-ref.outputs.is_real }}
     steps:
-      - run: |
-          printf "Accepted %s for release.\n" "${{ github.ref_name }}"
+      - id: check-ref
+        run: |
+          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "is_real=true" >> $GITHUB_OUTPUT
+            printf "Accepted %s for full release.\n" "${{ github.ref_name }}"
+          else
+            printf "Accepted %s for preview/test release.\n" "${{ github.ref_name }}"
+          fi
   publish-docs:
     needs: accept
     permissions:
@@ -47,8 +55,12 @@ jobs:
   publish-pypi:
     needs: accept
     uses: ./.github/workflows/_publish-pypi.yaml
+    with:
+      repository: ${{ needs.accept.outputs.is_real == 'true' && 'pypi' || 'testpypi' }}
     secrets: inherit
   publish-docker:
     needs: accept
     uses: ./.github/workflows/_publish-docker.yaml
+    with:
+      push: ${{ needs.accept.outputs.is_real == 'true' && 'true' || 'false' }}
     secrets: inherit
