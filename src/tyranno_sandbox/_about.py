@@ -19,6 +19,7 @@ __all__ = ["About", "UrlDict", "__about__"]
 
 class _FrozenList[T](Sequence[T]):
     def __init__(self, *items: T) -> None:
+        super().__init__()
         self.__items = list(items)
 
     @overload
@@ -40,6 +41,12 @@ class _FrozenList[T](Sequence[T]):
         if isinstance(other, _FrozenList):
             return self.__items == other.__items
         return NotImplemented
+
+    def __repr__(self) -> str:
+        return repr(self.__items)
+
+    def __str__(self) -> str:
+        return str(self.__items)
 
 
 class UrlDict(TypedDict):
@@ -93,9 +100,9 @@ class About(TypedDict):
 
 
 __about__: Final[About] = About(
-    # ::tyranno:: name="$<<.namespace>>",
+    # ::tyranno:: name="$<<~.namespace>>",
     namespace="tyranno_sandbox",
-    # ::tyranno:: name="$<<.vendor>>",
+    # ::tyranno:: name="$<<~.vendor>>",
     vendor="dmyersturnbull",
     # ::tyranno:: name="$<<project.name>>",
     name="tyranno-sandbox",
@@ -104,11 +111,11 @@ __about__: Final[About] = About(
     # ::tyranno:: summary="$<<project.summary>>",
     summary="Sandbox to test CI/CD in Tyrannosaurus",
     # ::tyranno:: authors=$<<project.authors[*].name>>,
-    authors=["Douglas Myers-Turnbull"],
+    authors=_FrozenList("Douglas Myers-Turnbull"),
     # ::tyranno:: maintainers=$<<project.maintainers[*].name>>,
-    maintainers=["Douglas Myers-Turnbull"],
+    maintainers=_FrozenList("Douglas Myers-Turnbull"),
     # ::tyranno:: name=$<<project.keywords>>,
-    keywords=["ci/cd", "cookiecutter", "github-workflow", "pyproject", "python-template"],
+    keywords=_FrozenList("ci/cd", "cookiecutter", "github-workflow", "pyproject", "python-template"),
     # ::tyranno:: license="$<<project.license.text>>",
     license="Apache-2.0",
     urls=UrlDict(
@@ -118,7 +125,7 @@ __about__: Final[About] = About(
         source="https://github.com/dmyersturnbull/tyranno-sandbox",
         # ::tyranno:: documentation="$<<project.urls.Documentation>>",
         documentation="https://github.com/dmyersturnbull/tyranno-sandbox",
-        # ::tyranno:: changelog="$<<project.urls.Release Notes>>",
+        # ::tyranno:: changelog="$<<project.urls."Release Notes">>",
         changelog="https://github.com/dmyersturnbull/tyranno-sandbox/releases",
         # ::tyranno:: download="$<<project.urls.Download>>",
         download="https://pypi.org/project/tyranno-sandbox/",
@@ -126,3 +133,7 @@ __about__: Final[About] = About(
         bug="https://github.com/dmyersturnbull/tyranno-sandbox/issues",
     ),
 )
+
+
+if __name__ == "__main__":
+    print(__about__)
