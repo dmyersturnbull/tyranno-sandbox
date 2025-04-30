@@ -131,11 +131,11 @@ dev = [
   "mkdocs-api-autonav>=0.2",
   "mkdocstrings[python]>=0.29",
   "pre-commit>=4.2",
-  "pyright[nodejs]>=1.1.350",
+  "pyright[nodejs]>=1.1.400",
   "pytest>=8.3",
   "pytest-cov>=6.1",
   "pytest-datadir>=1.6",
-  "ruff>=0.11.6",
+  "ruff>=0.11.7",
 ]
 test = [
   "coverage[toml]>=7.8",
@@ -157,10 +157,10 @@ docs = [
 # Detect and mark problems; shouldn't make changes (albeit `ruff check --fix` works).
 check = [
   "pre-commit>=4.2",
-  "pyright[nodejs]>=1.1.350",
-  "ruff>=0.11.6",
+  "pyright[nodejs]>=1.1.400",
+  "ruff>=0.11.7",
 ]
-ruff = ["ruff>=0.11.6"]
+ruff = ["ruff>=0.11.7"]
 precommit = ["pre-commit>=4.2"]
 
 #
@@ -172,6 +172,7 @@ precommit = ["pre-commit>=4.2"]
 
 # Needed only if `project.name.replace("-", "_") != namespace`,
 # where `namespace` is the dir under `src/`.
+# ::tyranno:: packages = ["src/$<<.namespace>>"]
 packages = ["src/tyranno_sandbox"]
 
 #
@@ -436,10 +437,7 @@ exclude_also = [
 
 [tool.pyright]
 
-include = [
-  "src/**/*.py",
-  "tests/**/*.py",
-]
+include = ["src/**/*.py", "tests/**/*.py"]
 
 # Set the typing profile.
 # The "type checking mode" sets most of the other options.

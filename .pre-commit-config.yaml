@@ -34,7 +34,7 @@ repos:
 
   # UV lock and sync
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.6.17
+    rev: 0.7.0
     hooks:
       - id: uv-sync # first locks (without `--upgrade`)
 
