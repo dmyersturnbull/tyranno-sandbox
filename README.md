@@ -5,17 +5,17 @@ In GitHub-flavored Markdown, do this by ending the line with `\` .
 -->
 <!-- ::tyranno:: [![Version status](https://img.shields.io/pypi/status/$<<project.name>>?label=Status)](https://pypi.org/project/$<<project.name>>)-->
 <!-- ::tyranno:: [![Version on PyPi](https://badgen.net/pypi/v/$<<project.name>>?label=PyPi)-->
-<!-- ::tyranno:: [![Version on GitHub](https://badgen.net/github/release/$<<.frag>>/stable?label=GitHub)]($<<.frag>>/releases)-->
-<!-- ::tyranno:: [![Version on Docker Hub](https://img.shields.io/docker/v/$<<.frag>>?color=green&label=Docker%20Hub)](https://hub.docker.com/repository/docker/$<<.frag>>)\-->
-<!-- ::tyranno:: [![Build (Actions)](https://img.shields.io/github/workflow/status/$<<.frag>>/test?label=Tests)]($<<.frag>>/actions)-->
-<!-- ::tyranno:: [![Coverage (coveralls)](https://badgen.net/coveralls/c/github/$<<project.name>>/$<<project.name>>?label=Coveralls)](https://coveralls.io/github/$<<.frag>>?branch=main)-->
-<!-- ::tyranno:: [![Coverage (codecov)](https://badgen.net/codecov/c/github/$<<.frag>>?label=CodeCov)](https://codecov.io/gh/$<<.frag>>)\-->
-<!-- ::tyranno:: [![Maintainability (Code Climate)](https://badgen.net/codeclimate/maintainability/$<<.frag>>)](https://codeclimate.com/github/$<<.frag>>/maintainability)-->
-<!-- ::tyranno:: [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/$<<.frag>>/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/$<<.frag>>/?branch=main)-->
-<!-- ::tyranno:: [![CodeFactor](https://www.codefactor.io/repository/github/$<<.frag>>/badge)](https://www.codefactor.io/repository/github/$<<.frag>>)\-->
+<!-- ::tyranno:: [![Version on GitHub](https://badgen.net/github/release/$<<~.frag>>/stable?label=GitHub)]($<<~.frag>>/releases)-->
+<!-- ::tyranno:: [![Version on Docker Hub](https://img.shields.io/docker/v/$<<~.frag>>?color=green&label=Docker%20Hub)](https://hub.docker.com/repository/docker/$<<~.frag>>)\-->
+<!-- ::tyranno:: [![Build (Actions)](https://img.shields.io/github/workflow/status/$<<~.frag>>/test?label=Tests)]($<<~.frag>>/actions)-->
+<!-- ::tyranno:: [![Coverage (coveralls)](https://badgen.net/coveralls/c/github/$<<project.name>>/$<<project.name>>?label=Coveralls)](https://coveralls.io/github/$<<~.frag>>?branch=main)-->
+<!-- ::tyranno:: [![Coverage (codecov)](https://badgen.net/codecov/c/github/$<<~.frag>>?label=CodeCov)](https://codecov.io/gh/$<<~.frag>>)\-->
+<!-- ::tyranno:: [![Maintainability (Code Climate)](https://badgen.net/codeclimate/maintainability/$<<~.frag>>)](https://codeclimate.com/github/$<<~.frag>>/maintainability)-->
+<!-- ::tyranno:: [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/$<<~.frag>>/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/$<<~.frag>>/?branch=main)-->
+<!-- ::tyranno:: [![CodeFactor](https://www.codefactor.io/repository/github/$<<~.frag>>/badge)](https://www.codefactor.io/repository/github/$<<~.frag>>)\-->
 <!-- ::tyranno:: [![License](https://badgen.net/pypi/license/$<<project.name>>?label=License)]($<<project.license.url>>)-->
-<!-- ::tyranno:: [![DOI](https://zenodo.org/badge/DOI/$<<.doi>>.svg)](https://doi.org/$<<.doi>>)-->
-<!-- ::tyranno:: [![Created with Tyrannosaurus](https://img.shields.io/badge/Created_with-tyranno-sandbox-0000ff.svg)](https://github.com/$<<.frag>>)-->
+<!-- ::tyranno:: [![DOI](https://zenodo.org/badge/DOI/$<<~.doi>>.svg)](https://doi.org/$<<~.doi>>)-->
+<!-- ::tyranno:: [![Created with Tyrannosaurus](https://img.shields.io/badge/Created_with-tyranno-sandbox-0000ff.svg)](https://github.com/$<<~.frag>>)-->
 
 [![Version status](https://img.shields.io/pypi/status/tyranno-sandbox?label=Status)](https://pypi.org/project/tyranno-sandbox)
 [![Version on PyPi](https://badgen.net/pypi/v/tyranno-sandbox?label=PyPi)](https://pypi.org/project/tyranno-sandbox)
@@ -141,7 +141,7 @@ and reference it in a JMESPath expression using a tyranno-defined `pep440_` func
 ```yaml
 - uses: astral-sh/setup-uv@v5
   with:
-    # ::tyranno:: python-version: "$<< .default-python|pep440_minor(@) >>"
+    # ::tyranno:: python-version: "$<< ~.default-python|pep440_minor(@) >>"
     python-version: "3.13"
 ```
 
@@ -160,7 +160,7 @@ along with a list of Python versions to test in CI:
 # }}
 test-python-versions = ["3.11.11", "3.12.8", "3.13.2"]
 # Use the highest version for main CI/CD tasks.
-# ::tyranno:: default-python-version = "$<< .test-python-versions|pep440_max(@) >>"
+# ::tyranno:: default-python-version = "$<< ~.test-python-versions|pep440_max(@) >>"
 default-python = "3.13.2"
 ```
 
@@ -184,7 +184,7 @@ public final String NOTICE = project.name
 
 ```java
 // ::tyranno-start::
-// ::tyranno:: List<String> command = List.of($<<.command|yaml_multiline(@, 4, true)>>);
+// ::tyranno:: List<String> command = List.of($<<~.command|yaml_multiline(@, 4, true)>>);
 List<String> command = List.of(
     "#!/usr/bin/env bash",
     "printf 'Hello, world!\\n'",

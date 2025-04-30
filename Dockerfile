@@ -5,7 +5,7 @@
 # Declare the core build args.
 # These must exist outside of any stage and be declared before the first FROM.
 ARG ALPINE_VERSION=""
-# ::tyranno:: ARG PYTHON_VERSION="$<<.cicd.python-version>>"
+# ::tyranno:: ARG PYTHON_VERSION="$<<~.cicd.python.version>>"
 ARG PYTHON_VERSION="3.13"
 
 # -------------------- Download uv and set vars --------------------
@@ -35,8 +35,8 @@ ENV UV_COMPILE_BYTECODE=1
 # These are standard opencontainer labels; see:
 # https://github.com/opencontainers/image-spec/blob/master/annotations.md
 # ::tyranno:: LABEL org.opencontainers.image.version="$<<project.version>>"
-LABEL org.opencontainers.image.version="0.0.1-alpha0"
-# ::tyranno:: LABEL org.opencontainers.image.vendor="$<<.vendor>>"
+LABEL org.opencontainers.image.version="0.0.1-a.0"
+# ::tyranno:: LABEL org.opencontainers.image.vendor="$<<~.vendor>>"
 LABEL org.opencontainers.image.vendor="dmyersturnbull"
 # ::tyranno:: LABEL org.opencontainers.image.title="$<<project.name>>"
 LABEL org.opencontainers.image.title="tyranno-sandbox"
@@ -89,7 +89,7 @@ CMD ["--version"]
 # EXPOSE 443
 # EXPOSE 443/udp
 
-# ::tyranno:: ENTRYPOINT ["/var/app/.venv/bin/hypercorn", "$<<.namespace>>"]
+# ::tyranno:: ENTRYPOINT ["/var/app/.venv/bin/hypercorn", "$<<~.namespace>>"]
 # ENTRYPOINT ["/var/app/.venv/bin/hypercorn", "tyranno_sandbox.api:app"]
 # CMD [
 # "--bind",

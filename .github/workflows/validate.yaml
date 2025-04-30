@@ -9,9 +9,9 @@ run-name: Validate release of ${{ github.ref_name }} (triggered by ${{ github.tr
 on:
   push:
     tags:
-      # ::tyranno:: - '^$<<.cicd.prerelease-trigger>>$'
+      # ::tyranno:: - '^$<<~.cicd.trigger.prerelease>>$'
       - '^v[0-9]+\.[0-9]+\.[0-9]+-((alpha|beta|rc)\.)?\d+$'
-      # ::tyranno:: - '^$<<.cicd.release-trigger>>$'
+      # ::tyranno:: - '^$<<~.cicd.trigger.release>>$'
       - '^v[0-9]+\.[0-9]+\.[0-9]+$'
 
 permissions:

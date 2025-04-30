@@ -5,7 +5,7 @@
 # ::tyranno:: site_name: $<<project.name>>
 site_name: tyranno-sandbox
 
-# ::tyranno:: site_name: $<<.copyright.yaml(@)>>
+# ::tyranno:: site_name: $<<~.copyright.yaml(@)>>
 copyright: Copyright 2025, Contributors to Tyrannosaurus
 # ::tyranno:: site_description: $<<project.description.yaml(@)>>
 site_description: Sandbox for Tyrannosaurus
@@ -99,7 +99,7 @@ markdown_extensions:
       social_url_shorthand: true
       normalize_issue_symbols: true
       provider: github
-      # ::tyranno:: user: $<<.vendor>>
+      # ::tyranno:: user: $<<~.vendor>>
       user: dmyersturnbull
       # ::tyranno:: repo: $<<project.name>>
       repo: tyranno-sandbox

@@ -22,7 +22,7 @@ from tyranno_sandbox.dot_tree import DotTree, Toml
 from tyranno_sandbox.james import TyrannoJmesFunctions
 
 __all__ = ["Context", "ContextFactory", "Data", "DefaultContextFactory"]
-SIMPLE_KEY_REGEX: Final[Pattern[str]] = re.compile(r"[A-Za-z0-9_.-]++")
+SIMPLE_KEY_REGEX: Final[Pattern[str]] = re.compile(r"([A-Za-z_][A-Za-z0-9_-]*+)(\.([A-Za-z_][A-Za-z0-9_-]*+))*+")
 # Match `${{group1}}` using a possessive `[^}]++` and `}` with a negative lookahead.
 EXPR_REGEX: Final[Pattern[str]] = re.compile(r"\$\{\{ (?P<expr>(?: [^}]++ | }(?!}) )*) }}", re.VERBOSE)
 
@@ -43,23 +43,22 @@ class Data:
         return dict(self.tree)
 
     def get(self, key: str) -> Toml | None:
-        if key.startswith("."):
-            key = "tool.tyranno.data" + key
         return self.tree.get(key)
 
     def access(self, key: str) -> Toml:
-        if key.startswith("."):
-            key = "tool.tyranno.data" + key
         return self.tree.access(key)
 
-    def replace_vars_in(self, template: str) -> str:
-        return EXPR_REGEX.sub(lambda m: self.expand_var(m.group("expr")), template)
+    def replace_vars_in(self, template: str, *, in_key: str = "") -> str:
+        return EXPR_REGEX.sub(lambda m: self.expand_var(m.group("expr"), in_key=in_key), template)
 
-    def expand_var(self, expression: str) -> str:
+    def expand_var(self, expression: str, *, in_key: str = "") -> str:
+        expression = expression.strip()
+        if expression.startswith("~."):
+            expression = "tool.tyranno.data" + expression
+        if in_key and expression.startswith("."):
+            expression = in_key + expression
         if SIMPLE_KEY_REGEX.fullmatch(expression):
             return self.access(expression)
-        if expression.startswith("."):
-            expression = "tool.tyranno.data" + expression
         return jmespath.compile(expression).search(self.raw_tree, self._jmespath_options)
 
 

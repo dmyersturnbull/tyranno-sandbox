@@ -42,7 +42,7 @@ jobs:
           - windows-latest
           - macos-latest
         python:
-          # ::tyranno-start:: $<<.python-builds|yaml(@)>>
+          # ::tyranno-start:: $<<~.cicd.python."minor-versions-to-test">>
           - "3.13"
           # :tyranno-end
     uses: ./.github/workflows/_run-pytest-single.yaml
