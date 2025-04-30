@@ -9,7 +9,7 @@ description: Sandbox for Tyrannosaurus
 homepage: https://github.com/dmyersturnbull/tyranno-sandbox
 
 topics:
-  # ::tyranno-start:: ${{project.keywords[*].unquote(@)|yaml(@)}}
+  # ::tyranno-start:: $<<project.keywords|yaml(@)>>
   - ci/cd
   - cookiecutter
   - github-workflow
@@ -28,17 +28,14 @@ labels:
     description: "🔔 Always include in the changelog"
     color: "#f9e6e6"
   - name: "effort: 1-easy"
-    description: "1️⃣ Easy (t < 1 hr)"
+    description: "1️⃣ Easy ( < 1 hr)"
     color: "#50b0ff"
   - name: "effort: 2-moderate"
-    description: "2️⃣ Moderate (1 hr ≤ t < 4 hr)"
+    description: "2️⃣ Moderate ( < 8 hr)"
     color: "#90e0fff"
   - name: "effort: 3-hard"
-    description: "3️⃣️ Hard (≥ 4 hours)"
+    description: "3️⃣️ Hard (≥ 16 hours)"
     color: "#8670ff"
-  - name: "effort: multipart"
-    description: "#️⃣ Organizes multiple sub-issues"
-    color: "#c050ff"
   - name: "help needed"
     description: "👋 Help needed"
     color: "#50ff50"
@@ -57,9 +54,6 @@ labels:
   - name: "question"
     description: "💬 Question or discussion (issues only)"
     color: "#8800ff"
-  - name: "state: awaiting triage"
-    description: "🚦 Awaiting triage"
-    color: "#f0f0f0"
   - name: "state: blocked"
     description: "🚧 Blocked by another issue"
     color: "#e0e0e0"
@@ -108,8 +102,8 @@ labels:
   - name: "type: test"
     description: "🚨 Addition or modification of tests"
     color: "#90e0ff"
-  - name: "scope: docker"
-    description: "“🐬 Docker"
+  - name: "scope: dev"
+    description: "🛠️ Shared infrastructure for developers only"
     color: "#009000"
 
   # ============= unused labels ============= #
@@ -124,7 +118,20 @@ labels:
   #  description: "️🧹 Other type of change"
   #  color: "#90e0ff"
 
+  # Assume "awaiting triage" is the default state.
+  #- name: "state: awaiting triage"
+  #  description: "🚦 Awaiting triage"
+  #  color: "#f0f0f0"
+
+  # Unnecessary effort labels
+  #- name: "effort: multipart"
+  #  description: "#️⃣ Organizes multiple sub-issues"
+  #  color: "#c050ff"
+
   # Examples of scopes
+  #- name: "scope: docker"
+  #  description: "“🐬 Docker"
+  #  color: "#009000"
   #- name: "scope: api"
   #  description: "🧩 Plugins"
   #  color: "#009000"
