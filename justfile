@@ -63,26 +63,26 @@ clean: && trash
 # Delete temporary project files and directories.
 [group('project'), private]
 @trash:
-  - rm .coverage.json
-  - rm -r .ruff_cache/
-  - rm -r .hypothesis/
-  - rm -r **/__pycache__/
-  - rm -r **/.pytest_cache/
-  - rm -r **/cython_debug/
-  - rm -r **/*.egg-info/
-  - rm **/*.py[codi]
+  - rm -f .coverage.json
+  - rm -rf .ruff_cache/
+  - rm -rf .hypothesis/
+  - rm -rf **/__pycache__/
+  - rm -rf **/.pytest_cache/
+  - rm -rf **/cython_debug/
+  - rm -rf **/*.egg-info/
+  - rm -f **/*.py[codi]
 
 # Delete files whose names indicate they're temporary.
 [group('project'), private]
 @trash-unsafe:
-  - rm **/.DS_Store
-  - rm **/Thumbs.db
-  - rm **/*.tmp
-  - rm **/*.temp
-  - rm **/*.swp
-  - rm **/.#*
-  - rm **/*[~\$]
-  - rm **/*.directory
+  - rm -f **/.DS_Store
+  - rm -f **/Thumbs.db
+  - rm -f **/*.tmp
+  - rm -f **/*.temp
+  - rm -f **/*.swp
+  - rm -f **/.#*
+  - rm -f **/*[~\$]
+  - rm -f **/*.directory
 
 ###################################################################################################
 
