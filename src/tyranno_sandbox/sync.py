@@ -30,9 +30,7 @@ class Markers:
     @classmethod
     def create(cls) -> Self:
         return cls(
-            tyranno_inline="::tyranno::",
-            tyranno_block_start="::tyranno block start::",
-            tyranno_block_end="::tyranno block end::",
+            tyranno_inline="::tyranno::", tyranno_block_start="::tyranno-start::", tyranno_block_end="::tyranno-end::"
         )
 
     @cache  # noqa: B019
@@ -150,11 +148,11 @@ class SyncHelper:
     context: Context
     path: Path
     # Filled in by `__post_init__`.
-    _pattern: Pattern = field(init=False)
+    _pattern: Pattern[str] = field(init=False)
     _line_number: int = field(default=0, init=False)  # Start at line #0 (let str messages add + 1).
-    _old_lines: list[str] = field(default_factory=list, init=False)  # don't modify
-    _new_lines: list[str] = field(default_factory=list, init=False)
-    _templates: list[str] = field(default_factory=list, init=False)
+    _old_lines: list[str | None] = field(default_factory=list, init=False)  # don't modify
+    _new_lines: list[str | None] = field(default_factory=list, init=False)
+    _templates: list[str | None] = field(default_factory=list, init=False)
     _template_rewind: int = field(default=-1, init=False)
     _hits: list[DeltaBlock] = field(default_factory=list, init=False)
 
@@ -223,7 +221,7 @@ class Syncer:
 
     def _save(self, path: Path, lines: list[str]) -> None:
         if self.backup:
-            bak_path = self.context.bak_path(path) if self.backup else None
+            bak_path = self.context.bak_path(path)
             shutil.copyfile(path, bak_path)
         self._write(path, lines)
 

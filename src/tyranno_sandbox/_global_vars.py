@@ -20,6 +20,9 @@ from tyranno_sandbox._about import __about__
 
 __all__ = ["STARTUP", "EnvGlobalVarsFactory", "GlobalVars", "GlobalVarsFactory", "Startup"]
 
+TRUE: Final[frozenset[str]] = frozenset({"true", "yes", "on"})
+FALSE: Final[frozenset[str]] = frozenset({"false", "no", "off"})
+
 
 @dataclass(frozen=True)
 class Startup:
@@ -122,13 +125,15 @@ class EnvGlobalVarsFactory(GlobalVarsFactory):
     def _get_bool(self, name: str) -> bool:
         env_var = self.env_var_prefix + name.upper()
         value = os.environ.get(env_var, "false")
+        return self._parse_bool(name, value)
+
+    def _parse_bool(self, env_var: str, value: str) -> bool:
         match value.lower():
-            case "true" | "yes":
+            case s if s in TRUE:
                 return True
-            case "false" | "no":
+            case s if s in FALSE:
                 return False
-            case _:
-                raise GlobalConfigError("$" + env_var, value, "is not (true|yes|false|no)")
+        raise GlobalConfigError("$" + env_var, value, f"is not ({'|'.join(TRUE | FALSE)})")
 
     def _get_rel_dir(self, name: str, default: str) -> str:
         var_name = self.env_var_prefix + name.upper()

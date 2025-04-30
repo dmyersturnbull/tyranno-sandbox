@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Annotated, Final
 
 from loguru import logger
-from typer import Argument, Exit, Option, Typer, echo, style
+from typer import Argument, Option, Typer, echo, style
 
 from tyranno_sandbox._about import __about__
 from tyranno_sandbox._global_vars import EnvGlobalVarsFactory, GlobalVars
@@ -81,8 +81,6 @@ class CliCommands:
         verbose: _Opts.verbose = False,
         quiet: _Opts.quiet = False,
     ) -> None:
-        if path is None and name is None:
-            raise Exit()
         set_cli_state(verbose=verbose, quiet=quiet)
         context = context_factory(Path.cwd(), _ENV, dry_run=dry_run)
         messenger.info(f"Done! Created a new repository under {name}")

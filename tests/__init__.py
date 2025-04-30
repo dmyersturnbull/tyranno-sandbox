@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from os import PathLike
 from pathlib import Path
 from types import TracebackType
-from typing import Self
+from typing import Self, override
 
 __all__ = ["TestHelper", "logger"]
 
@@ -40,6 +40,7 @@ class Capture(contextlib.ExitStack):
     def stderr(self) -> str:
         return self._stderr.getvalue()
 
+    @override
     def __enter__(self) -> Self:
         logger.debug("Capturing stdout and stderr")
         super().__enter__()
@@ -49,6 +50,7 @@ class Capture(contextlib.ExitStack):
         self._stderr_context = self.enter_context(contextlib.redirect_stderr(self._stderr))
         return self
 
+    @override
     def __exit__(self, exc_type: type[BaseException], exc_value: BaseException, traceback: TracebackType) -> None:
         logger.debug("Finished capturing stdout and stderr")
         # The ExitStack handles everything
@@ -63,7 +65,7 @@ class TestHelper:
     """
 
     _start_dt: datetime = field(default_factory=lambda: datetime.now().astimezone(), init=False)
-    _start_s: float = field(default_factory=lambda: time.monotonic(), init=False)
+    _start_s: float = field(default_factory=time.monotonic, init=False)
 
     @classmethod
     @contextlib.contextmanager
