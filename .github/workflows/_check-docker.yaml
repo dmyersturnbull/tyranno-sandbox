@@ -7,13 +7,6 @@
 
 on:
   workflow_call:
-    inputs:
-      lint:
-        type: boolean
-        default: true
-      test-build:
-        type: boolean
-        default: true
 
 jobs:
   lint-dockerfile:
