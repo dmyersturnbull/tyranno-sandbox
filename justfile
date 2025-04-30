@@ -125,18 +125,18 @@ _fix *args:
   - uv run pre-commit run ruff-fix {{args}}
 
 _fix_ruff *args:
-  - uv run ruff check --fix-only --show-fixes --statistics --output-format grouped {{args}}
+  - uv run ruff check --fix-only --show-fixes --output-format grouped {{args}}
 
 ###################################################################################################
 
 # Check Ruff and Pyright rules (via pre-commit).
 [group('check')]
-check: check-ruff check-deal check-pyright check-links
+check: check-ruff check-pyright check-links
 
 # Check Ruff rules without auto-fix.
 [group('check')]
 check-ruff *args:
-  uv run ruff check --no-fix --statistics --output-format grouped {{args}}
+  uv run ruff check --no-fix --output-format grouped {{args}}
   check-deal
 
 # Check Deal lint rules.
