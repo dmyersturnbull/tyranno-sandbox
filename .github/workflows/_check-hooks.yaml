@@ -14,7 +14,7 @@ jobs:
       UV_NO_SYNC: true
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v6
       - name: Run some pre-commit hooks
         run: |
           uv sync --frozen --only-group precommit || exit $?

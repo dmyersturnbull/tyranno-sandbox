@@ -139,7 +139,7 @@ Define `default-python` in `[tool.tyranno.data]`
 and reference it in a JMESPath expression using a tyranno-defined `pep440_` function.
 
 ```yaml
-- uses: astral-sh/setup-uv@v5
+- uses: astral-sh/setup-uv@v6
   with:
     # ::tyranno:: python-version: "$<< ~.default-python|pep440_minor(@) >>"
     python-version: "3.13"

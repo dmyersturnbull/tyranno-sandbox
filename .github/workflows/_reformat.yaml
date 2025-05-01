@@ -27,7 +27,7 @@ jobs:
           git config --global user.name 'github-actions[bot]' || exit $?
           git config --global user.email 'github-actions[bot]@users.noreply.github.com' || exit $?
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v6
       - run: |
           uv sync --locked --only-group precommit || exit $?
       - name: Run Ruff auto-fix

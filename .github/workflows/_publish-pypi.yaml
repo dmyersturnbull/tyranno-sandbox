@@ -13,6 +13,10 @@ on:
         required: true
         description: Either 'pypi' or 'testpypi'.
 
+env:
+  PUBLISH_REPOSITORY: >-
+    ${{ inputs.repository == 'pypi' && 'https://upload.pypi.org/legacy/' || 'https://test.pypi.org/legacy/' }}
+
 jobs:
   publish-pypi:
     # This job publishes the package to PyPI.
@@ -20,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v6
       - name: Download dist/ GH workflow artifacts
         uses: actions/download-artifact@v4
         with:
@@ -28,4 +32,4 @@ jobs:
       - name: Publish to PyPi using uv.
         # See: https://docs.pypi.org/trusted-publishers/adding-a-publisher/
         run: |
-          uv publish || exit $?
+          uv publish --publish-url $PUBLISH_REPOSITORY --trusted-publishing always || exit $?
