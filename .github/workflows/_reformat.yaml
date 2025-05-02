@@ -7,63 +7,93 @@
 on:
   workflow_call:
     inputs:
-      all-files:
-        type: boolean
-        default: false
+      ref:
+        type: string
+        required: true
+        description: The branch or tag; for a PR, this should be ${{ GITHUB_HEAD_REF }}.
+      compare-to-ref:
+        type: string
+        required: true
+        description: >-
+          If set, only run on files modified since this commit; otherwise, runs on all files.
+          For a PR, this should be ${{ GITHUB_BASE_REF }}.
+
+env:
+  FROM_REF: ${{ inputs.compare-to-ref }}
+  TO_REF: ${{ inputs.ref }}
 
 jobs:
   reformat:
+    if: ${{ ! env.FROM_REF}}
     name: Reformat and auto-fix modified files
-    if: ${{ github.event_name == 'pull_request' || inputs.all-files == true }}
     runs-on: ubuntu-latest
     env:
       # For historical reasons, the GH CLI uses GH_TOKEN instead of GITHUB_TOKEN
       # https://github.com/github/docs/issues/21930
       GH_TOKEN: ${{ github.token }}
       UV_NO_SYNC: true
+
     steps:
+      #
+      # ==== Set up Git and fetch the needed refs ====
       - name: Configure Git
         run: |
           git config --global user.name 'github-actions[bot]' || exit $?
           git config --global user.email 'github-actions[bot]@users.noreply.github.com' || exit $?
-      - uses: actions/checkout@v4
+      - name: Fetch PR's HEAD (not merge commit)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TO_REF }}
+      - if: ${{ ! env.FROM_REF }}
+        name: Fetch base commit for comparison
+        run: |
+          git fetch --no-tags origin $GITHUB_BASE_REF --depth=1
       - uses: astral-sh/setup-uv@v6
       - run: |
           uv sync --locked --only-group precommit || exit $?
-      - name: Run Ruff auto-fix
+      #
+      # ==== Auto-fix Ruff rule violations ====
+      - if: ${{ ! env.FROM_REF }}
+        name: Run Ruff auto-fix on all files
         run: |
-          if [[ "${{ inputs.all-files }}" == "true" ]]; then
-            uv run pre-commit run ruff --all-files || exit $?
-          else
-            uv run pre-commit run ruff \
-              --from-ref ${{ github.event.pull_request.base.sha }} \
-              --to-ref ${{ github.event.pull_request.head.sha }} \
-              || exit $?
-          fi
-      - name: Commit Ruff auto-fixes (if any)
+          uv run pre-commit run ruff --all-files || exit $?
+      - if: ${{ env.FROM_REF }}
+        name: Run Ruff autofix on modified files
         run: |
-          if ! git diff --quiet . ; then
-            git commit -m "fix: auto-fix lint violations" . || exit $?
-          fi
-      - name: Reformat
+          uv run pre-commit run ruff --from-ref $FROM_REF --to-ref $TO_REF || exit $?
+      - name: Check for Ruff autofix changes
+        id: autofix
         run: |
-          if [[ "${{ inputs.all-files }}" == "true" ]]; then
-            uv run pre-commit run ruff-format --all-files
-            uv run pre-commit run prettier --all-files
-          else
-            uv run pre-commit run ruff-format
-              --from-ref ${{ github.event.pull_request.base.sha }} \
-              --to-ref ${{ github.event.pull_request.head.sha }} \
-              || true
-            uv run pre-commit run prettier
-              --from-ref ${{ github.event.pull_request.base.sha }} \
-              --to-ref ${{ github.event.pull_request.head.sha }} \
-              || true
-      - name: Commit formatter changes (if any)
+          git diff --quiet . || echo "has-changes=true" >> $GITHUB_OUTPUT
+      - if: ${{ steps.autofix.outputs.has-changes }}
+        name: Commit Ruff auto-fix
         run: |
-          if ! git diff --quiet . ; then
-            git commit -m "style: auto-fix lint violations and autoformat" . || exit $?
-          fi
-      - name: Push changes (if any)
+          git add -A || exit $?
+          git commit -m "fix: auto-fix lint violations" || exit $?
+      #
+      # ==== Auto-fix Ruff rule violations ====
+      - if: ${{ ! env.FROM_REF }}
+        name: Reformat all files
+        run: |
+          uv run pre-commit run ruff-format --all-files || true
+          uv run pre-commit run prettier --all-files || true
+      - if: ${{ env.FROM_REF }}
+        name: Reformat modified files
+        run: |
+          uv run pre-commit run ruff-format --from-ref $FROM_REF --to-ref $TO_REF || true
+          uv run pre-commit run prettier --from-ref $FROM_REF --to-ref $TO_REF || true
+      - name: Check for formating changes
+        id: reformat
+        run: |
+          git diff --quiet . || echo "changes=true" >> $GITHUB_OUTPUT
+      - if: ${{ steps.reformat.outputs.has-changes }}
+        name: Commit changes
+        run: |
+          git add -A || exit $?
+          git commit -m "style: auto-fix lint violations and autoformat" || exit $?
+      #
+      # ==== Push changes ====
+      - if: ${{ steps.autofix.outputs.has-changes || steps.reformat.outputs.has-changes }}
+        name: Push changes
         run: |
           git push || exit $?

@@ -10,7 +10,7 @@ on:
     inputs:
       ref:
         type: string
-        description: The branch or tag
+        required: true
       os:
         type: string
         required: true
@@ -25,14 +25,12 @@ on:
         default: 0
 
 env:
-  REF: ${{ inputs.ref || github.ref_name }}
+  UV_NO_SYNC: true
 
 jobs:
   run-tests:
-    name: Test ${{ env.REF }} on ${{ inputs.os }}, Python ${{ inputs.python }}
+    name: Test ${{ inputs.ref }} on ${{ inputs.os }}, Python ${{ inputs.python }}
     runs-on: ${{ inputs.os }}
-    env:
-      UV_NO_SYNC: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,11 +46,11 @@ jobs:
           else
             uv run pytest -m "not ux" || exit $?
           fi
-      - name: Store coverage report
-        if: ${{ inputs.retention-days > 0 }}
+      - if: ${{ inputs.retention-days > 0 }}
+        name: Store coverage report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ env.REF }}-${{ inputs.os }}-${{ inputs.python }}
+          name: coverage-${{ inputs.ref }}-${{ inputs.os }}-${{ inputs.python }}
           include-hidden-files: true
           path: .coverage.json
           compression-level: 8 # highly compressible

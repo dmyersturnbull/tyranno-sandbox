@@ -28,7 +28,10 @@ jobs:
     name: Check security
     uses: ./.github/workflows/_check-ruff.yaml
     with:
+      ref: ${{ github.head_ref }}
       rules: S
   test:
     name: Run PyTest tests
     uses: ./.github/workflows/_run-pytest.yaml
+    with:
+      ref: ${{ github.head_ref }}

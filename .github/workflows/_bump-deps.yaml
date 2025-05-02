@@ -6,37 +6,50 @@
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+        description: The branch or tag; for a PR, this must be the head ref.
+
+env:
+  LOCK_COMMIT_MSG: "build: update lock file"
+  PRECOMMIT_COMMIT_MSG: "ci: upgrade pre-commit config"
+  UV_NO_SYNC: true
 
 jobs:
   bump-deps:
     runs-on: ubuntu-latest
-    env:
-      UV_NO_SYNC: true
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - uses: astral-sh/setup-uv@v6
       - name: Configure Git
         run: |
           git config --global user.name 'github-actions[bot]' || exit $?
           git config --global user.email 'github-actions[bot]@users.noreply.github.com' || exit $?
       - name: Upgrade the lock file
+        id: lock
         run: |
           uv lock --upgrade || exit $?
-          if git diff --quiet uv.lock; then
-            git commit --no-verify -m "build: update lock file" uv.lock || exit $?
-          else
-            printf "No changes to uv.lock to commit\n"
-          fi
+          git diff --quiet uv.lock || echo "has-changes=true" >> $GITHUB_OUTPUT
+      - if: ${{ steps.lock.outputs.has-changes }}
+        name: Commit uv.lock changes
+        run: |
+          git commit --no-verify -m "$LOCK_COMMIT_MSG" uv.lock || exit $?
       - name: Upgrade the pre-commit config
+        id: precommit
         run: |
           uv sync --frozen --only-group precommit || exit $?
           uv run pre-commit install || exit $?
           uv run pre-commit autoupdate || exit $?
-          if git diff --quiet .pre-commit-config.yaml; then
-            git commit --no-verify -m "ci: upgrade pre-commit config" .pre-commit-config.yaml || exit $?
-          else
-            printf "No changes to .pre-commit-config.yaml to commit.\n"
-          fi
-      - name: Push changes
+          git diff --quiet .pre-commit-config.yaml || echo "has-changes=true" >> $GITHUB_OUTPUT
+      - if: ${{ steps.precommit.outputs.has-changes }}
+        name: Commit pre-commit changes
+        run: |
+          git commit --no-verify -m "PRECOMMIT_COMMIT_MSG" .pre-commit-config.yaml || exit $?
+      - if: ${{ steps.lock.outputs.has-changes || steps.precommit.outputs.has-changes }}
+        name: Push changes
         run: |
           git push || exit $?

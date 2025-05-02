@@ -3,15 +3,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow that builds docs and deploys them to GitHub Pages.
+# Always uses ${{ github.ref }}.
 
 on:
   workflow_call:
 
+env:
+  UV_NO_SYNC: true
+
 jobs:
   publish-mkdocs:
     runs-on: ubuntu-latest
-    env:
-      UV_NO_SYNC: true
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6

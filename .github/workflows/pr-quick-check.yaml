@@ -4,7 +4,8 @@
 
 # Checks basic things on every push to a PR.
 name: PR-quick-check
-run-name: Quick-check PR ${{ github.event.pull_request.number }} by ${{ github.event.pull_request.user.login }}
+run-name: >-
+  Quick-check PR ${{ github.event.pull_request.number }} by ${{ github.event.pull_request.user.login }}
 
 on:
   pull_request:
@@ -20,3 +21,5 @@ jobs:
   check-hooks:
     if: ${{ !contains(github.event.pull_request, 'draft') || !github.event.pull_request.draft }}
     uses: ./.github/workflows/_check-hooks.yaml
+    with:
+      ref: ${{ github.head_ref }}

@@ -6,6 +6,11 @@
 # Requires `_run-pytest.yaml` and the secret `COVERALLS_TOKEN`.
 on:
   workflow_call:
+    inputs:
+      ref_name:
+        type: string
+        required: true
+        description: The name of the branch or tag.
 
 jobs:
   send:
@@ -21,16 +26,18 @@ jobs:
           - "3.13"
           # ::tyranno-end::
     env:
-      artifact_name: coverage-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.python }}
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python }}
+      ARTIFACT_NAME: coverage-${{ inputs.ref_name }}-${{ matrix.os }}-${{ matrix.python }}
     steps:
-      - name: Download workflow artifact ${{ env.artifact_name }}
+      - name: Download workflow artifact ${{ env.ARTIFACT_NAME }}
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.artifact_name }}
-      - name: Send coverage report ${{ env.artifact_name }} to Coveralls
+          name: ${{ env.ARTIFACT_NAME }}
+      - name: Send coverage report ${{ env.ARTIFACT_NAME }} to Coveralls
         uses: coverallsapp/github-action@v2
         with:
-          flag-name: run-${{ matrix.os }}-py${{ matrix.python }}
+          flag-name: run-${{ env.OS }}-py${{ env.PYTHON }}
           parallel: true
   finish:
     needs: send

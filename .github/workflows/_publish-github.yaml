@@ -3,14 +3,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow that publishes a release to GitHub and creates alias Git tags like `v1`.
+# Always uses ${{ github.ref }}
 # Requires `_build_dist.yaml`.
 
 on:
   workflow_call:
-    inputs:
-      is-latest:
-        type: boolean
-        default: true
+
+env:
+  ARTIFACT_NAME: dist-${{ github.ref_name }}
+  IS_LATEST: ${{ github.ref_name == 'main' || github.ref_name == 'master' }}
 
 jobs:
   tag-latest:
@@ -19,7 +20,7 @@ jobs:
     steps:
       - uses: Actions-R-Us/actions-tagger@v2
         with:
-          publish_latest_tag: ${{ inputs.is-latest }}
+          publish_latest_tag: ${{ env.IS_LATEST }}
 
   publish-github:
     runs-on: ubuntu-latest
@@ -27,7 +28,7 @@ jobs:
       - name: Download dist/ GH workflow artifacts
         uses: actions/download-artifact@v4
         with:
-          name: dist-${{ github.ref_name }}
+          name: ${{ env.ARTIFACT_NAME }}
       - name: Publish to GitHub Releases
         id: release
         uses: softprops/action-gh-release@v2
@@ -37,5 +38,7 @@ jobs:
           fail_on_unmatched_files: true
           files: dist/*
       - name: Print info
+        env:
+          RELEASE_URL: ${{ steps.release.outputs.url }}
         run: |
-          printf "Published release: %s\n" "${{ steps.release.outputs.url }}"
+          printf "Published release: %s\n" "$RELEASE_URL"

@@ -26,3 +26,5 @@ permissions:
 jobs:
   check-docker:
     uses: ./.github/workflows/_check-docker.yaml
+    with:
+      ref: ${{ github.ref }}

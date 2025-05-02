@@ -28,20 +28,20 @@ env:
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   COVERALLS_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-  IS_MAIN: ${{ github.ref_name == 'main' || github.ref_name == 'master' }}
 
 jobs:
   test:
     uses: ./.github/workflows/_run-pytest.yaml
     with:
+      ref: ${{ github.ref }}
       retention-days: 1 # Only to upload coverage reports.
   create-issue:
     if: ${{ failure() }}
     needs: test
-    name: Open a GitHub issue if tests failed
-    runs-on: ubuntu-latest
     permissions:
       issues: write
+    name: Open a GitHub issue if tests failed
+    runs-on: ubuntu-latest
     steps:
       - name: Create GitHub issue
         env:
@@ -55,18 +55,22 @@ jobs:
             --label "type: bug"
           exit 1
   update-codecov:
-    if: ${{ success() && env.IS_MAIN && env.CODECOV_TOKEN != '' }}
+    if: ${{ success() && env.CODECOV_TOKEN != '' }}
     needs: test
     concurrency:
       group: codecov # Don't harass CodeCov.
       cancel-in-progress: true
     uses: ./.github/workflows/_update-codecov.yaml
+    with:
+      ref_name: ${{ github.ref_name }}
     secrets: inherit
   update-coveralls:
-    if: ${{ success() && env.IS_MAIN && env.COVERALLS_TOKEN != '' }}
+    if: ${{ success() && env.COVERALLS_TOKEN != '' }}
     needs: test
     concurrency:
       group: codecov # Don't harass Coveralls.
       cancel-in-progress: true
     uses: ./.github/workflows/_update-coveralls.yaml
+    with:
+      ref_name: ${{ github.ref_name }}
     secrets: inherit

@@ -25,3 +25,5 @@ permissions:
 jobs:
   check-docs:
     uses: ./.github/workflows/_check-docs.yaml
+    with:
+      ref: ${{ github.ref }}

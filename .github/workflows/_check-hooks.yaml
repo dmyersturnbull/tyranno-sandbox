@@ -6,18 +6,27 @@
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+        description: The branch or tag; for a PR, this should be the head ref.
+
+env:
+  UV_NO_SYNC: true
 
 jobs:
   check-hooks:
     runs-on: ubuntu-latest
-    env:
-      UV_NO_SYNC: true
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out PR's HEAD (not merge commit)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - uses: astral-sh/setup-uv@v6
       - name: Run some pre-commit hooks
         run: |
-          uv sync --frozen --only-group precommit || exit $?
+          uv sync --frozen --only-group precommit || exit $? # Sync and confirm lock file is up-to-date.
           chk() {
             uv run pre-commit run --all-files $1 || exit $?
           }

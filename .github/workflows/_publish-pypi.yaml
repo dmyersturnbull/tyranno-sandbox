@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow that publishes a release to PyPI.
+# Always uses ${{ github.ref }}
 # Requires `_build_dist.yaml`.
 
 on:
@@ -14,7 +15,8 @@ on:
         description: Either 'pypi' or 'testpypi'.
 
 env:
-  PUBLISH_REPOSITORY: >-
+  ARTIFACT_NAME: dist-${{ github.ref_name }}
+  PYPI_TARGET: >-
     ${{ inputs.repository == 'pypi' && 'https://upload.pypi.org/legacy/' || 'https://test.pypi.org/legacy/' }}
 
 jobs:
@@ -28,8 +30,8 @@ jobs:
       - name: Download dist/ GH workflow artifacts
         uses: actions/download-artifact@v4
         with:
-          name: dist-${{ github.ref_name }}
+          name: ${{ env.ARTIFACT_NAME }}
       - name: Publish to PyPi using uv.
         # See: https://docs.pypi.org/trusted-publishers/adding-a-publisher/
         run: |
-          uv publish --publish-url $PUBLISH_REPOSITORY --trusted-publishing always || exit $?
+          uv publish --publish-url $PYPI_TARGET --trusted-publishing always || exit $?

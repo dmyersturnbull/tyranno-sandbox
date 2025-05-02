@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow that builds a Docker image and publishes it to container registries.
+# Always uses ${{ github.ref }}.
 
 on:
   workflow_call:
@@ -10,14 +11,15 @@ on:
       push:
         type: boolean
         required: true
-        description: If false, doesn't push the image to container registries (dry run).
+        description: Push to container registries; otherwise, only performs a dry run.
+
+env:
+  IMAGE_NAME: ${{ github.repository }} # Assume the image is `owner/repo`
 
 jobs:
   publish-docker:
     name: Publish to container registries
     runs-on: ubuntu-latest
-    env:
-      image_name: ${{ github.repository }} # Assume the image is `owner/repo`
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -25,19 +27,21 @@ jobs:
         id: docker-metadata
         uses: docker/metadata-action@v5 # https://github.com/docker/metadata-action
         with:
-          images: ${{ env.image_name }}
+          images: ${{ env.IMAGE_NAME }}
       - name: Print metadata
+        env:
+          METADATA: ${{ steps.docker-metadata.outputs.json }}
         run: |
-          printf "Docker metadata:\n%s\n" "${{ steps.docker-metadata.outputs.json }}"
+          printf "Docker metadata:\n%s\n" "$METADATA"
       # Help for specific registries at https://github.com/docker/login-action
-      - name: Log into Docker Hub
-        if: ${{ vars.DOCKERHUB_USERNAME != '' }} # True if it's **defined**
+      - if: ${{ vars.DOCKERHUB_USERNAME != '' }} # True if it's **defined**
+        name: Log into Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Log into GHCR
-        if: ${{ vars.GHCR_USERNAME != '' }}
+      - if: ${{ vars.GHCR_USERNAME != '' }}
+        name: Log into GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io

@@ -7,30 +7,41 @@
 on:
   workflow_call:
     inputs:
+      ref:
+        type: string
+        required: true
+        description: The branch or tag; for a PR, this should be the head ref.
       rules:
         type: string
         default: ""
+        description: Ruff rule specifier passed as 'ruff check --select <rules>'.
       glob:
         type: string
         default: .
+        description: Glob pattern of paths passed as 'ruff check <glob>'.
+
+env:
+  GLOB: ${{ inputs.glob }}
+  RULES: ${{ inputs.rules }}
+  UV_NO_SYNC: true
 
 jobs:
   check-ruff:
     runs-on: ubuntu-latest
-    env:
-      UV_NO_SYNC: true
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - uses: astral-sh/setup-uv@v6
       - run: |
           uv sync --locked --only-group ruff || exit $?
-      - name: Check Ruff formatting
-        run: |
-          uv run ruff format --check ${{ inputs.glob }} || exit $?
       - name: Check Ruff rules
         run: |
-          if [[ -z "${{ inputs.rules }}" ]]; then
-            uv run ruff check --no-fix ${{ inputs.glob }} || exit $?
+          if [[ -z "$RULES" ]]; then
+            uv run ruff check --no-fix "$GLOB" || exit $?
           else
-            uv run ruff check --no-fix --select "${{ inputs.rules }}" ${{ inputs.glob }} || exit $?
+            uv run ruff check --no-fix --select "$RULES" "$GLOB" || exit $?
           fi
+      - name: Check Ruff formatting
+        run: |
+          uv run ruff format --check "$GLOB" || exit $?

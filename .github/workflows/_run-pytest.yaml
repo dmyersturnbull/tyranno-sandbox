@@ -11,7 +11,8 @@ on:
     inputs:
       ref:
         type: string
-        description: The branch or tag
+        required: true
+        description: The branch or tag; for a PR, this should be the merge commit.
       markers:
         type: string
         default: not ux
@@ -26,9 +27,6 @@ on:
         type: number
         default: 1
         description: "Increase when testing important branches; leave at 1 for PRs."
-
-env:
-  REF: ${{ inputs.ref || github.ref_name }}
 
 jobs:
   run-tests:
@@ -47,7 +45,7 @@ jobs:
           # :tyranno-end
     uses: ./.github/workflows/_run-pytest-single.yaml
     with:
-      ref: ${{ env.REF }}
+      ref: ${{ inputs.ref }}
       os: ${{ matrix.os }}
       python: ${{ matrix.python }}
       retention-days: ${{ inputs.retention-days }}

@@ -27,17 +27,18 @@ permissions:
 jobs:
   accept:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: Determine whether this is a full release or preview
     runs-on: ubuntu-latest
     outputs:
       is_real: ${{ steps.check-ref.outputs.is_real }}
     steps:
       - id: check-ref
         run: |
-          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ "$GITHUB_REF" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "is_real=true" >> $GITHUB_OUTPUT
-            printf "Accepted %s for full release.\n" "${{ github.ref_name }}"
+            printf "Accepted %s for full release.\n" "$GITHUB_REF_NAME"
           else
-            printf "Accepted %s for preview/test release.\n" "${{ github.ref_name }}"
+            printf "Accepted %s for preview/test release.\n" "$GITHUB_REF_NAME"
           fi
   publish-docs:
     needs: accept

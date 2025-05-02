@@ -7,12 +7,19 @@
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+        description: The branch or tag; for a PR, this should be the merge commit.
 
 jobs:
   lint-dockerfile:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - uses: hadolint/hadolint-action@v3.1.0 # Currently doesn't publish e.g. `v3`
 
   build-images:
@@ -26,6 +33,8 @@ jobs:
           - windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - uses: astral-sh/setup-uv@v6
       - run: |
           docker build . || exit $?

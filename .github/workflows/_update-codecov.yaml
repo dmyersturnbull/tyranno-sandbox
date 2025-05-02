@@ -7,6 +7,11 @@
 
 on:
   workflow_call:
+    inputs:
+      ref_name:
+        type: string
+        required: true
+        description: The name of the branch or tag.
 
 jobs:
   send:
@@ -22,18 +27,18 @@ jobs:
           - "3.13"
           # ::tyranno-end::
     env:
-      os: ${{ matrix.os }}
-      python: ${{ matrix.python }}
-      artifact_name: coverage-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.python }}
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python }}
+      ARTIFACT_NAME: coverage-${{ inputs.ref_name }}-${{ matrix.os }}-${{ matrix.python }}
     steps:
-      - name: Download workflow artifact ${{ env.artifact_name }}
+      - name: Download workflow artifact ${{ env.ARTIFACT_NAME }}
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.artifact_name }}
-      - name: Upload coverage report ${{ env.artifact_name }} to Codecov
+          name: ${{ env.ARTIFACT_NAME }}
+      - name: Upload coverage report ${{ env.ARTIFACT_NAME }} to Codecov
         uses: codecov/codecov-action@v5
         with:
-          env_vars: os,python
+          env_vars: OS,PYTHON
           fail_ci_if_error: true
           files: ./.coverage.json
           token: ${{ secrets.CODECOV_TOKEN }}

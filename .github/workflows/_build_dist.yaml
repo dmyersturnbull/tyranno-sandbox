@@ -12,17 +12,24 @@ on:
     inputs:
       ref:
         type: string
+        required: true
+        description: The branch or tag; for testing a PR, this should be the merge commit.
+      ref_name:
+        type: string
+        required: true
+        description: The name of the branch or tag.
       retention-days:
         type: number
         default: 1
+        description: If > 0, uploads the zip file as GitHub artifact 'dist-<REF>' with this retention time.
       use-uv-sources:
         type: boolean
         default: false
-        description: If true, use 'tool.uv.sources'; otherwise, passes '--no-sources' to uv build.
+        description: Use 'tool.uv.sources'; otherwise, passes '--no-sources' to 'uv build'.
 
 env:
-  REF: ${{ inputs.ref || github.ref_name }}
-  UV_BUILD_OPTIONS: ${{ inputs.use-uv-sources && '' || '--no-sources' }}
+  ARTIFACT_NAME: dist-${{ inputs.ref_name }}
+  UV_BUILD_OPTION: ${{ inputs.use-uv-sources && '' || '--no-sources' }}
 
 jobs:
   build-dist:
@@ -30,16 +37,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.REF }}
+          ref: ${{ inputs.ref }}
       - uses: astral-sh/setup-uv@v6
       - name: Build sources and wheels
         run: |
-          uv build $UV_BUILD_OPTIONS
-      - name: Upload 'dist/' (wheels and sdists) as artifact 'dist-${{ env.REF }}'
+          uv build $UV_BUILD_OPTION
+      - if: ${{ inputs.retention-days > 0 }}
+        name: Upload 'dist/' (wheels and sdists) as artifact '${{ env.ARTIFACT_NAME }}'
         id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ env.REF }}
+          name: ${{ env.ARTIFACT_NAME }}
           path: dist/
           if-no-files-found: error
           compression-level: 0 # they're already gzip-compressed
@@ -48,7 +56,7 @@ jobs:
         run: |
           printf \
             "Uploaded artifact '%s':\n  ID: %s\nURI: %s\nDigest: %s\n" \
-            "dist-${{ env.REF }}" \
+            "$ARTIFACT_NAME \
             "${{ steps.upload.outputs.artifact-id }}"
             "${{ steps.upload.outputs.artifact-url }}"
             "${{ steps.upload.outputs.artifact-digest }}"
