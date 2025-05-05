@@ -13,6 +13,10 @@ on:
         required: true
         description: The name of the branch or tag.
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   send:
     name: Send reports to codecov

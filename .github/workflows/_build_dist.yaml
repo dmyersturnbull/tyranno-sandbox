@@ -4,20 +4,13 @@
 
 # "Function" workflow: that uploads `dist/` as GH workflow artifact `dist-${{ github.ref_name }}`.
 
-# See: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does
-# See "Accessing contextual information about workflow runs".
-
 on:
   workflow_call:
     inputs:
       ref:
         type: string
         required: true
-        description: The branch or tag; for testing a PR, this should be the merge commit.
-      ref_name:
-        type: string
-        required: true
-        description: The name of the branch or tag.
+        description: The branch, tag, or hash; for testing a PR, this should be the merge commit.
       retention-days:
         type: number
         default: 1
@@ -28,13 +21,23 @@ on:
         description: Use 'tool.uv.sources'; otherwise, passes '--no-sources' to 'uv build'.
 
 env:
-  ARTIFACT_NAME: dist-${{ inputs.ref_name }}
+  ARTIFACT_NAME: dist-${{ inputs.ref-name }}
   UV_BUILD_OPTION: ${{ inputs.use-uv-sources && '' || '--no-sources' }}
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   build-dist:
     runs-on: ubuntu-latest
     steps:
+      - id: ref-name
+        run: |
+          ref_name="${{ inputs.ref }}"
+          ref_name="${ref_name#refs/heads/}"
+          ref_name="${ref_name#refs/tags/}"
+          echo "ref_name=$ref_name" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
@@ -47,7 +50,7 @@ jobs:
         id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
+          name: dist-${{ steps.ref-name.outputs.ref_name }}
           path: dist/
           if-no-files-found: error
           compression-level: 0 # they're already gzip-compressed

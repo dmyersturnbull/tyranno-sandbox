@@ -7,6 +7,10 @@
 on:
   workflow_call:
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   run-codeql:
     runs-on: ubuntu-latest

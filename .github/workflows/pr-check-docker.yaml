@@ -23,6 +23,10 @@ concurrency:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   check-docker:
     uses: ./.github/workflows/_check-docker.yaml

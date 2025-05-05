@@ -23,14 +23,22 @@ on:
       retention-days:
         type: number
         default: 0
+      fail-fast:
+        type: boolean
+        default: false
 
-env:
-  UV_NO_SYNC: true
+defaults:
+  run:
+    shell: bash
 
 jobs:
   run-tests:
     name: Test ${{ inputs.ref }} on ${{ inputs.os }}, Python ${{ inputs.python }}
     runs-on: ${{ inputs.os }}
+    env:
+      MARKERS: ${{ inputs.markers || 'not ux' }}
+      PYTEST_OPTION: ${{ inputs.fast-fail && '--exitfirst' || '' }}
+      UV_NO_SYNC: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,12 +48,8 @@ jobs:
           python-version: "${{ inputs.python }}"
       - name: Install dependencies and run tests
         run: |
-          uv sync --locked --exact --no-dev --group test || exit $?
-          if [[ -n "${{ inputs.markers }}" ]]; then
-            uv run pytest -m "${{ inputs.markers }}" || exit $?
-          else
-            uv run pytest -m "not ux" || exit $?
-          fi
+          uv sync --locked --exact --no-dev --group test
+          uv run pytest -m "$MARKERS" "$PYTEST_OPTION"
       - if: ${{ inputs.retention-days > 0 }}
         name: Store coverage report
         uses: actions/upload-artifact@v4

@@ -10,14 +10,17 @@ on:
       ref:
         type: string
         required: true
-        description: The branch or tag; for a PR, this should be the head ref.
+        description: The branch, tag, or hash; for a PR, this should be the head ref.
 
-env:
-  UV_NO_SYNC: true
+defaults:
+  run:
+    shell: bash
 
 jobs:
   check-hooks:
     runs-on: ubuntu-latest
+    env:
+      UV_NO_SYNC: true
     steps:
       - name: Check out PR's HEAD (not merge commit)
         uses: actions/checkout@v4
@@ -26,9 +29,9 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - name: Run some pre-commit hooks
         run: |
-          uv sync --frozen --only-group precommit || exit $? # Sync and confirm lock file is up-to-date.
+          uv sync --frozen --only-group precommit # Sync and confirm lock file is up-to-date.
           chk() {
-            uv run pre-commit run --all-files $1 || exit $?
+            uv run pre-commit run --all-files $1
           }
           chk check-added-large-files
           chk forbid-new-submodules

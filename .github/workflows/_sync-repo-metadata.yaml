@@ -10,6 +10,10 @@ on:
 env:
   SETTINGS_PATH: .github/project.yaml
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   sync-repo-metadata:
     runs-on: ubuntu-latest
@@ -20,17 +24,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install jq and yq
-        run: sudo snap install jq yq || exit $?
+        run: sudo snap install jq yq
       - name: Set repo metadata
         run: |
           # Read the metadata
-          description=$(yq eval '.description' "$SETTINGS_PATH" || exit $?)
-          homepage=$(yq eval '.homepage' "$SETTINGS_PATH" || exit $?)
-          topics=$(yq eval '.topics | join(",")' "$SETTINGS_PATH" || exit $?)
+          description=$(yq eval '.description' "$SETTINGS_PATH")
+          homepage=$(yq eval '.homepage' "$SETTINGS_PATH")
+          topics=$(yq eval '.topics | join(",")' "$SETTINGS_PATH")
           # Update the repo metadata.
           gh repo edit $GITHUB_REPOSITORY \
             --description "$description" \
             --homepage "$homepage" \
-            --add-topic "$topics" \
-            || exit $?
+            --add-topic "$topics"
           printf "Updated repo description, homepage, and topics.\n"

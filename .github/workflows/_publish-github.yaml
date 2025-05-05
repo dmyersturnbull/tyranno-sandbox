@@ -13,6 +13,10 @@ env:
   ARTIFACT_NAME: dist-${{ github.ref_name }}
   IS_LATEST: ${{ github.ref_name == 'main' || github.ref_name == 'master' }}
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   tag-latest:
     # This job tags the release as 'latest' and 'v<x>', where <x> is its major version

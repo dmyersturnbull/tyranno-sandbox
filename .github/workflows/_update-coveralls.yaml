@@ -4,6 +4,7 @@
 
 # "Function" workflow that sends code coverage reports to Coveralls.
 # Requires `_run-pytest.yaml` and the secret `COVERALLS_TOKEN`.
+
 on:
   workflow_call:
     inputs:
@@ -11,6 +12,10 @@ on:
         type: string
         required: true
         description: The name of the branch or tag.
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   send:
@@ -39,6 +44,7 @@ jobs:
         with:
           flag-name: run-${{ env.OS }}-py${{ env.PYTHON }}
           parallel: true
+
   finish:
     needs: send
     name: Tell Coveralls the reports were all sent

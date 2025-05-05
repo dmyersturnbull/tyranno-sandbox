@@ -35,6 +35,10 @@ permissions:
   contents: read
   security-events: write
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   codeql:
     uses: ./.github/workflows/_run-codeql.yaml

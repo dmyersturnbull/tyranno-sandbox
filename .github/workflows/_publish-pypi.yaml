@@ -19,6 +19,10 @@ env:
   PYPI_TARGET: >-
     ${{ inputs.repository == 'pypi' && 'https://upload.pypi.org/legacy/' || 'https://test.pypi.org/legacy/' }}
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   publish-pypi:
     # This job publishes the package to PyPI.
@@ -34,4 +38,4 @@ jobs:
       - name: Publish to PyPi using uv.
         # See: https://docs.pypi.org/trusted-publishers/adding-a-publisher/
         run: |
-          uv publish --publish-url $PYPI_TARGET --trusted-publishing always || exit $?
+          uv publish --publish-url $PYPI_TARGET --trusted-publishing always

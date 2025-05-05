@@ -11,7 +11,11 @@ on:
       ref:
         type: string
         required: true
-        description: The branch or tag; for a PR, this should be the merge commit.
+        description: The branch, tag, or hash; for a PR, this should be the merge commit.
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   lint-dockerfile:
@@ -37,4 +41,4 @@ jobs:
           ref: ${{ inputs.ref }}
       - uses: astral-sh/setup-uv@v6
       - run: |
-          docker build . || exit $?
+          docker build .

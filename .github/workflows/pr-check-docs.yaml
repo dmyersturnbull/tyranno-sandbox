@@ -22,6 +22,10 @@ concurrency:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   check-docs:
     uses: ./.github/workflows/_check-docs.yaml

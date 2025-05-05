@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow that builds a Docker image and publishes it to container registries.
-# Always uses ${{ github.ref }}.
 
 on:
   workflow_call:
@@ -15,6 +14,10 @@ on:
 
 env:
   IMAGE_NAME: ${{ github.repository }} # Assume the image is `owner/repo`
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   publish-docker:

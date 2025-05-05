@@ -24,6 +24,10 @@ concurrency:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   accept:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}

@@ -17,6 +17,10 @@ concurrency:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   check-hooks:
     if: ${{ !contains(github.event.pull_request, 'draft') || !github.event.pull_request.draft }}

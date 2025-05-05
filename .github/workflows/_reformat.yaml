@@ -10,17 +10,21 @@ on:
       ref:
         type: string
         required: true
-        description: The branch or tag; for a PR, this should be ${{ GITHUB_HEAD_REF }}.
+        description: The branch, tag, or hash; for a PR, this should be the head or its current hash.
       compare-to-ref:
         type: string
         required: true
         description: >-
           If set, only run on files modified since this commit; otherwise, runs on all files.
-          For a PR, this should be ${{ GITHUB_BASE_REF }}.
+          For a PR, this should be the base hash (last commit before the PR branch).
 
 env:
   FROM_REF: ${{ inputs.compare-to-ref }}
   TO_REF: ${{ inputs.ref }}
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   reformat:
@@ -38,8 +42,8 @@ jobs:
       # ==== Set up Git and fetch the needed refs ====
       - name: Configure Git
         run: |
-          git config --global user.name 'github-actions[bot]' || exit $?
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com' || exit $?
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
       - name: Fetch PR's HEAD (not merge commit)
         uses: actions/checkout@v4
         with:
@@ -47,20 +51,20 @@ jobs:
       - if: ${{ ! env.FROM_REF }}
         name: Fetch base commit for comparison
         run: |
-          git fetch --no-tags origin $GITHUB_BASE_REF --depth=1
+          git fetch --no-tags --depth=1 origin $FROM_REF
       - uses: astral-sh/setup-uv@v6
       - run: |
-          uv sync --locked --only-group precommit || exit $?
+          uv sync --locked --only-group precommit
       #
       # ==== Auto-fix Ruff rule violations ====
       - if: ${{ ! env.FROM_REF }}
         name: Run Ruff auto-fix on all files
         run: |
-          uv run pre-commit run ruff --all-files || exit $?
+          uv run pre-commit run ruff --all-files
       - if: ${{ env.FROM_REF }}
         name: Run Ruff autofix on modified files
         run: |
-          uv run pre-commit run ruff --from-ref $FROM_REF --to-ref $TO_REF || exit $?
+          uv run pre-commit run ruff --from-ref $FROM_REF --to-ref $TO_REF
       - name: Check for Ruff autofix changes
         id: autofix
         run: |
@@ -68,8 +72,8 @@ jobs:
       - if: ${{ steps.autofix.outputs.has-changes }}
         name: Commit Ruff auto-fix
         run: |
-          git add -A || exit $?
-          git commit -m "fix: auto-fix lint violations" || exit $?
+          git add -A
+          git commit -m "fix: auto-fix lint violations"
       #
       # ==== Auto-fix Ruff rule violations ====
       - if: ${{ ! env.FROM_REF }}
@@ -89,11 +93,11 @@ jobs:
       - if: ${{ steps.reformat.outputs.has-changes }}
         name: Commit changes
         run: |
-          git add -A || exit $?
-          git commit -m "style: auto-fix lint violations and autoformat" || exit $?
+          git add -A
+          git commit -m "style: auto-fix lint violations and autoformat"
       #
       # ==== Push changes ====
       - if: ${{ steps.autofix.outputs.has-changes || steps.reformat.outputs.has-changes }}
         name: Push changes
         run: |
-          git push || exit $?
+          git push

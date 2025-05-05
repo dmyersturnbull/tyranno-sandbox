@@ -12,25 +12,33 @@ on:
       ref:
         type: string
         required: true
-        description: The branch or tag; for a PR, this should be the merge commit.
+        description: The branch, tag, or hash; for a PR, this should be the merge commit.
       markers:
         type: string
         default: not ux
       retention-days:
         type: number
         default: 0
+        description: If > 0, uploads coverage reports 'coverage-<ref>-<os>-<python>', using this retention time.
       fail-fast:
         type: boolean
         default: true
-        description: "Potentially useful if coverage reports are generated (`retention-days` > 0)."
+        description: >-
+          Fail this workflow immediately when any test on any OS and Python version fails.
+          Applies 'fast-fail' to the strategy, and runs pytest with '--exitfirst'.
+          Recommended when only confirming that tests pass, such as immediately before publishing or reporting coverage.
       max-parallel:
         type: number
         default: 1
-        description: "Increase when testing important branches; leave at 1 for PRs."
+        description: Increase when testing important branches; leave at 1 for PRs.
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   run-tests:
-    name: Test ${{ env.REF }}
+    name: Test ${{ inputs.ref }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }} # Doesn't affect the status of the `run-tests` job.
       max-parallel: ${{ inputs.max-parallel }}
@@ -50,3 +58,4 @@ jobs:
       python: ${{ matrix.python }}
       retention-days: ${{ inputs.retention-days }}
       markers: ${{ inputs.markers }}
+      fail-fast: ${{ inputs.fail-fast }}

@@ -29,6 +29,10 @@ env:
   COVERALLS_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   test:
     uses: ./.github/workflows/_run-pytest.yaml
@@ -50,9 +54,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue create \
-            --title "Test failure(s) on ${{ github.ref_name }}" \
-            --body "See: [run #${{ github.run_id }}](${{ env.RUN_URL }})" \
-            --label "type: bug"
+            --title "Test failure(s) on $GITHUB_REF_NAME" \
+            --body "See: [run #$GITHUB_RUN_ID]($RUN_URL)" \
+            --label "type: bug" \
           exit 1
   update-codecov:
     if: ${{ success() && env.CODECOV_TOKEN != '' }}

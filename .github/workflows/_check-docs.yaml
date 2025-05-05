@@ -10,19 +10,22 @@ on:
       ref:
         type: string
         required: true
-        description: The branch or tag; for a PR, this should be the merge commit.
+        description: The branch, tag, or hash; for a PR, this should be the merge commit.
 
-env:
-  UV_NO_SYNC: true
+defaults:
+  run:
+    shell: bash
 
 jobs:
   check-mkdocs:
     runs-on: ubuntu-latest
+    env:
+      UV_NO_SYNC: true
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
       - uses: astral-sh/setup-uv@v6
       - run: |
-          uv sync --locked --only-group docs || exit $?
-          uv run mkdocs build --strict || exit $?
+          uv sync --locked --only-group docs
+          uv run mkdocs build --strict
