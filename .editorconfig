@@ -2,68 +2,77 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# Check https://editorconfig.org for more information
+# See: https://editorconfig.org
 
-# Do not look in parent directories.
-root=true
+# Don't look in parent directories.
+root = true
 
+# Strategy:
 # We'll use the most prevalent indentation style for each language,
 # using the survey of top-starred GitHub repos at https://ukupat.github.io/tabs-or-spaces/ .
 
+# Line length:
+# We'll generally specify 100 because it's a common choice.
+# (I previously used 120 because it was Hatch's default, but almost no style guides recommend that.)
+# Note that Prettier uses `max_line_length` as `--print-width`, which is a soft limit.
+# That's a sensible approach, given that you can't always break lines.
+
+# JavaScript, CSS, and many others -- as well as "unknown" file types.
+# Use 2 spaces because it's the most common choice in the survey.
+# Omit specifying `max_line_length` here because we'd need to unset it for things like CSV.
 [*]
-# As of 2022 (and 2025), most languages in the survey use 2 spaces, so use that as the default.
-# Omit specifying `max_line_length` here, we'd need to unset it for things like CSV.
-# We'll generally specify 120, though (chosen because it's Hatch's default).
-# Note that Prettier uses max_line_length for `--print-width`, more as a guide than a hard limit.
-end_of_line=lf
-charset=utf-8
-indent_style=space
-indent_size=2
-trim_trailing_whitespace=true # Markdown converts 2 trailing spaces to `<br/>`; use `\` instead.
-insert_final_newline=true
+end_of_line = lf
+charset = utf-8
+indent_style = space
+indent_size = 2
+# Markdown converts 2 trailing spaces to `<br/>`, which this will remove.
+# That's fine: You should use `\` instead.
+trim_trailing_whitespace = true
+insert_final_newline = true
 
+# 4-space; assembly dialects
 [*.{s,asm}]
-# 4-space; assembly
-indent_size=4
-max_line_length=120
+indent_size = 4
+max_line_length = 100
 
-[*.{c,cpp,h,java,kt,kts,groovy,gradle,cs,rs,v,d,vala}]
 # 4-space; C, JVM, or C++-like: C, C++, Java, Kotlin, Groovy, C#, Rust, V, D, Vala
 # C++ is 4-space or 2-space, whereas C is 4-space or tab; use 4-space for consistency.
 # Exclude Scala, which is almost universally 2-space.
 # `.v` is for the V language (https://vlang.io/), not Verilog.
 # Vala is either 4-space or tab.
-indent_size=4
-max_line_length=120
+[*.{c,cpp,h,java,kt,kts,groovy,gradle,cs,rs,v,d,vala}]
+indent_size = 4
+max_line_length = 100
 
-[*.{fs,fsi,fsx,mm,julia,f90,erl,swift}]
 # 4-space; misc. compiled: F#, Objective-C, Julia, Fortran, Erlang, Swift
 # Assume modern Fortran uses `.f90`, not (e.g.) `.f03`.
-indent_size=4
-max_line_length=120
+[*.{fs,fsi,fsx,mm,julia,f90,erl,swift}]
+indent_size = 4
+max_line_length = 100
 
-[*.{f,for}]
 # Fixed-format Fortran, specified just to avoid totally wrecking files.
-charset=unset
-trim_trailing_whitespace=false
-indent_size=5
-max_line_length=72
+[*.{f,for}]
+charset = unset
+trim_trailing_whitespace = false
+indent_size = 5
+max_line_length = 72
 
-[*.{py,lua,pl,perl,ps1,bat,php,m}]
 # 4-space; misc. interpreted: Python, Lua, Perl, PowerShell, Batch, PHP (8+ only), MATLAB
 # Lua is either 4-space or tab.
-indent_size=4
-max_line_length=120
+[*.{py,lua,pl,perl,ps1,bat,php,m}]
+indent_size = 4
+max_line_length = 100
 
-[*.{go,hx,sas,au3}]
 # Tabs: Go, Haxe, SAS, AutoIt
 # Verilog mostly uses tabs, but `.v`/`.sv` clashes with the `.v` for the V language.
-indent_style=tab
-max_line_length=120
+[*.{go,hx,sas,au3}]
+indent_style = tab
+max_line_length = 100
 
-[*.{tsv,tab,csv}]
 # Tabular: tab-separated, comma-separated
 # Don't add a newline or trim whitespace.
-indent_style=tab # `indent_style=tab` seems safer but is probably not necessary.
-trim_trailing_whitespace=false
-insert_final_newline=false
+# Set `indent_style = tab` only because it feels safer.
+[*.{tsv,tab,csv}]
+indent_style = tab
+trim_trailing_whitespace = false
+insert_final_newline = false
