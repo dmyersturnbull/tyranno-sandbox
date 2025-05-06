@@ -23,11 +23,9 @@ keywords:
   - python-template
   # ::tyranno-end::
 # ::tyranno:: appVersion: "$<<project.version>>"
-appVersion: "0.0.1"
+appVersion: "0.0.1-alpha.0"
 # ::tyranno:: version: "$<<project.version>>"
-version: "0.0.1"
+version: "0.0.1-alpha.0"
 annotations:
   # ::tyranno:: license: $<<project.license.text>>
   license: Apache-2.0
-  # ::tyranno:: requires-python: "$<<project."requires-python">>"
-  requires-python: "~=3.13"

@@ -27,7 +27,7 @@ permissions:
 jobs:
   check-security:
     name: Check security
-    uses: ./.github/workflows/_check-ruff.yaml
+    uses: ./.github/workflows/_lint.yaml
     with:
       ref: ${{ github.head_ref }}
       rules: S

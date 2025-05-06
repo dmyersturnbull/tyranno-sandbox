@@ -22,7 +22,7 @@ on:
 
 env:
   ARTIFACT_NAME: dist-${{ inputs.ref-name }}
-  UV_BUILD_OPTION: ${{ inputs.use-uv-sources && '' || '--no-sources' }}
+  UV_BUILD_ARGS: ${{ inputs.use-uv-sources && '' || '--no-sources' }}
 
 defaults:
   run:
@@ -44,7 +44,9 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - name: Build sources and wheels
         run: |
-          uv build $UV_BUILD_OPTION
+          # shellcheck disable=SC2086 # Intentionally word-split into an array.
+          read -r -a uv_build_option <<< "$UV_BUILD_OPTION"
+          uv build "${uv_build_option[@]}"
       - if: ${{ inputs.retention-days > 0 }}
         name: Upload 'dist/' (wheels and sdists) as artifact '${{ env.ARTIFACT_NAME }}'
         id: upload

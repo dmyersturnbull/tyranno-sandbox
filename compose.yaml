@@ -1,5 +1,5 @@
 services:
-  web:
+  app:
     build: .
     volumes:
       - .:/var/app/
@@ -24,7 +24,7 @@ services:
       - mongo:/var/lib/mongodb
 
   elastic:
-    image: elasticsearch:8.17.4
+    image: elasticsearch:8.18.0
     environment:
       - node.name=elasticsearch
       - cluster.name=elasticsearch

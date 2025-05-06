@@ -5,7 +5,7 @@ title: tyranno-sandbox
 # ::tyranno:: abstract: $<<project.description.yaml(@)>>
 abstract: Sandbox to test CI/CD in Tyrannosaurus
 # ::tyranno:: version: $<<project.version>>
-version: 0.0.1-a.0
+version: 0.0.1-alpha.0
 # ::tyranno:: license: $<<project.license.text>>
 license: Apache-2.0
 # ::tyranno:: repository-code: $<<project.urls.Source>>

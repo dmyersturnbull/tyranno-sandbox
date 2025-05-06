@@ -8,7 +8,8 @@ ARG ALPINE_VERSION=""
 # ::tyranno:: ARG PYTHON_VERSION="$<<~.cicd.python.version>>"
 ARG PYTHON_VERSION="3.13"
 
-# -------------------- Download uv and set vars --------------------
+#
+# -------------------------- Base image and uv --------------------------------------------------- #
 
 # Start the stage "builder", and download uv.
 FROM python:$PYTHON_VERSION-alpine$ALPINE_VERSION AS builder
@@ -30,12 +31,16 @@ ENV UV_COMPILE_BYTECODE=yes
 # Alternative we're not using:
 # ENV UV_NO_CACHE=yes
 ENV UV_COMPILE_BYTECODE=1
+# Don't sync the venv unless we request it.
+ENV UV_NO_SYNC=true
 
-# -------------------- Set the labels --------------------
+#
+# -------------------------- Labels -------------------------------------------------------------- #
+
 # These are standard opencontainer labels; see:
 # https://github.com/opencontainers/image-spec/blob/master/annotations.md
 # ::tyranno:: LABEL org.opencontainers.image.version="$<<project.version>>"
-LABEL org.opencontainers.image.version="0.0.1-a.0"
+LABEL org.opencontainers.image.version="0.0.1-alpha.0"
 # ::tyranno:: LABEL org.opencontainers.image.vendor="$<<~.vendor>>"
 LABEL org.opencontainers.image.vendor="dmyersturnbull"
 # ::tyranno:: LABEL org.opencontainers.image.title="$<<project.name>>"
@@ -47,7 +52,8 @@ LABEL org.opencontainers.image.documentation="https://github.com/dmyersturnbull/
 # ::tyranno:: LABEL org.opencontainers.image.licenses="$<<project.license.text>>"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 
-# -------------------- Install the project --------------------
+#
+# -------------------------- Build and install --------------------------------------------------- #
 
 # We'll install in 2 layers: (1) transitive dependencies and (2) project, as described in
 # https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
@@ -69,44 +75,51 @@ RUN \
   --mount=type=cache,target=/root/.cache/uv \
   uv sync --frozen --no-dev --no-editable
 
-# ******************** In production only! ************************
-# -------------------- Run in a fresh stage -----------------------
-# Make a new stage that contains only the final venv.
+# Start a new stage, copying over only the files we need.
+# (Comment out while prototyping so tools are available in the container; uncomment in production.)
 # FROM python:$PYTHON_VERSION:alpine$ALPINE_VERSION
 # COPY --from=builder --chown=app:app /var/app/.venv /var/app/.venv
-# *****************************************************************
 
-# ::tyranno:: ENTRYPOINT ["/var/app/.venv/bin/$<<project.scripts.$<<project.name>>>>"]
-ENTRYPOINT ["/var/app/.venv/bin/tyranno-sandbox"]
-CMD ["--version"]
+#
+# -------------------------- Entrypoint: `__main__.py` ------------------------------------------- #
 
-# -------------------------------------------------------------------------------------------------
+# For a command-line tool:
+# ::tyranno:: # ENTRYPOINT ["/var/app/.venv/bin/$<<project.scripts.$<<project.name>>>>"]
+# ENTRYPOINT ["/var/app/.venv/bin/tyranno-sandbox"]
+# CMD ["--help"]
 
-# An example of starting a hypercorn server.
+#
+# -------------------------- Entrypoint: hypercorn + FastAPI ------------------------------------- #
 
 # Expose HTTP 1.1 & 2.0 on TCP/80, HTTPS 1.1 & 2.0 on TCP/443, and HTTP/3 on UDP/443.
-# EXPOSE 80
-# EXPOSE 443
-# EXPOSE 443/udp
+EXPOSE 80
+EXPOSE 443
+EXPOSE 443/udp
 
+# Note: Across multiple lines, you still need `\`, even though it's inside `[]`.
 # ::tyranno:: ENTRYPOINT ["/var/app/.venv/bin/hypercorn", "$<<~.namespace>>"]
-# ENTRYPOINT ["/var/app/.venv/bin/hypercorn", "tyranno_sandbox.api:app"]
-# CMD [
-# "--bind",
-# "[::]:80",
-# "--bind",
-# "[::]:443",
-# "--quic-bind",
-# "[::]:443"
-# ]
+ENTRYPOINT ["/var/app/.venv/bin/hypercorn", "tyranno_sandbox.api:app"]
+CMD ["--bind", "[::]:80", "--bind", "[::]:443", "--quic-bind", "[::]:443"]
 
-# ARG HEALTHCHECK_INTERVAL=5m
-# ARG HEALTHCHECK_TIMEOUT=3s
-# ARG HEALTHCHECK_START_PERIOD=5s
+# Define params for the healthcheck.
+# Probe frequency during normal operation:
+ARG HEALTHCHECK_INTERVAL=5m
+# Timeout per probe:
+ARG HEALTHCHECK_TIMEOUT=10s
+ARG HEALTHCHECK_RETRIES=3
+# Startup grace period, under which any number of retries are ok:
+ARG HEALTHCHECK_START_PERIOD=20s
+ARG HEALTHCHECK_START_INTERVAL=2s
 
-# Ubuntu curl doesn't support --http3 yet
-# HEALTHCHECK \
-#   --interval=$HEALTHCHECK_INTERVAL \
-#   --timeout=$HEALTHCHECK_TIMEOUT \
-#   --start-period=$HEALTHCHECK_START_PERIOD \
-#   CMD curl --fail --http2-prior-knowledge http://localhost/ || exit 1
+# Declare a container healthcheck, which Docker Compose (used in CI) will use.
+# We *could* instead define it in `compose.yaml`, but there's no downside to keeping it here.
+# This is equivalent to our choice for K8s "liveness" probe.
+# Ubuntu's `curl` doesn't support `--http3` yet, but HTTP/2 will be fine.
+# (`--http2-prior-knowledge` initiates an HTTP/2 request without a prior HTTP/1.1 request.)
+HEALTHCHECK \
+  --timeout=$HEALTHCHECK_TIMEOUT \
+  --retries=$HEALTHCHECK_RETRIES \
+  --interval=$HEALTHCHECK_INTERVAL \
+  --start-period=$HEALTHCHECK_START_PERIOD \
+  --start-interval=$HEALTHCHECK_START_PERIOD \
+  CMD curl --fail --http2-prior-knowledge http://localhost/ || exit 1

@@ -2,8 +2,7 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# "Function" workflow that lints Dockerfiles and tests building images on Ubuntu and Windows.
-# See: https://github.com/hadolint/hadolint-action
+# "Function" workflow that tests building images on Ubuntu and Windows.
 
 on:
   workflow_call:
@@ -18,14 +17,6 @@ defaults:
     shell: bash
 
 jobs:
-  lint-dockerfile:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref }}
-      - uses: hadolint/hadolint-action@v3.1.0 # Currently doesn't publish e.g. `v3`
-
   build-images:
     name: Test building image on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}

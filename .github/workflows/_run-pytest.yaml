@@ -15,7 +15,7 @@ on:
         description: The branch, tag, or hash; for a PR, this should be the merge commit.
       markers:
         type: string
-        default: not ux
+        default: not (ux or e2e)
       retention-days:
         type: number
         default: 0

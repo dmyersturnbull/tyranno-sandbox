@@ -22,8 +22,7 @@ jobs:
     env:
       UV_NO_SYNC: true
     steps:
-      - name: Check out PR's HEAD (not merge commit)
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
       - uses: astral-sh/setup-uv@v6

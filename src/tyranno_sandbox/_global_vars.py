@@ -77,7 +77,7 @@ class XdgHelper[**P]:
     def dir(self, xdg_fn: Callable[P, str]) -> Path:
         var_name = self._var_name(xdg_fn.__name__)
         value = os.environ.get(var_name, xdg_fn(**self._args()))
-        title = f"${var_name}" if var_name in os.environ else f"platform config {xdg_fn.__name__}"
+        title = "$" + var_name if var_name in os.environ else f"platform config {xdg_fn.__name__}"
         path = Path(value).expanduser()
         if not path.is_absolute():
             raise GlobalConfigError(title, value, "is not an absolute path")

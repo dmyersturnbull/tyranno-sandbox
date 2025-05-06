@@ -165,7 +165,7 @@ check-links:
 # Run PyTest tests (except 'ux').
 [group('test')]
 test *args:
-  uv run --locked pytest --no-cov -m "not ux" {{args}}
+  uv run --locked pytest --no-cov -m "not (ux or e2e)" {{args}}
 
 # Run PyTest tests not marked 'slow', 'net', or 'ux'.
 [group('test')]
@@ -185,7 +185,7 @@ test-property *args:
 # Run PyTest tests (except 'ux') stepwise (starting with last failure).
 [group('test')]
 test-stepwise *args:
-  uv run --locked pytest --no-cov -m "not ux" {{args}}
+  uv run --locked pytest --no-cov -m "not (ux or e2e)" {{args}}
 
 # Run PyTest tests marked 'ux' stepwise (starting with last failure).
 [group('test')]
@@ -195,12 +195,12 @@ test-ux-stepwise *args:
 # Run PyTest tests (except 'ux'), showing minimal output.
 [group('test')]
 test-quietly *args:
-  uv run --locked pytest --no-cov -m "not ux" --capture=no --tb=line {{args}}
+  uv run --locked pytest --no-cov -m "not (ux or e2e)" --capture=no --tb=line {{args}}
 
 # Run PyTest tests (except 'ux'), showing tracebacks, locals, and INFO.
 [group('test')]
 test-loudly *args:
-  uv run --locked pytest --no-cov -m "not ux" --showlocals --full-trace --log-level INFO {{args}}
+  uv run --locked pytest --no-cov -m "not (ux or e2e)" --showlocals --full-trace --log-level INFO {{args}}
 
 # Run PyTest tests with pdb debugger.
 [group('test')]

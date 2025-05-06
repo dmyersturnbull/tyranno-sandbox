@@ -21,7 +21,7 @@ requires = ["hatchling>=1.27"]
 
 # Important basics
 name = "tyranno-sandbox"
-version = "0.0.1-a.0" # See `[tool.tyranno.data.versioning]` for details.
+version = "0.0.1-alpha.0" # See `[tool.tyranno.data.versioning]` for details.
 requires-python = "~=3.13"
 
 # 'readme' is 'description' in `importlib.metadata`.
@@ -79,12 +79,21 @@ dependencies = [
 
 # -------------------------- optional dependencies ----------------------------
 [project.optional-dependencies]
-perf = [
-  "zstandard>=0.23",
-]
-rich = [
+cli = [
   "rich>=14.0",
   "shellingham>=1.5",
+]
+server = [
+  "fastapi>=0.115",
+  "fastapi-problem>=0.11",
+  "hypercorn[h3,uvloop]>=0.17",
+  "pydantic>=2.11",
+  "rfc9457>=0.3",
+]
+
+server-perf = [
+  "starlette-compress>=1.5",
+  "zstandard>=0.23",
 ]
 
 # -------------------------- scripts ------------------------------------------
@@ -118,7 +127,7 @@ Download = "https://pypi.org/project/tyranno-sandbox/"
 [dependency-groups]
 
 # `--only-dev` literally means only the `dev` group, so include everything.
-# Also define groups for use in CI.
+# The other groups are solely intended for use in CI.
 dev = [
   "coverage[toml]>=7.8",
   "deal>=4.24",
@@ -131,36 +140,34 @@ dev = [
   "mkdocs-api-autonav>=0.2",
   "mkdocstrings[python]>=0.29",
   "pre-commit>=4.2",
-  "pyright[nodejs]>=1.1.400",
+  "pyright[nodejs]>=1.1.400", # Type checker. Will replace with Astral's Red Knot.
   "pytest>=8.3",
   "pytest-cov>=6.1",
   "pytest-datadir>=1.6",
-  "ruff>=0.11.7",
+  "pytest-randomly>=3.16",
+  "pytest-xdist[psutil]>=3.6",
+  "ruff>=0.11.8",
 ]
 test = [
-  "coverage[toml]>=7.8",
-  "deal>=4.24",
-  "hypofuzz>=25.4",
-  "hypothesis[cli,codemods]>=6.130",
-  "pytest>=8.3",
-  "pytest-cov>=6.1",
-  "pytest-datadir>=1.6",
+  "coverage[toml]>=7.8", # Required for coverage.
+  "deal>=4.24", # Optional. Automated contract testing.
+  "hypofuzz>=25.4", # Optional. Fuzzing, used alongside Hypothesis.
+  "hypothesis[cli,codemods]>=6.130", # Optional. Required. `cli` and `codemods` optional.
+  "pytest>=8.3", # Required.
+  "pytest-cov>=6.1", # Required for coverage.
+  "pytest-datadir>=1.6", # Optional. To read test resources in the same dir.
+  "pytest-randomly>=3.16", # Optional. Sets and prints the seed, also randomizing test order.
+  "pytest-xdist[psutil]>=3.6", # Optional. Used to distribute tests over multiple cores.
 ]
 docs = [
-  "mkdocs>=1.6",
-  "mkdocs-material>=9.6",
-  "mkdocs-minify-plugin>=0.8",
-  "mkdocs-literate-nav>=0.6",
-  "mkdocs-api-autonav>=0.2",
-  "mkdocstrings[python]>=0.29",
+  "mkdocs>=1.6", # Required.
+  "mkdocs-material>=9.6", # Required.
+  "mkdocs-minify-plugin>=0.8", # Optional. Minifies CSS, etc., on build.
+  "mkdocs-literate-nav>=0.6", # To list contents in `CONTENTS.md` rather than `mkdocs.yaml`.
+  "mkdocs-api-autonav>=0.2", # Required for API docs. Extracts docs automatically.
+  "mkdocstrings[python]>=0.29", # Required for API docs.
 ]
-# Detect and mark problems; shouldn't make changes (albeit `ruff check --fix` works).
-check = [
-  "pre-commit>=4.2",
-  "pyright[nodejs]>=1.1.400",
-  "ruff>=0.11.7",
-]
-ruff = ["ruff>=0.11.7"]
+ruff = ["ruff>=0.11.8"]
 precommit = ["pre-commit>=4.2"]
 
 #
@@ -376,10 +383,11 @@ doctest_optionflags = [
 # Create markers for very slow, network-dependent, or interactive tests.
 # To run only unit tests, use `-m 'not (slow or net or ux)'`.
 markers = [
-  "slow: marks tests that take a long time to run (select with `-m slow`)",
-  "net: marks tests that require network access (select with `-m net`)",
-  "ux: marks tests that require live interaction (select with `-m ux`)",
-  "property: marks tests that use Hypothesis or otherwise generate test data (select with `-m property`)",
+  "slow: tests that take a long time to run (select with `-m slow`)",
+  "net: tests that require network access (select with `-m net`)",
+  "ux: tests that require user interaction or manual verification (select with `-m ux`)",
+  "property: tests that use Hypothesis or otherwise generate test data (select with `-m property`)",
+  "e2e: comprehensive tests that require external services (select with `-m e2e`)",
 ]
 
 # -------------------------- Pytest CLI args ----------------------------------

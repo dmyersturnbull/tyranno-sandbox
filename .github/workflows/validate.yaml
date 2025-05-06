@@ -36,7 +36,7 @@ jobs:
     with:
       ref: ${{ github.ref }}
   check-security:
-    uses: ./.github/workflows/_check-ruff.yaml
+    uses: ./.github/workflows/_lint.yaml
     with:
       ref: ${{ github.ref }}
       rules: S

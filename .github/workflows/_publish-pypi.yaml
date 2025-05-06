@@ -17,7 +17,11 @@ on:
 env:
   ARTIFACT_NAME: dist-${{ github.ref_name }}
   PYPI_TARGET: >-
-    ${{ inputs.repository == 'pypi' && 'https://upload.pypi.org/legacy/' || 'https://test.pypi.org/legacy/' }}
+    ${{
+      inputs.repository == 'pypi'
+        && 'https://upload.pypi.org/legacy/'
+        || 'https://test.pypi.org/legacy/'
+    }}
 
 defaults:
   run:

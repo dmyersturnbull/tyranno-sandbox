@@ -1,0 +1,54 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+# "Function" workflow that tests Helm charts by deploying in a test cluster.
+# TODO: This is experimental.
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+        description: The branch, tag, or hash; for a PR, this should be the merge commit.
+      only-if-changed:
+        type: boolean
+        default: false
+        description: Skip testing if the charts are not different from the current stable release.
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  lint-helm:
+    runs-on: ubuntu-latest
+    env:
+      ONLY_IF_CHANGED: ${{ inputs.only-if-changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: astral-sh/setup-uv@v6 # Some subsequent tools expect Python.
+        with:
+          activate-environment: true
+      - uses: azure/setup-helm@v4.2.0
+        with:
+          version: v3.17.0
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.7.0
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        run: |
+          changed=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
+          if [[ -n "$changed" || "$ONLY_IF_CHANGED" != true ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+          printf "Changes:\n%s\n" "$changed"
+      - if: steps.list-changed.outputs.changed == 'true'
+        name: Create kind cluster
+        uses: helm/kind-action@v1.12.0
+      - if: steps.list-changed.outputs.changed == 'true'
+        name: Run chart-testing (install)
+        run: ct install --target-branch '${{ inputs.ref }}'

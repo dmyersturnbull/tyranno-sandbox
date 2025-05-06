@@ -1,0 +1,66 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+# "Function" workflow that runs end-to-end PyTest tests inside a container via docker compose.
+# TODO: This is experimental.
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+        description: The branch, tag, or hash; for a PR, this should be the merge commit.
+      fail-fast:
+        type: boolean
+        default: true
+        description: Refer to the same input in '_run-pytest.yaml`.
+      max-parallel:
+        type: number
+        default: 1
+        description: Refer to the same input in '_run-pytest.yaml`.
+
+env:
+  SERVICE_NAME: app # Named in `compose.yaml` (the key under the top-level `services`).
+  PYTEST_ARGS: ${{ inputs.fast-fail && '--exitfirst' || '' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  end-to-end:
+    name: End-to-end test ${{ inputs.ref }} on ${{ inputs.os }}
+    strategy:
+      fail-fast: ${{ inputs.fail-fast }} # Doesn't affect the status of the enclosing job.
+      max-parallel: ${{ inputs.max-parallel }}
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Set up Docker Compose
+        run: docker compose up -d --build
+      - name: Wait for services to be healthy
+        run: |
+          docker compose ps
+          sleep 20  # OR write a smarter healthcheck wait
+      - name: Run E2E tests
+        run: |
+          # shellcheck disable=SC2086 # Intentionally word-split into an array.
+          read -r -a pytest_args <<< "$PYTEST_ARGS"
+          docker compose exec "$SERVICE_NAME" pytest -m e2e "${pytest_args[@]}"
+      - name: Show logs if failed
+        if: failure()
+        run: |
+          docker compose logs
+      - name: Tear down
+        if: always()
+        run: |
+          docker compose down -v
