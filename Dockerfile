@@ -14,7 +14,7 @@ ARG PYTHON_VERSION="3.13"
 # Start the stage "builder", and download uv.
 FROM python:$PYTHON_VERSION-alpine$ALPINE_VERSION AS builder
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-RUN apk add --no-cache bash==5.*
+RUN apk add --no-cache bash
 SHELL ["/bin/bash", "-c"]
 
 # Environment variables
@@ -73,7 +73,7 @@ RUN \
 COPY . /var/app/
 RUN \
   --mount=type=cache,target=/root/.cache/uv \
-  uv sync --frozen --no-dev --no-editable
+  uv sync --frozen --no-dev --extra server-full --no-editable
 
 # Start a new stage, copying over only the files we need.
 # (Comment out while prototyping so tools are available in the container; uncomment in production.)
@@ -96,20 +96,26 @@ EXPOSE 80
 EXPOSE 443
 EXPOSE 443/udp
 
+ARG N_WORKERS=1
+ARG LOG_LEVEL=WARNING
+ARG BACKLOG_SIZE=100
+
+ENV N_WORKERS=$N_WORKERS
+ENV LOG_LEVEL=$LOG_LEVEL
+ENV BACKLOG_SIZE=$BACKLOG_SIZE
+
 # Note: Across multiple lines, you still need `\`, even though it's inside `[]`.
 # ::tyranno:: ENTRYPOINT ["/var/app/.venv/bin/hypercorn", "$<<~.namespace>>"]
 ENTRYPOINT ["/var/app/.venv/bin/hypercorn", "tyranno_sandbox.api:app"]
-CMD ["--bind", "[::]:80", "--bind", "[::]:443", "--quic-bind", "[::]:443"]
-
-# Define params for the healthcheck.
-# Probe frequency during normal operation:
-ARG HEALTHCHECK_INTERVAL=5m
-# Timeout per probe:
-ARG HEALTHCHECK_TIMEOUT=10s
-ARG HEALTHCHECK_RETRIES=3
-# Startup grace period, under which any number of retries are ok:
-ARG HEALTHCHECK_START_PERIOD=20s
-ARG HEALTHCHECK_START_INTERVAL=2s
+CMD [ \
+  "--bind", "[::]:80", \
+  "--bind", "[::]:443", \
+  "--quic-bind", "[::]:443", \
+  "--log-file", "-", \
+  "--log-level", "$LOG_LEVEL", \
+  "--workers", "$N_WORKERS", \
+  "--backlog", "$BACKLOG_SIZE" \
+  ]
 
 # Declare a container healthcheck, which Docker Compose (used in CI) will use.
 # We *could* instead define it in `compose.yaml`, but there's no downside to keeping it here.
@@ -117,9 +123,7 @@ ARG HEALTHCHECK_START_INTERVAL=2s
 # Ubuntu's `curl` doesn't support `--http3` yet, but HTTP/2 will be fine.
 # (`--http2-prior-knowledge` initiates an HTTP/2 request without a prior HTTP/1.1 request.)
 HEALTHCHECK \
-  --timeout=$HEALTHCHECK_TIMEOUT \
-  --retries=$HEALTHCHECK_RETRIES \
-  --interval=$HEALTHCHECK_INTERVAL \
-  --start-period=$HEALTHCHECK_START_PERIOD \
-  --start-interval=$HEALTHCHECK_START_PERIOD \
+  --start-interval=2.5s \
+  --start-period=5s \
+  --timeout=10s \
   CMD curl --fail --http2-prior-knowledge http://localhost/ || exit 1
