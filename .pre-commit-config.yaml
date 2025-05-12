@@ -32,15 +32,21 @@ repos:
         language: fail
         files: '[^/\w.,+=-]|^-|\.$'
 
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.33.0
+    hooks:
+      - id: check-github-workflows
+      - id: check-compose-spec
+
   # UV lock and sync
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.7.2
+    rev: 0.7.3
     hooks:
       - id: uv-sync # first locks (without `--upgrade`)
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.8
+    rev: v0.11.9
     hooks:
       - id: ruff
         args:

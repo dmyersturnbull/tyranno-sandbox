@@ -13,8 +13,8 @@ on:
         description: The branch, tag, or hash; for a PR, this must be the head ref.
 
 env:
-  LOCK_COMMIT_MSG: "build: update lock file"
-  PRECOMMIT_COMMIT_MSG: "ci: upgrade pre-commit config"
+  LOCK_COMMIT_MSG: "build(deps): update lock file"
+  PRECOMMIT_COMMIT_MSG: "ci(deps): upgrade pre-commit config"
 
 defaults:
   run:

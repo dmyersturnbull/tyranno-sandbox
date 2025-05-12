@@ -105,6 +105,9 @@ labels:
   - name: "scope: dev"
     description: "🛠️ Shared infrastructure for developers only"
     color: "#009000"
+  - name: "scope: deps"
+    description: "⬆️ Automatic updates to dependencies"
+    color: "#009000"
 
   # ============= unused labels ============= #
 

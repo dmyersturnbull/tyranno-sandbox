@@ -51,7 +51,9 @@ class Capture(contextlib.ExitStack):
         return self
 
     @override
-    def __exit__(self, exc_type: type[BaseException], exc_value: BaseException, traceback: TracebackType) -> None:
+    def __exit__(
+        self, exc_type: type[BaseException], exc_value: BaseException, traceback: TracebackType
+    ) -> None:
         logger.debug("Finished capturing stdout and stderr")
         # The ExitStack handles everything
         super().__exit__(exc_type, exc_value, traceback)

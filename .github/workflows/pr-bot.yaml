@@ -2,7 +2,7 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# Responds to `/just <command>` comments on pull requests.
+# Responds to `/plz <command>` comments on pull requests.
 name: PR-bot
 run-name: Comment by ${{ github.sender.login }} on PR ${{ github.event.pull_request.number }}
 
@@ -16,16 +16,18 @@ permissions:
   contents: read
 
 env:
-  NULLARY_CMD: '^\/just (?<cmd>[a-z0-9 -]+)$'
-  UNARY_CMD: '^\/just (?<cmd>[a-z0-9 -]+)(?: (?:in)? (?<ref>head|merge))?$'
+  NULLARY_CMD: >-
+    ^\/plz ++(?<cmd>[a-z0-9 -]++) *+$
+  UNARY_CMD: >-
+    ^\/plz ++(?<cmd>(?:(?:[a-z0-9-]++) *)+?)(?: ++(?:in|on)?+ ++(?<ref>head|merge)(?: ref)?+)?+ *+$
 
 defaults:
   run:
     shell: bash
 
 jobs:
-  # Parse the body and find lines matching `/just <cmd> [<ref>]`.
-  # Individual jobs could check e.g. `contains(github.event.comment.body, '/just test')`.
+  # Parse the body and find lines matching `/plz <cmd> [<ref>]`.
+  # Individual jobs could check e.g. `contains(github.event.comment.body, '/plz test')`.
   # However, that can't capture command "arguments" (though, currently, we only need `<ref>`).
   # Note that we allow multiple commands per comment.
   # To associate arguments with their respective commands, we need Bash for regex, etc.
@@ -39,18 +41,19 @@ jobs:
       nullary: ${{ steps.extract.outputs.nullary }}
       unary: ${{ steps.extract.outputs.unary }}
     steps:
-      - name: Extract commands using regex and jq
+      - name: Extract commands using regex
         id: extract
-        shell: bash
+        # TODO: Process with jq, and capture options like lint types.
         run: |
           nullary=$( \
             grep --only-matching --perl-regexp "$NULLARY_CMD" <<< "$TEXT" \
-              | sed -r 's/ /-/g' | sed -r 's/just-//g' \
+              | sed -r 's/-/ /g' | sed -r 's/plz ++//g' \
+              | sed -r 's/reformat/format/g'
           )
           echo "nullary=$nullary" >> "$GITHUB_OUTPUT"
           unary=$( \
             grep --only-matching --perl-regexp "$UNARY_CMD" <<< "$TEXT" \
-            | sed -r 's/ /-/g' | sed -r 's/just-//g' | sed -r 's/-in-/\//g' \
+            | sed -r 's/-/ /g' | sed -r 's/plz ++//g' | sed -r 's/ ++(in|on) ++/ \//g' \
           )
           echo "unary=$unary" >> "$GITHUB_OUTPUT"
 
@@ -65,7 +68,7 @@ jobs:
       rules: S
       # Run on HEAD, unless "on merge" is specifically requested.
       ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'audit/merge') && github.ref || github.head_ref }}
+        ${{ contains(needs.cmd.outputs.unary, 'audit /merge') && github.ref || github.head_ref }}
 
   lint:
     if: ${{ contains(needs.cmd.outputs.unary, 'lint') }}
@@ -77,10 +80,10 @@ jobs:
     with:
       # Run on HEAD, unless "on merge" is specifically requested.
       ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'lint/merge') && github.ref || github.head_ref }}
+        ${{ contains(needs.cmd.outputs.unary, 'lint /merge') && github.ref || github.head_ref }}
 
   check-image:
-    if: ${{ contains(needs.cmd.outputs.unary, 'check-image') }}
+    if: ${{ contains(needs.cmd.outputs.unary, 'check image') }}
     needs: cmd
     concurrency:
       group: check-image-${{ github.ref_name }}
@@ -89,10 +92,10 @@ jobs:
     with:
       # Run on HEAD, unless "on merge" is specifically requested.
       ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'check-image/merge') && github.ref || github.head_ref }}
+        ${{ contains(needs.cmd.outputs.unary, 'check image /merge') && github.ref || github.head_ref }}
 
   check-docs:
-    if: ${{ contains(needs.cmd.outputs.unary, 'check-docs') }}
+    if: ${{ contains(needs.cmd.outputs.unary, 'check docs') }}
     needs: cmd
     concurrency:
       group: check-docs-${{ github.ref_name }}
@@ -101,7 +104,7 @@ jobs:
     with:
       # Run on HEAD, unless "on merge" is specifically requested.
       ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'check-docs/merge') && github.ref || github.head_ref }}
+        ${{ contains(needs.cmd.outputs.unary, 'check docs /merge') && github.ref || github.head_ref }}
 
   test:
     if: ${{ contains(needs.cmd.outputs.unary, 'test') }}
@@ -113,10 +116,10 @@ jobs:
     with:
       # Run on MERGE, unless "on head" is specifically requested.
       ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'test/head') && github.head_ref || github.ref }}
+        ${{ contains(needs.cmd.outputs.unary, 'test /head') && github.head_ref || github.ref }}
 
   quick-test:
-    if: ${{ contains(needs.cmd.outputs.unary, 'quick-test') }}
+    if: ${{ contains(needs.cmd.outputs.unary, 'quick test') }}
     needs: cmd
     concurrency:
       group: test-${{ github.ref_name }} # Group shared with `test`.
@@ -125,11 +128,11 @@ jobs:
     with:
       # Run on MERGE, unless "on head" is specifically requested.
       ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'quick-test/head') && github.head_ref || github.ref }}
+        ${{ contains(needs.cmd.outputs.unary, 'quick test /head') && github.head_ref || github.ref }}
       markers: not (ux or slow or net or e2e)
 
   e2e-test:
-    if: ${{ contains(needs.cmd.outputs.unary, 'e2e-test') }}
+    if: ${{ contains(needs.cmd.outputs.unary, 'e2e test') }}
     needs: cmd
     concurrency:
       group: e2e-${{ github.ref_name }} # The others exclude 'e2e', so there's no need to share.
@@ -138,7 +141,7 @@ jobs:
     with:
       # Run on MERGE, unless "on head" is specifically requested.
       ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'test/head') && github.head_ref || github.ref }}
+        ${{ contains(needs.cmd.outputs.unary, 'e2e test /head') && github.head_ref || github.ref }}
 
   upgrade:
     if: ${{ contains(needs.cmd.outputs.nullary, 'upgrade') }}
@@ -153,8 +156,8 @@ jobs:
       # Always run on HEAD (doesn't make sense on merge).
       ref: ${{ github.head_ref }}
 
-  reformat:
-    if: ${{ contains(needs.cmd.outputs.nullary, 'reformat') }}
+  format:
+    if: ${{ contains(needs.cmd.outputs.nullary, 'format') }}
     needs: cmd
     concurrency:
       group: fixup-${{ github.ref_name }} # Group shared with `upgrade`.
@@ -167,3 +170,16 @@ jobs:
       # Reformat files changed since BASE.
       ref: ${{ github.head_ref }}
       compare-to-ref: ${{ github.base_ref }}
+
+  label:
+    if: ${{ contains(needs.cmd.outputs.nullary, 'label') }}
+    needs: cmd
+    concurrency:
+      group: label-${{ github.ref_name }}
+      cancel-in-progress: true
+    permissions:
+      pull-requests: write
+    uses: ./.github/workflows/_check-pr-metadata.yaml
+    with:
+      pr: ${{ github.event.pull_request.number }}
+      label: true

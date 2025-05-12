@@ -3,7 +3,8 @@
 ## Organization
 
 Workflows prefixed with `_` are only triggered via `workflow_call`.
-(These could be moved to e.g. `/.github/actions/` for clarity.)
+These could be later be turned into
+[Composite Actions](https://docs.github.com/en/actions/sharing-automations/creating-actions/creating-a-composite-action).
 
 ## Notes
 
