@@ -4,6 +4,7 @@
 
 # "Function" workflow that runs end-to-end PyTest tests inside a container via docker compose.
 # TODO: This is experimental.
+run-name: End-to-end test ${{ inputs.ref }}
 
 on:
   workflow_call:
@@ -20,10 +21,20 @@ on:
         type: number
         default: 1
         description: Refer to the same input in '_run-pytest.yaml`.
+      cancel-in-progress:
+        type: boolean
+        description: >-
+          Cancel already-running runs for the same ref.
+          Enable for ad-hoc checks, but keep disabled otherwise.
+          This is important if 'ref' is an "abbreviated ref" rather than a hash.
+
+concurrency:
+  group: _test-e2e / ${{ inputs.ref }}
+  cancel-in-progress: ${{ inputs.cancel-in-progress }}
 
 env:
   SERVICE_NAME: app # Named in `compose.yaml` (the key under the top-level `services`).
-  PYTEST_ARGS: ${{ inputs.fast-fail && '--exitfirst' || '' }}
+  PYTEST_OPTIONS: ${{ inputs.fast-fail && '--exitfirst' || '' }}
 
 defaults:
   run:
@@ -54,8 +65,8 @@ jobs:
       - name: Run E2E tests
         run: |
           # shellcheck disable=SC2086 # Intentionally word-split into an array.
-          read -r -a pytest_args <<< "$PYTEST_ARGS"
-          docker compose exec "$SERVICE_NAME" pytest -m e2e "${pytest_args[@]}"
+          read -r -a pytest_options <<< "$PYTEST_OPTIONS"
+          docker compose exec "$SERVICE_NAME" pytest -m e2e "${pytest_options[@]}"
       - name: Show logs if failed
         if: failure()
         run: |

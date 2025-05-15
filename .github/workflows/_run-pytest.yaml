@@ -5,6 +5,7 @@
 # "Function" workflow that runs `_run-pytest-single` for each OS and Python version.
 # See:
 # https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategyfail-fast
+run-name: PyTest matrix on ${{ inputs.ref }} with markers ${{ inputs.markers }}
 
 on:
   workflow_call:
@@ -31,6 +32,16 @@ on:
         type: number
         default: 1
         description: Increase when testing important branches; leave at 1 for PRs.
+      cancel-in-progress:
+        type: boolean
+        description: >-
+          Cancel already-running runs for the same ref.
+          Enable for ad-hoc checks, but keep disabled otherwise.
+          This is important if 'ref' is an "abbreviated ref" rather than a hash.
+
+concurrency:
+  group: _run-pytest / ${{ inputs.ref }}
+  cancel-in-progress: ${{ inputs.cancel-in-progress }}
 
 defaults:
   run:
@@ -48,9 +59,9 @@ jobs:
           - windows-latest
           - macos-latest
         python:
-          # ::tyranno-start:: $<<~.cicd.python."minor-versions-to-test">>
+          # ::tyranno start:: $<<~.python."test-versions">>
           - "3.13"
-          # :tyranno-end
+          # :tyranno end
     uses: ./.github/workflows/_run-pytest-single.yaml
     with:
       ref: ${{ inputs.ref }}

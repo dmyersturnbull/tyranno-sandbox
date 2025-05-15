@@ -3,9 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow that syncs some GitHub repo metadata to `.github/project.yaml`.
+run-name: Sync repo metadata
 
 on:
   workflow_call:
+
+# Handle concurrency in `sync-repo.yaml`.
 
 env:
   SETTINGS_PATH: .github/project.yaml

@@ -5,7 +5,8 @@
 # Runs the release process when `validate` completes successfully (after a tag is pushed).
 name: Publish
 run-name: >-
-  ${{ github.event.workflow_run.conclusion == 'success' && 'Publish' || 'Ignore' }} ${{ github.ref_name }}
+  ${{ github.event.workflow_run.conclusion == 'success' && 'Publish' || 'Ignore' }}
+  ${{ github.ref_name }}
 
 on:
   workflow_run:
@@ -18,8 +19,8 @@ concurrency:
   # Only allow one publish workflow to run at a time.
   # This prevents accidental double-publishes and avoids upsetting external services.
   # There's also little reason to run more than one at a time.
-  group: publish
-  # DO NOT cancel this workflow if it's already running.
+  group: ${{ github.workflow }}
+  # DO NOT cancel this workflow if it's already running; it's VERY NON-ATOMIC.
 
 permissions:
   contents: read
@@ -34,15 +35,14 @@ jobs:
     name: Determine whether this is a full release or preview
     runs-on: ubuntu-latest
     outputs:
-      is_real: ${{ steps.check-ref.outputs.is_real }}
+      is-real-release: ${{ steps.check-ref.outputs.is_real }}
     steps:
       - id: check-ref
         run: |
-          if [[ "$GITHUB_REF" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "is_real=true" >> $GITHUB_OUTPUT
-            printf "Accepted %s for full release.\n" "$GITHUB_REF_NAME"
-          else
-            printf "Accepted %s for preview/test release.\n" "$GITHUB_REF_NAME"
+          # ::tyranno:: regex_1='^refs/tags/$<<~.cicd.tag.release-trigger>>$'
+          regex_1='^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$'
+          if [[ "$GITHUB_REF" =~ $regex_1 ]]; then
+             echo "is_real=true" >> $GITHUB_OUTPUT
           fi
   publish-docs:
     needs: accept
@@ -61,11 +61,11 @@ jobs:
     needs: accept
     uses: ./.github/workflows/_publish-pypi.yaml
     with:
-      repository: ${{ needs.accept.outputs.is_real == 'true' && 'pypi' || 'testpypi' }}
+      repository: ${{ needs.accept.outputs.is-real-release && 'pypi' || 'testpypi' }}
     secrets: inherit
   publish-docker:
     needs: accept
     uses: ./.github/workflows/_publish-docker.yaml
     with:
-      push: ${{ needs.accept.outputs.is_real == 'true' && 'true' || 'false' }}
+      push: ${{ needs.accept.outputs.is-real-release }}
     secrets: inherit

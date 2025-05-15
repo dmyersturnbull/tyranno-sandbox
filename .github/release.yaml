@@ -5,14 +5,15 @@
 changelog:
   exclude:
     labels:
+      - "changelog: exclude"
+      - "scope: dev-infra"
+      - "scope: docs-infra"
       - "type: chore"
       - "type: style"
-      - "scope: dev"
-      - "changelog: exclude"
   categories:
     - title: 💥 Breaking changes
       labels:
-        - "breaking"
+        - breaking
     - title: ❌ Removals
       labels:
         - "type: drop"
@@ -39,7 +40,7 @@ changelog:
         - "type: build"
     - title: 🍒 Miscellaneous
       labels:
+        - "changelog: include"
         - "type: refactor"
         - "type: test"
         - "type: ci"
-        - "changelog: include"

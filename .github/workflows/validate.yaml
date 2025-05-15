@@ -10,10 +10,7 @@ run-name: >-
 on:
   push:
     tags:
-      # ::tyranno:: - '^$<<~.cicd.trigger.prerelease>>$'
-      - '^v[0-9]+\.[0-9]+\.[0-9]+-((alpha|beta|rc)\.)?\d+$'
-      # ::tyranno:: - '^$<<~.cicd.trigger.release>>$'
-      - '^v[0-9]+\.[0-9]+\.[0-9]+$'
+      - "v*.*.*"
 
 permissions:
   contents: read
@@ -23,24 +20,54 @@ concurrency:
   # (with `cancel-in-progress` set to FALSE).
   # It's safe to cancel runs of `validate`, but not of `publish`.
   # We'll let runs proceed here, then bottle up against the start of `publish`.
-  group: validate-${{ github.ref_name }}
+  group: ${{ github.workflow }} / ${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
+  check-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      is-match: ${{ steps.match.outputs.match }}
+    steps:
+      - id: match
+        run: |
+          # ::tyranno:: regex_1='^refs/tags/$<<~.cicd.tag.release-trigger>>$'
+          regex_1='^v[0-9]+\.[0-9]+\.[0-9]+$'
+          # ::tyranno:: regex_2='^refs/tags/$<<~.cicd.tag.prerelease-trigger>>$'
+          regex_2='^v[0-9]+\.[0-9]+\.[0-9]+-((alpha|beta|rc)\.)?\d+$'
+          if [[ "$GITHUB_REF" =~ $regex_1 ]]; then
+            printf "Accepting %s for real release.\n" "$GITHUB_REF_NAME"
+            echo "match=true" >> $GITHUB_OUTPUT
+          elif [[ "$GITHUB_REF" =~ $regex_2 ]]; then
+            printf "Accepting %s for preview/test release only.\n" "$GITHUB_REF_NAME"
+            echo "match=true" >> $GITHUB_OUTPUT
+          fi
+  guard:
+    if: ${{ needs.check-tag.outputs.is-match }}
+    needs: check-tag
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          printf "Proceeding.\n"
   check-hooks:
+    needs: guard
     uses: ./.github/workflows/_check-hooks.yaml
     with:
       ref: ${{ github.ref }}
+      check-schemas: true
   run-tests:
+    needs: guard
     uses: ./.github/workflows/_run-pytest.yaml
     with:
       ref: ${{ github.ref }}
   check-security:
+    needs: guard
     uses: ./.github/workflows/_lint.yaml
     with:
       ref: ${{ github.ref }}
       rules: S
   check-docker:
+    needs: guard
     uses: ./.github/workflows/_check-docker.yaml
     with:
       ref: ${{ github.ref }}
@@ -55,4 +82,3 @@ jobs:
     uses: ./.github/workflows/_build_dist.yaml
     with:
       ref: ${{ github.ref }}
-      ref_name: ${{ github.ref_name }}

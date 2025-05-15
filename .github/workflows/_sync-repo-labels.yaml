@@ -3,9 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow that syncs repo labels with those in `.github/project.yaml`.
+run-name: Sync repo issue/PR labels
 
 on:
   workflow_call:
+
+# Handle concurrency in `sync-repo.yaml`.
 
 env:
   SETTINGS_PATH: .github/project.yaml

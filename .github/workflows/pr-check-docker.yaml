@@ -4,7 +4,9 @@
 
 # Checks that the Docker image is buildable on PRs with relevant changes.
 name: PR-check-Docker
-run-name: Check Docker on PR ${{ github.event.pull_request.number }} by ${{ github.event.pull_request.user.login }}
+run-name: >-
+  Check images on PR ${{ github.event.pull_request.number }}
+  by ${{ github.event.pull_request.user.login }}
 
 on:
   pull_request:
@@ -17,7 +19,7 @@ on:
       - .dockerignore
 
 concurrency:
-  group: check-docker-${{ github.ref_name }}
+  group: ${{ github.workflow }} / ${{ github.ref_name }}
   cancel-in-progress: true
 
 permissions:

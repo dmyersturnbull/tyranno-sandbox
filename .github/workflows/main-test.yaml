@@ -2,7 +2,8 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# When a commit is pushed to main or releases/**, runs tests and either opens an issue or uploads coverage reports.
+# When a commit is pushed to main or releases/**,
+# runs tests and either opens an issue or uploads coverage reports.
 name: Main-test
 run-name: Test ${{ github.ref_name }} (${{ github.sha }})
 
@@ -17,9 +18,9 @@ on:
       - master
       - releases/**
 
-concurrency: # More restrictive groups defined on jobs.
-  group: main-test-${{ github.ref_name }}
-  cancel-in-progress: true
+concurrency:
+  group: ${{ github.workflow }} / ${{ github.ref_name }}
+  # More restrictive groups defined on jobs.
 
 permissions:
   contents: read
@@ -56,24 +57,17 @@ jobs:
           gh issue create \
             --title "Test failure(s) on $GITHUB_REF_NAME" \
             --body "See: [run #$GITHUB_RUN_ID]($RUN_URL)" \
-            --label "type: bug" \
-          exit 1
+            --label "type: bug"
   update-codecov:
-    if: ${{ success() && env.CODECOV_TOKEN != '' }}
+    if: ${{ success() && env.CODECOV_TOKEN }}
     needs: test
-    concurrency:
-      group: codecov # Don't harass CodeCov.
-      cancel-in-progress: true
     uses: ./.github/workflows/_update-codecov.yaml
     with:
       ref_name: ${{ github.ref_name }}
     secrets: inherit
   update-coveralls:
-    if: ${{ success() && env.COVERALLS_TOKEN != '' }}
+    if: ${{ success() && env.COVERALLS_TOKEN }}
     needs: test
-    concurrency:
-      group: codecov # Don't harass Coveralls.
-      cancel-in-progress: true
     uses: ./.github/workflows/_update-coveralls.yaml
     with:
       ref_name: ${{ github.ref_name }}

@@ -3,9 +3,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow that builds docs and deploys them to GitHub Pages.
+run-name: Publish docs for ${{ github.ref }}
 
 on:
   workflow_call:
+
+concurrency:
+  group: _publish-docs / ${{ inputs.ref }}
+  # Per the same logic in `_publish-docker.yaml`, we should always cancel;
+  # this applies whether we have versioned or unversioned docs.
+  # This isn't atomic, but `upload-pages-artifact` replaces any previous files -- so we're ok.
+  cancel-in-progress: true
 
 defaults:
   run:

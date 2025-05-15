@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow: that runs `uv lock --upgrade`, commits, and pushes.
+run-name: Bump deps on ${{ inputs.ref || 'ε' }}
 
 on:
   workflow_call:
@@ -12,9 +13,16 @@ on:
         required: true
         description: The branch, tag, or hash; for a PR, this must be the head ref.
 
+concurrency:
+  group: _bump-deps / ${{ inputs.ref }}
+  # There are no parameters to worry about potentially conflicting,
+  # and there's a single (atomic) push -- so we're ok to cancel.
+  # The only caveat is that some bump runs could be skipped.
+  cancel-in-progress: true
+
 env:
-  LOCK_COMMIT_MSG: "build(deps): update lock file"
-  PRECOMMIT_COMMIT_MSG: "ci(deps): upgrade pre-commit config"
+  LOCK_COMMIT_MSG: "build: update lock file"
+  PRECOMMIT_COMMIT_MSG: "ci: upgrade pre-commit config"
 
 defaults:
   run:

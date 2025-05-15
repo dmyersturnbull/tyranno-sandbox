@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow that tests building images on Ubuntu and Windows.
+run-name: Check images on ${{ inputs.ref || 'ε' }}
 
 on:
   workflow_call:
@@ -11,6 +12,16 @@ on:
         type: string
         required: true
         description: The branch, tag, or hash; for a PR, this should be the merge commit.
+      cancel-in-progress:
+        type: boolean
+        description: >-
+          Cancel already-running runs for the same ref.
+          Enable for ad-hoc checks, but keep disabled otherwise.
+          This is important if 'ref' is an "abbreviated ref" rather than a hash.
+
+concurrency:
+  group: _check-docker / ${{ inputs.ref }}
+  cancel-in-progress: ${{ inputs.cancel-in-progress }}
 
 defaults:
   run:

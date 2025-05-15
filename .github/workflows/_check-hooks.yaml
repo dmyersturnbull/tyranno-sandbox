@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow that checks basic things via pre-commit hooks.
+run-name: Check hooks on ${{ inputs.ref || 'ε' }}
 
 on:
   workflow_call:
@@ -11,6 +12,24 @@ on:
         type: string
         required: true
         description: The branch, tag, or hash; for a PR, this should be the head ref.
+      cancel-in-progress:
+        type: boolean
+        description: >-
+          Cancel already-running runs for the same ref.
+          Enable for ad-hoc checks, but keep disabled otherwise.
+          This is important if 'ref' is an "abbreviated ref" rather than a hash.
+      check-schemas:
+        type: boolean
+        default: false
+        description: Also validate schemas.
+
+concurrency:
+  group: _check-hooks / ${{ inputs.ref }} / ${{ inputs.check-schemas }}
+  # Separating by `check-schemas` is a little weird,
+  # but it's the easiest way to prevent a non-schema-check run from cancelling a schema-check run.
+  # Otherwise, we'd need to use `${{ cancel-in-progress || inputs.check-schema }}`,
+  # which would be surprising.
+  cancel-in-progress: ${{ cancel-in-progress }}
 
 defaults:
   run:
@@ -20,6 +39,7 @@ jobs:
   check-hooks:
     runs-on: ubuntu-latest
     env:
+      CHECK_SCHEMAS: ${{ inputs.check-schemas && 'true' || 'false' }}
       UV_NO_SYNC: true
     steps:
       - uses: actions/checkout@v4
@@ -42,3 +62,7 @@ jobs:
           chk fix-byte-order-marker
           chk end-of-file-fixer
           chk trailing-whitespace
+          if [[ "$CHECK_SCHEMAS" == true ]]; then
+            chk check-github-workflows
+            chk check-compose-spec
+          fi

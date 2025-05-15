@@ -4,6 +4,7 @@
 
 # "Function" workflow that sends code coverage reports to Coveralls.
 # Requires `_run-pytest.yaml` and the secret `COVERALLS_TOKEN`.
+run-name: Send ${{ inputs.ref_name }} coverage to Coveralls
 
 on:
   workflow_call:
@@ -12,6 +13,10 @@ on:
         type: string
         required: true
         description: The name of the branch or tag.
+
+concurrency:
+  group: _update-coveralls / ${{ inputs.ref_name }}
+  cancel-in-progress: true
 
 defaults:
   run:
@@ -27,9 +32,9 @@ jobs:
         os:
           - ubuntu-latest
         python:
-          # ::tyranno-start:: $<<~.cicd.python."minor-versions-to-test">>
+          # ::tyranno start:: $<<~.python."test-versions">>
           - "3.13"
-          # ::tyranno-end::
+          # ::tyranno end::
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python }}

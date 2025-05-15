@@ -5,9 +5,16 @@
 # "Function" workflow that publishes a release to GitHub and creates alias Git tags like `v1`.
 # Always uses ${{ github.ref }}
 # Requires `_build_dist.yaml`.
+run-name: Release ${{ github.ref }} on GitHub
 
 on:
   workflow_call:
+
+concurrency:
+  group: _publish-github / ${{ inputs.ref }}
+  # Per the logic in `_publish-docker.yaml`, we should always cancel.
+  # The release step is atomic, so it's safe to do this.
+  cancel-in-progress: true
 
 env:
   ARTIFACT_NAME: dist-${{ github.ref_name }}

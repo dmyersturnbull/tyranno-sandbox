@@ -8,6 +8,11 @@ These could be later be turned into
 
 ## Notes
 
+### Weirdness
+
+- In a `workflow_call`-ed job,
+  [`${{ github.workflow }}` is the **caller's name**](https://github.com/orgs/community/discussions/30708#discussioncomment-3518412).
+
 ### Context, variables, and expressions
 
 See:

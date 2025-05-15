@@ -4,7 +4,9 @@
 
 # Checks that the docs are buildable on PRs with relevant changes.
 name: PR-check-docs
-run-name: Check docs on PR ${{ github.event.pull_request.number }} by ${{ github.event.pull_request.user.login }}
+run-name: >-
+  Check docs on PR ${{ github.event.pull_request.number }}
+  by ${{ github.event.pull_request.user.login }}
 
 on:
   pull_request:
@@ -16,7 +18,7 @@ on:
       - src/**/*.py # for API docs
 
 concurrency:
-  group: check-docs-${{ github.ref_name }}
+  group: ${{ github.workflow }} / ${{ github.ref_name }}
   cancel-in-progress: true
 
 permissions:

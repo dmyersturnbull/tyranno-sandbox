@@ -4,6 +4,12 @@
 
 # "Function" workflow that lints with Ruff, YAML, and others.
 
+run-name: >-
+  Lint ${{ inputs.ref || 'ε' }}
+  for ${{ inputs.tasks }},
+  glob ${{ inputs.glob }},
+  rules ${{ inputs.rules }}
+
 on:
   workflow_call:
     inputs:
@@ -15,14 +21,21 @@ on:
         type: string
         default: python,dockerfile,yaml,charts
         description: Comma-separated list of 'python', 'dockerfile', 'yaml', 'charts'.
-      rules:
-        type: string
-        default: ""
-        description: Ruff rule specifier passed as 'ruff check --select <rules>'.
       glob:
         type: string
         default: .
         description: Glob pattern of paths.
+      rules:
+        type: string
+        default: ""
+        description: Ruff rule specifier passed as 'ruff check --select <rules>'.
+
+concurrency:
+  group: _lint / ${{ inputs.ref }}
+  # Never cancel a currently running job.
+  # We would only want to cancel current runs that are run on the same hash with identical inputs;
+  # we have no way to determine that here.
+  # It's CRITICAL that we only allow one to run per ref at a time to avoid merge conflicts.
 
 defaults:
   run:
@@ -91,7 +104,7 @@ jobs:
         uses: ibiqlik/action-yamllint@v3
         with:
           strict: true
-          file_or_dir: "${{inputs.glob}}"
+          file_or_dir: "${{ inputs.glob }}"
           # Only lint real issues, not formatting.
           config_data: |
             rules:

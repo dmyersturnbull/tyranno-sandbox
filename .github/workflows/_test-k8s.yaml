@@ -4,6 +4,7 @@
 
 # "Function" workflow that tests Helm charts by deploying in a test cluster.
 # TODO: This is experimental.
+run-name: Test ${{ inputs.ref }} on K8s ${{ inputs.only-if-changed && ' if changed' || '' }}
 
 on:
   workflow_call:
@@ -16,6 +17,16 @@ on:
         type: boolean
         default: false
         description: Skip testing if the charts are not different from the current stable release.
+      cancel-in-progress:
+        type: boolean
+        description: >-
+          Cancel already-running runs for the same ref.
+          Enable for ad-hoc checks, but keep disabled otherwise.
+          This is important if 'ref' is an "abbreviated ref" rather than a hash.
+
+concurrency:
+  group: _test-k8s / ${{ inputs.ref }}
+  cancel-in-progress: ${{ inputs.cancel-in-progress }}
 
 defaults:
   run:

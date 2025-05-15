@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow: that uploads `dist/` as GH workflow artifact `dist-${{ github.ref_name }}`.
+run-name: Package ${{ inputs.ref || 'ε' }}
 
 on:
   workflow_call:
@@ -11,6 +12,12 @@ on:
         type: string
         required: true
         description: The branch, tag, or hash; for testing a PR, this should be the merge commit.
+      cancel-in-progress:
+        type: boolean
+        description: >-
+          Cancel already-running runs for the same ref.
+          Enable for ad-hoc checks, but keep disabled otherwise.
+          This is important if 'ref' is an "abbreviated ref" rather than a hash.
       retention-days:
         type: number
         default: 1
@@ -20,9 +27,13 @@ on:
         default: false
         description: Use 'tool.uv.sources'; otherwise, passes '--no-sources' to 'uv build'.
 
+concurrency:
+  group: _build-dist / ${{ inputs.ref }}
+  cancel-in-progress: ${{ inputs.cancel-in-progress }}
+
 env:
   ARTIFACT_NAME: dist-${{ inputs.ref-name }}
-  UV_BUILD_ARGS: ${{ inputs.use-uv-sources && '' || '--no-sources' }}
+  UV_BUILD_OPTIONS: ${{ inputs.use-uv-sources && '' || '--no-sources' }}
 
 defaults:
   run:
@@ -45,8 +56,8 @@ jobs:
       - name: Build sources and wheels
         run: |
           # shellcheck disable=SC2086 # Intentionally word-split into an array.
-          read -r -a uv_build_option <<< "$UV_BUILD_OPTION"
-          uv build "${uv_build_option[@]}"
+          read -r -a uv_build_options <<< "$UV_BUILD_OPTIONS"
+          uv build "${uv_build_options[@]}"
       - if: ${{ inputs.retention-days > 0 }}
         name: Upload 'dist/' (wheels and sdists) as artifact '${{ env.ARTIFACT_NAME }}'
         id: upload
@@ -58,10 +69,14 @@ jobs:
           compression-level: 0 # they're already gzip-compressed
           retention-days: ${{ inputs.retention-days }}
       - name: Print artifact info
+        env:
+          ARTIFACT_ID: "${{ steps.upload.outputs.artifact-id }}"
+          ARTIFACT_URL: "${{ steps.upload.outputs.artifact-url }}"
+          ARTIFACT_DIGEST: "${{ steps.upload.outputs.artifact-digest }}"
         run: |
           printf \
             "Uploaded artifact '%s':\n  ID: %s\nURI: %s\nDigest: %s\n" \
             "$ARTIFACT_NAME \
-            "${{ steps.upload.outputs.artifact-id }}"
-            "${{ steps.upload.outputs.artifact-url }}"
-            "${{ steps.upload.outputs.artifact-digest }}"
+            "$ARTIFACT_ID" \
+            "$ARTIFACT_URL" \
+            "$ARTIFACT_DIGEST"

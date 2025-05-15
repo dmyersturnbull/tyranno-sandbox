@@ -1,0 +1,83 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+# "Function" workflow that verifies the PR name, description, and issues are correct.
+# TODO: This was hastily written and not tested at all.
+
+on:
+  workflow_call:
+    inputs:
+      pr:
+        type: number
+        required: true
+        description: The PR number.
+      label:
+        type: boolean
+        default: false
+        description: Add type and scope labels to the PR.
+
+concurrency:
+  group: _check-pr-metadata / ${{ inputs.ref }}
+  cancel-in-progress: true # Even if a previous job was adding labels, it's no longer valid.
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check-pr-title:
+    if: ${{ !contains(github.event.pull_request, 'draft') || !github.event.pull_request.draft }}
+    name: Validate PR title
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      type: ${{ steps.pr.outputs.type }}
+      scope: ${{ steps.pr.outputs.scope }}
+    steps:
+      - id: pr
+        uses: amannn/action-semantic-pull-request@v5
+        with:
+          types: |
+            feat
+            security
+            drop
+            depr
+            fix
+            perf
+            build
+            docs
+            ci
+            test
+            chore
+          scopes: |
+            dev
+            deps
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  add-labels:
+    if: ${{ inputs.label }}
+    needs: check-pr-title
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          PR: ${{ github.event.pull_request.number }}
+          TYPE: ${{ needs.check-pr-title.outputs.type }}
+          SCOPE: ${{ needs.check-pr-title.outputs.scope }}
+          GH_TOKEN: ${{ github.token }} # https://github.com/github/docs/issues/21930
+        run: |
+          # Get a label for the commit type.
+          label="type: $TYPE"
+          label=${label//depr/deprecation}
+          label=${label//perf/performance}
+          label=${label//ci/cicd}
+          # Get labels for the scopes.
+          labels=($type_label)
+          IFS=',' read -r -a parts <<< "$SCOPE"
+          for part in "${parts[@]}"; do labels+=("scope: $part"); done
+          gh issue edit "$PR" --add-label "${labels[@]}"
+          # TODO: Remove other type and scope labels.
+          # TODO: Sync labels with issue?

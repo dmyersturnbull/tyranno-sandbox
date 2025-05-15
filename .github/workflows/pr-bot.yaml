@@ -4,7 +4,7 @@
 
 # Responds to `/plz <command>` comments on pull requests.
 name: PR-bot
-run-name: Comment by ${{ github.sender.login }} on PR ${{ github.event.pull_request.number }}
+run-name: Handle PR ${{ github.event.pull_request.number }} comment by ${{ github.sender.login }}
 
 on:
   issue_comment:
@@ -60,9 +60,6 @@ jobs:
   audit:
     if: ${{ contains(needs.cmd.outputs.unary, 'audit') }}
     needs: cmd
-    concurrency:
-      group: audit-${{ github.ref_name }}
-      cancel-in-progress: true
     uses: ./.github/workflows/_lint.yaml
     with:
       rules: S
@@ -73,9 +70,6 @@ jobs:
   lint:
     if: ${{ contains(needs.cmd.outputs.unary, 'lint') }}
     needs: cmd
-    concurrency:
-      group: lint-${{ github.ref_name }}
-      cancel-in-progress: true
     uses: ./.github/workflows/_lint.yaml
     with:
       # Run on HEAD, unless "on merge" is specifically requested.
@@ -85,9 +79,6 @@ jobs:
   check-image:
     if: ${{ contains(needs.cmd.outputs.unary, 'check image') }}
     needs: cmd
-    concurrency:
-      group: check-image-${{ github.ref_name }}
-      cancel-in-progress: true
     uses: ./.github/workflows/_check-docker.yaml
     with:
       # Run on HEAD, unless "on merge" is specifically requested.
@@ -97,21 +88,25 @@ jobs:
   check-docs:
     if: ${{ contains(needs.cmd.outputs.unary, 'check docs') }}
     needs: cmd
-    concurrency:
-      group: check-docs-${{ github.ref_name }}
-      cancel-in-progress: true
     uses: ./.github/workflows/_check-docs.yaml
     with:
       # Run on HEAD, unless "on merge" is specifically requested.
       ref: >-
         ${{ contains(needs.cmd.outputs.unary, 'check docs /merge') && github.ref || github.head_ref }}
 
+  validate-schemas:
+    if: ${{ contains(needs.cmd.outputs.unary, 'validate schemas') }}
+    needs: cmd
+    uses: ./.github/workflows/_check-hooks.yaml
+    with:
+      # Run on HEAD, unless "on merge" is specifically requested.
+      ref: >-
+        ${{ contains(needs.cmd.outputs.unary, 'validate schemas /merge') && github.ref || github.head_ref }}
+      check-schemas: true
+
   test:
     if: ${{ contains(needs.cmd.outputs.unary, 'test') }}
     needs: cmd
-    concurrency:
-      group: test-${{ github.ref_name }} # Group shared with `quick-test`.
-      cancel-in-progress: true # Let `test` cancel `quick-test` (and `test`).
     uses: ./.github/workflows/_run-pytest.yaml
     with:
       # Run on MERGE, unless "on head" is specifically requested.
@@ -121,9 +116,6 @@ jobs:
   quick-test:
     if: ${{ contains(needs.cmd.outputs.unary, 'quick test') }}
     needs: cmd
-    concurrency:
-      group: test-${{ github.ref_name }} # Group shared with `test`.
-      # Don't cancel. We don't want `quick-test` to cancel a full test.
     uses: ./.github/workflows/_run-pytest.yaml
     with:
       # Run on MERGE, unless "on head" is specifically requested.
@@ -134,9 +126,6 @@ jobs:
   e2e-test:
     if: ${{ contains(needs.cmd.outputs.unary, 'e2e test') }}
     needs: cmd
-    concurrency:
-      group: e2e-${{ github.ref_name }} # The others exclude 'e2e', so there's no need to share.
-      cancel-in-progress: true
     uses: ./.github/workflows/_test-e2e.yaml
     with:
       # Run on MERGE, unless "on head" is specifically requested.
@@ -146,9 +135,6 @@ jobs:
   upgrade:
     if: ${{ contains(needs.cmd.outputs.nullary, 'upgrade') }}
     needs: cmd
-    concurrency:
-      group: fixup-${{ github.ref_name }} # Group shared with `reformat`.
-      # Don't cancel. Although it's safe because `git push` is atomic, we'd also cancel `reformat`.
     permissions:
       contents: write
     uses: ./.github/workflows/_bump-deps.yaml
@@ -159,9 +145,6 @@ jobs:
   format:
     if: ${{ contains(needs.cmd.outputs.nullary, 'format') }}
     needs: cmd
-    concurrency:
-      group: fixup-${{ github.ref_name }} # Group shared with `upgrade`.
-      # Don't cancel. Although it's safe because `git push` is atomic, we'd also cancel `upgrade`.
     permissions:
       contents: write
     uses: ./.github/workflows/_reformat.yaml
@@ -174,9 +157,6 @@ jobs:
   label:
     if: ${{ contains(needs.cmd.outputs.nullary, 'label') }}
     needs: cmd
-    concurrency:
-      group: label-${{ github.ref_name }}
-      cancel-in-progress: true
     permissions:
       pull-requests: write
     uses: ./.github/workflows/_check-pr-metadata.yaml

@@ -5,139 +5,142 @@
 # A short description of the repository that will show up on GitHub
 # ::tyranno:: description: $<<project.description.yaml(@)>>
 description: Sandbox for Tyrannosaurus
-# ::tyranno:: homepage: $<<project.urls.Homepage>>
+# ::tyranno:: homepage: $<<project.urls.Homepage.yaml(@)>>
 homepage: https://github.com/dmyersturnbull/tyranno-sandbox
 
 topics:
-  # ::tyranno-start:: $<<project.keywords|yaml(@)>>
+  # ::tyranno start:: $<<project.keywords|yaml(@)>>
   - ci/cd
   - cookiecutter
   - github-workflow
   - pyproject
   - python-template
-  # ::tyranno-end::
+  # ::tyranno end::
 
 labels:
-  - name: "breaking"
-    description: "💥 Breaking change"
+  - name: breaking
+    description: 💥 Breaking change
     color: "#000000"
   - name: "changelog: exclude"
-    description: "🔕 Always omit from the changelog"
+    description: 🔕 Always omit from the changelog
     color: "#f2e9e9"
   - name: "changelog: include"
-    description: "🔔 Always include in the changelog"
+    description: 🔔 Always include in the changelog
     color: "#f9e6e6"
   - name: "effort: 1-easy"
-    description: "1️⃣ Easy ( < 1 hr)"
+    description: 1️⃣ Easy ( < 1 hr)
     color: "#50b0ff"
   - name: "effort: 2-moderate"
-    description: "2️⃣ Moderate ( < 8 hr)"
+    description: 2️⃣ Moderate ( < 8 hr)
     color: "#90e0fff"
   - name: "effort: 3-hard"
-    description: "3️⃣️ Hard (≥ 16 hours)"
+    description: 3️⃣️ Hard (≥ 16 hours)
     color: "#8670ff"
-  - name: "help needed"
-    description: "👋 Help needed"
+  - name: help needed
+    description: 👋 Help needed
     color: "#50ff50"
   - name: "priority: 1-low"
-    description: "🟩 Does not block release/milestone and can be done at any time"
+    description: 🟩 Does not block release/milestone and can be done at any time
     color: "#99dd00"
   - name: " priority: 2-medium"
-    description: "🟨 Does not block release/milestone but should be prioritized"
+    description: 🟨 Does not block release/milestone but should be prioritized
     color: "#d0cc11"
   - name: "priority: 3-high"
-    description: "🟧 Stalls work on the project or its dependents"
+    description: 🟧 Stalls work on the project or its dependents
     color: "#e09911"
   - name: "priority: 4-critical"
-    description: "🟥 Must be fixed ASAP"
+    description: 🟥 Must be fixed ASAP
     color: "#f06600"
-  - name: "question"
-    description: "💬 Question or discussion (issues only)"
+  - name: question
+    description: 💬 Question or discussion (issues only)
     color: "#8800ff"
   - name: "state: blocked"
-    description: "🚧 Blocked by another issue"
+    description: 🚧 Blocked by another issue
     color: "#e0e0e0"
   - name: "state: needs details"
-    description: "🏷️ Needs more details before work can begin"
+    description: 🏷️ Needs more details before work can begin
     color: "#f0f0f0"
   - name: "state: ready for dev"
-    description: "🏁 Ready for work"
+    description: 🏁 Ready for work
     color: "#e0e0e0"
-  - name: "state: rejected"
-    description: "✖️ Will not be worked on"
-    color: "#ffffff"
   - name: "type: build"
-    description: "🔧 Change to the build system or external dependencies"
+    description: 🔧 Change to the build system or external dependencies
     color: "#90e0ff"
   - name: "type: cicd"
-    description: "⚙️ Change to continuous integration and deployment (CI/CD)"
+    description: ⚙️ Change to continuous integration and deployment (CI/CD)
     color: "#90e0ff"
   - name: "type: docs"
-    description: "📝 Change to documentation only"
+    description: 📝 Change to documentation only
     color: "#90e0ff"
   - name: "type: deprecation"
-    description: "🗑️ Deprecation of a feature or component"
+    description: 🗑️ Deprecation of a feature or component
     color: "#90e0ff"
   - name: "type: drop"
-    description: "❌ Removal of a feature"
+    description: ❌ Removal of a feature
     color: "#90e0ff"
   - name: "type: feature"
-    description: "✨ Addition or modification of a feature"
+    description: ✨ Addition or modification of a feature
     color: "#90e0ff"
   - name: "type: fix"
-    description: "🐛 Bug fix, excluding security vulnerabilities"
+    description: 🐛 Bug fix, excluding security vulnerabilities
     color: "#90e0ff"
   - name: "type: performance"
-    description: "⚡️ Code change that improves performance"
+    description: ⚡️ Code change that improves performance
     color: "#90e0ff"
   - name: "type: refactor"
-    description: "♻️ Modify code without affecting execution/behavior"
+    description: ♻️ Modify code without affecting execution/behavior
     color: "#90e0ff"
   - name: "type: security"
-    description: "🔒️ Vulnerability fix/mitigation or hardening"
+    description: 🔒️ Vulnerability fix/mitigation or hardening
     color: "#90e0ff"
   - name: "type: style"
-    description: "🎨 Code change that does not affect the meaning of the code"
+    description: 🎨 Code change that does not affect the meaning of the code
     color: "#90e0ff"
   - name: "type: test"
-    description: "🚨 Addition or modification of tests"
+    description: 🚨 Addition or modification of tests
     color: "#90e0ff"
-  - name: "scope: dev"
-    description: "🛠️ Shared infrastructure for developers only"
+  - name: "scope: dev-infra"
+    description: 🛠️ Development infrastructure
     color: "#009000"
-  - name: "scope: deps"
-    description: "⬆️ Automatic updates to dependencies"
+  - name: "scope: docs-infra"
+    description: 🛠️ Documentation infrastructure
     color: "#009000"
 
   # ============= unused labels ============= #
 
   # Potentially useful labels
   #- name: "sticky"
-  # description: "🔖 Important for reference"
+  # description: 🔖 Important for reference
   # color: "#ffff44"
 
-  # The Angular type `chore` has no obvious use.
+  # The legacy Angular type `chore` has no obvious use.
   #- name: "type: chore"
-  #  description: "️🧹 Other type of change"
+  #  description: ️🧹 Other type of change
   #  color: "#90e0ff"
 
   # Assume "awaiting triage" is the default state.
   #- name: "state: awaiting triage"
-  #  description: "🚦 Awaiting triage"
+  #  description: 🚦 Awaiting triage
   #  color: "#f0f0f0"
+
+  # GitHub now supports `reason` for closed issues:
+  # e.g. https://github.com/dmyersturnbull/cicd/issues?q=reason%3Anot-planned
+  #- name: "state: rejected"
+  #  description: ✖️ Will not be worked on
+  #  color: "#ffffff"
 
   # Unnecessary effort labels
   #- name: "effort: multipart"
-  #  description: "#️⃣ Organizes multiple sub-issues"
+  #  description: #️⃣ Organizes multiple sub-issues
   #  color: "#c050ff"
 
   # Examples of scopes
   #- name: "scope: docker"
-  #  description: "“🐬 Docker"
+  #  description: “🐬 Docker
   #  color: "#009000"
   #- name: "scope: api"
-  #  description: "🧩 Plugins"
+  #  description: 🧩 Plugins
   #  color: "#009000"
   #- name: "scope: i18n"
-  #  description: "🌐 Internationalization"
+  #  description: 🌐 Internationalization
   #  color: "#009000"

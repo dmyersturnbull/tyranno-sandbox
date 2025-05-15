@@ -5,6 +5,13 @@
 # "Function" workflow that publishes a release to PyPI.
 # Always uses ${{ github.ref }}
 # Requires `_build_dist.yaml`.
+run-name: Publish ${{ github.ref }} to ${{ inputs.repository }}
+
+concurrency:
+  group: _publish-pypi / ${{ inputs.ref }}
+  # Per the logic in `_publish-docker.yaml`, we should always cancel.
+  # The publish step is atomic, so it's safe to do this.
+  cancel-in-progress: true
 
 on:
   workflow_call:
@@ -42,4 +49,4 @@ jobs:
       - name: Publish to PyPi using uv.
         # See: https://docs.pypi.org/trusted-publishers/adding-a-publisher/
         run: |
-          uv publish --publish-url $PYPI_TARGET --trusted-publishing always
+          uv publish --publish-url "$PYPI_TARGET" --trusted-publishing always

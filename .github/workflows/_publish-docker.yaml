@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # "Function" workflow that builds a Docker image and publishes it to container registries.
+run-name: ${{ inputs.push && 'Publish' || 'Test publishing' }} images for ${{ github.ref }}
 
 on:
   workflow_call:
@@ -11,6 +12,14 @@ on:
         type: boolean
         required: true
         description: Push to container registries; otherwise, only performs a dry run.
+
+concurrency:
+  group: _publish-docker / ${{ inputs.ref }}
+  # Because `ref` dictates the image labels, we should never have multiple.
+  # For tags, those shouldn't be overwritten.
+  # And for branches, the most recent revision should replace others.
+  # In both cases, it's fine -- in fact, good -- to cancel currently running runs.
+  cancel-in-progress: true
 
 env:
   IMAGE_NAME: ${{ github.repository }} # Assume the image is `owner/repo`
@@ -37,13 +46,13 @@ jobs:
         run: |
           printf "Docker metadata:\n%s\n" "$METADATA"
       # Help for specific registries at https://github.com/docker/login-action
-      - if: ${{ vars.DOCKERHUB_USERNAME != '' }} # True if it's **defined**
+      - if: ${{ vars.DOCKERHUB_USERNAME }}
         name: Log into Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - if: ${{ vars.GHCR_USERNAME != '' }}
+      - if: ${{ vars.GHCR_USERNAME }}
         name: Log into GHCR
         uses: docker/login-action@v3
         with:

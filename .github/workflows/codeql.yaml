@@ -6,7 +6,8 @@
 # This file MUST be named `.github/workflows/codeql.yaml`, or GitHub won't recognize it.
 name: CodeQL
 run-name: >-
-  CodeQL on PR ${{ github.event.pull_request.number }} by ${{ github.event.pull_request.user.login }}
+  CodeQL PR ${{ github.event.pull_request.number }}
+  by ${{ github.event.pull_request.user.login }}
 
 on:
   pull_request:
@@ -28,7 +29,7 @@ on:
       - "**/*.kt"
 
 concurrency:
-  group: codeql-${{ github.ref_name }}
+  group: ${{ github.workflow }} / ${{ github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -40,6 +41,12 @@ defaults:
     shell: bash
 
 jobs:
-  codeql:
-    uses: ./.github/workflows/_run-codeql.yaml
-    secrets: inherit
+  run-codeql:
+    runs-on: ubuntu-latest
+    # Runner size impacts CodeQL analysis time
+    # See https://gh.io/recommended-hardware-resources-for-running-codeql
+    timeout-minutes: 30
+    steps:
+      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3

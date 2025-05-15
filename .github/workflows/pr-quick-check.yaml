@@ -12,7 +12,7 @@ on:
   pull_request:
 
 concurrency:
-  group: check-basics-${{ github.ref_name }}
+  group: ${{ github.workflow }} / ${{ github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -24,13 +24,13 @@ defaults:
 
 jobs:
   check-hooks:
-    if: ${{ !contains(github.event.pull_request, 'draft') || !github.event.pull_request.draft }}
+    if: ${{ ! contains(github.event.pull_request, 'draft') || ! github.event.pull_request.draft }}
     uses: ./.github/workflows/_check-hooks.yaml
     with:
       ref: ${{ github.head_ref }}
   # TODO:
   # check-pr-metadata:
-  #   if: ${{ !contains(github.event.pull_request, 'draft') || !github.event.pull_request.draft }}
+  #   if: ${{ ! contains(github.event.pull_request, 'draft') || ! github.event.pull_request.draft }}
   #   uses: ./.github/workflows/_check-pr-metadata.yaml
   #   with:
   #     pr: ${{ github.event.pull_request.number }}

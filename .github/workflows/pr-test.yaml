@@ -6,7 +6,8 @@
 
 name: PR-test
 run-name: >-
-  Test PR ${{ github.event.pull_request.number }} by ${{ github.event.pull_request.user.login }}
+  Test PR ${{ github.event.pull_request.number }}
+  by ${{ github.event.pull_request.user.login }}
 
 on:
   pull_request:
@@ -18,7 +19,7 @@ on:
       - pyproject.toml
 
 concurrency:
-  group: test-${{ github.ref_name }}
+  group: ${{ github.workflow }} / ${{ github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -29,10 +30,10 @@ jobs:
     name: Check security
     uses: ./.github/workflows/_lint.yaml
     with:
-      ref: ${{ github.head_ref }}
+      ref: ${{ github.ref }}
       rules: S
   test:
     name: Run PyTest tests
     uses: ./.github/workflows/_run-pytest.yaml
     with:
-      ref: ${{ github.head_ref }}
+      ref: ${{ github.ref }}

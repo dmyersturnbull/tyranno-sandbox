@@ -4,6 +4,10 @@
 
 # "Function" workflow that runs pytest for a single OS and Python version.
 # Normally run by `_run-pytest`.
+run-name: >-
+  Run PyTest on ${{ inputs.ref }}
+  ${{ inputs.os }}/py${{ inputs.python }}
+  with markers ${{ inputs.markers }}
 
 on:
   workflow_call:
@@ -29,7 +33,7 @@ on:
 
 env:
   MARKERS: ${{ inputs.markers || 'not (ux or e2e)' }}
-  PYTEST_ARGS: ${{ inputs.fast-fail && '--exitfirst' || '' }}
+  PYTEST_OPTIONS: ${{ inputs.fast-fail && '--exitfirst' || '' }}
 
 defaults:
   run:
@@ -52,8 +56,8 @@ jobs:
         run: |
           uv sync --locked --exact --no-dev --group test
           # shellcheck disable=SC2086 # Intentionally word-split into an array.
-          read -r -a pytest_args <<< "$PYTEST_ARGS"
-          uv run pytest -m "$MARKERS" "${pytest_args[@]}"
+          read -r -a pytest_options <<< "$PYTEST_OPTIONS
+          uv run pytest -m "$MARKERS" "${pytest_options[@]}"
       - if: ${{ inputs.retention-days > 0 }}
         name: Store coverage report
         uses: actions/upload-artifact@v4
