@@ -163,18 +163,14 @@ _format *args:
 [group('fix')]
 fix-changes:
   git add .pre-commit-config.yaml
-  - uv run pre-commit run ruff
-  git add .pre-commit-config.yaml
-  uv run --no-sync pre-commit run ruff
+  - uv run pre-commit run ruff-check
 alias fix := fix-changes
 
 # Fix configured Ruff rule violations in ALL files (via pre-commit).
 [group('fix')]
 fix-all:
   git add .pre-commit-config.yaml
-  - uv run pre-commit run ruff --all-files
-  git add .pre-commit-config.yaml
-  uv run --no-sync pre-commit run ruff --all-files
+  - uv run pre-commit run ruff-check --all-files
 
 # Fix configured Ruff rule violations.
 [group('fix')]
