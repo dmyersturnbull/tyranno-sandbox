@@ -18,12 +18,16 @@ alias help := list
 
 ###################################################################################################
 
+###################################################################################################
+
 # Sync the venv and install commit hooks.
 [group('setup')]
 init:
   uv sync --all-extras --exact
   uv run pre-commit install --install-hooks --overwrite
   uv run pre-commit gc
+
+###################################################################################################
 
 # Update the lock file, sync the venv, auto-fix + format changes, and clean.
 [group('project')]
@@ -54,45 +58,25 @@ update-hooks:
   uv run pre-commit gc
 alias upgrade-hooks := update-hooks
 
-# This is an alternative to 'git gc':
-# Spawns incremental optimization tasks in background via 'git maintenance'.
+# Prune various temp data, including from uv, pre-commit, and git.
+[group('project')]
+clean: delete-trash clean-main clean-git
+
+# Delete unused uv and pre-commit cache data.
 [group('project'), private]
-maintain-git:
+clean-main:
+  uv run pre-commit gc
+  uv cache prune
+
+# Run incremental optimization tasks (see 'git maintenance'). Runs in background.
+[group('project'), private]
+clean-git:
   git maintenance run \
     --task=commit-graph \
     --task=prefetch \
     --task=loose-objects \
     --task=incremental-repack \
     --task=pack-refs
-
-# Minify the repo by deleting nearly all recreatable files (UNSAFE).
-[group('project'), private]
-strip-down-repo: clean (prune-git "1.hour") && delete-unsafe _pkg_idea
-  uv run pre-commit clean
-  uv run pre-commit uninstall
-  - rm -f -r .venv
-  - rm -f uv.lock
-
-# Package .idea (will fail if the directory does not exist).
-[group('project')]
-_pkg_idea:
-  @tar -c -z -f idea.tar.gz .idea
-  @rm -r .idea/
-  @echo "Wrote idea.tar.gz"
-
-# Remove temporary files and most caches.
-[group('project')]
-clean: && delete-trash
-  uv run pre-commit gc
-  uv cache prune
-
-# Runs 'git gc --prune={prune}' and 'git remote prune --all'.
-[group('project'), private]
-prune-git prune='2.week':
-  # Needed on macOS (fails on others).
-  @- chflags -R nouchg .git/*
-  git gc --prune={{prune}}
-  git remote prune --all
 
 # Delete temporary project files and directories.
 [group('project'), private]
@@ -123,20 +107,39 @@ _trash_os_specific:
 _trash_os_specific:
   - rm -f **/Thumbs.db
 
-# Delete files whose names indicate they're temporary (UNSAFE).
+# Delete files whose names indicate they're temporary [CAUTION]
 [group('project'), private]
 @delete-unsafe:
   - rm -f -r .trash
   - rm -f *.log
   - rm -f src/**/*.log
   - rm -f tests/*.log
-  - rm -f **/*.pid
   - rm -f **/*.tmp
   - rm -f **/*.temp
   - rm -f **/*.swp
   - rm -f **/*.bak
   - rm -f **/.#*
   - rm -f **/*[~\$]
+
+# Run 'git remote prune --all' and 'git maintenance run gc'. Runs in background. [CAUTION]
+[group('project'), private]
+prune-git:
+  # Needed on macOS.
+  @- chflags -R nouchg .git/*
+  # Prune tracked refs first because it's a foreground task.
+  git remote prune --all
+  # Uses 'gc.pruneExpire'.
+  git maintenance run --task gc
+
+# Minify the repo by deleting nearly all recreatable files. [DANGER]
+[group('project'), private]
+minify-repo: clean
+  uv run pre-commit clean
+  uv run pre-commit uninstall
+  - rm -f -r .venv
+  - rm -f -r .idea
+  - rm -f uv.lock
+  just delete-unsafe
 
 ###################################################################################################
 
@@ -223,100 +226,100 @@ check-links:
 ###################################################################################################
 
 # Run PyTest tests (except 'ux' and 'e2e').
-[group('test')]
+[group('test'), no-exit-message]
 test *args:
   uv run --locked pytest --no-cov -m "not (ux or e2e)" {{args}}
 
 # Run PyTest tests not marked 'slow', 'net', 'ux', or 'e2e'.
-[group('test')]
+[group('test'), no-exit-message]
 test-main *args:
   uv run --locked pytest -m "not (slow or net or ux or e2e)" {{args}}
 
 # Run PyTest tests marked 'ux' (interaction or manual review).
-[group('test')]
+[group('test'), no-exit-message]
 test-ux *args:
   uv run --locked pytest --no-cov -m ux {{args}}
 
 # Run PyTest tests marked 'property' with extra Hypothesis options.
-[group('test')]
+[group('test'), no-exit-message]
 test-property *args:
   uv run --locked pytest -m property --hypothesis-explain --hypothesis-show-statistics {{args}}
 
 # Run all PyTest tests stepwise (starting at last failure).
-[group('test')]
+[group('test'), no-exit-message]
 test-stepwise *args:
   uv run --locked pytest --no-cov {{args}}
 
 # Run all PyTest tests, highlighting test durations.
-[group('test')]
+[group('test'), no-exit-message]
 test-durations *args:
   uv run --locked pytest --no-cov --durations=0 --durations-min=0 {{args}}
 
 # Run doctest tests (via PyTest).
-[group('test')]
+[group('test'), no-exit-message]
 doctest *args:
   uv run --locked pytest --doctest-modules src/ {{args}}
 
 # Run all PyTest tests, showing minimal output.
-[group('test'), private]
+[group('test'), no-exit-message, private]
 test-quietly *args:
   uv run --locked pytest --no-cov --capture=no --tb=line {{args}}
 
 # Run all PyTest tests, showing tracebacks, locals, and INFO.
-[group('test'), private]
+[group('test'), no-exit-message, private]
 test-loudly *args:
   uv run --locked pytest --no-cov --showlocals --full-trace --log-level INFO {{args}}
 
 # Run all PyTest tests with pdb debugger.
-[group('test'), private]
+[group('test'), no-exit-message, private]
 test-with-pdb *args:
   uv run --locked pytest --no-cov --pdb {{args}}
 
 ###################################################################################################
 
 # Build mkdocs docs from scratch, treating warnings as errors.
-[group('docs')]
+[group('docs'), no-exit-message]
 build-docs *args:
   uv run --locked mkdocs build --clean --strict {{args}}
 
 # Locally serve the mkdocs docs.
-[group('docs')]
+[group('docs'), no-exit-message]
 serve-docs *args:
   uv run mkdocs serve {{args}}
 
 ###################################################################################################
 
 # `uv run --locked`.
-[group('alias')]
+[group('alias'), no-exit-message]
 run +args:
   uv run --locked {{args}}
 
 # `uv run --locked python`.
-[group('alias')]
+[group('alias'), no-exit-message]
 python *args:
   uv run --locked python {{args}}
 
 # `uv run --locked pre-commit`.
-[group('alias')]
+[group('alias'), no-exit-message]
 pre-commit *args:
   uv run --locked pre-commit {{args}}
 
 # `uv run --locked pre-commit run {hook}`.
-[group('alias')]
+[group('alias'), no-exit-message]
 hook name *args:
   uv run --locked pre-commit run name {{args}}
 
 # `uv run --locked ruff`.
-[group('alias')]
+[group('alias'), no-exit-message]
 ruff *args:
   uv run --locked ruff {{args}}
 
 # `uv run --locked pytest`.
-[group('alias')]
+[group('alias'), no-exit-message]
 pytest *args:
   uv run --locked pytest {{args}}
 
 # `gh pr create --fill-verbose --web --draft`.
-[group('alias')]
+[group('alias'), no-exit-message]
 pr *args:
   gh pr create --fill-verbose --web --draft {{args}}
