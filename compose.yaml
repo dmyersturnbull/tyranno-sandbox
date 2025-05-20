@@ -12,20 +12,15 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
-    develop:
-      watch:
-        - action: sync
-          path: .
-          target: /var/app
 
   mongodb:
     image: mongo:8
     restart: unless-stopped
-    command: mongod --quiet --logpath /dev/null
+    command: mongod --quiet
     volumes:
       - mongo:/data/db
     healthcheck:
-      test: ["CMD", "mongo", "--quiet", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand({ping:1})"]
       interval: 15s
       start_interval: 2.5s
       start_period: 10s

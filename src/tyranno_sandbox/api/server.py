@@ -14,13 +14,15 @@ from starlette.background import BackgroundTasks
 from starlette.middleware.errors import ServerErrorMiddleware
 from starlette.middleware.exceptions import ExceptionMiddleware
 
+from tyranno_sandbox.api._meta import META
+
 try:
     from starlette_compress import CompressMiddleware
 except ImportError:
     logger.warning("starlette_compress is not available")
     CompressMiddleware = None
 
-api = FastAPI()
+api = FastAPI(**META)
 api.add_middleware(ServerErrorMiddleware)
 api.add_middleware(ExceptionMiddleware)
 if CompressMiddleware:

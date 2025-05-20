@@ -4,3 +4,12 @@
 """
 Example server.
 """
+
+import asyncio
+import os
+
+if os.name == "nt":
+    # workaround for asyncio loop policy for Windows users
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+from tyranno_sandbox.api.server import api  # noqa: F401

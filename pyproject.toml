@@ -86,15 +86,16 @@ cli = [
 server = [
   "fastapi>=0.115",
   "fastapi-problem>=0.11.2",
-  "hypercorn[h3,uvloop]>=0.17",
+  "hypercorn>=0.17",
   "pydantic>=2.11",
   "rfc9457>=0.3",
-]
-server-full = [
-  "dramatiq[rabbitmq,redis] >=1.17",
-  "pymongo>=4.12",
-  "starlette-compress>=1.5",
   "zstandard>=0.23",
+  "starlette-compress>=1.5",
+]
+etl = [
+  "dramatiq[rabbitmq,redis] >=1.17",
+  "hypercorn[h3,uvloop]>=0.17",
+  "pymongo>=4.12",
 ]
 
 # -------------------------- scripts ------------------------------------------

@@ -11,6 +11,8 @@ from typing import Final
 from tyranno_sandbox._about import __about__ as about
 from tyranno_sandbox._core import JsonBranch
 
+__all__ = ["META"]
+
 _description = None
 if (p := Path("API.md")).exists():
     _description = p.read_text(encoding="utf-8")
