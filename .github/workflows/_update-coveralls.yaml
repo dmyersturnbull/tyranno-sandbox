@@ -4,7 +4,7 @@
 
 # "Function" workflow that sends code coverage reports to Coveralls.
 # Requires `_run-pytest.yaml` and the secret `COVERALLS_TOKEN`.
-run-name: Send ${{ inputs.ref_name }} coverage to Coveralls
+run-name: Send ${{ inputs.ref_name || 'ε' }} coverage to Coveralls
 
 on:
   workflow_call:

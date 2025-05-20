@@ -69,11 +69,11 @@ jobs:
       - if: ${{ ! env.FROM_REF }}
         name: Run Ruff auto-fix on all files
         run: |
-          uv run pre-commit run ruff --all-files
+          uv run pre-commit run ruff-check --all-files
       - if: ${{ env.FROM_REF }}
         name: Run Ruff autofix on modified files
         run: |
-          uv run pre-commit run ruff --from-ref $FROM_REF --to-ref $TO_REF
+          uv run pre-commit run ruff-check --from-ref $FROM_REF --to-ref $TO_REF
       - name: Check for Ruff autofix changes
         id: autofix
         run: |

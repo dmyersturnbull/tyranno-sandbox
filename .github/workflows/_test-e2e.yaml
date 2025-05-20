@@ -4,7 +4,7 @@
 
 # "Function" workflow that runs end-to-end PyTest tests inside a container via docker compose.
 # TODO: This is experimental.
-run-name: End-to-end test ${{ inputs.ref }}
+run-name: End-to-end test ${{ inputs.ref || 'ε' }}
 
 on:
   workflow_call:

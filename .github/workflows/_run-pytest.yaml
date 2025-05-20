@@ -5,7 +5,7 @@
 # "Function" workflow that runs `_run-pytest-single` for each OS and Python version.
 # See:
 # https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategyfail-fast
-run-name: PyTest matrix on ${{ inputs.ref }} with markers ${{ inputs.markers }}
+run-name: PyTest matrix on ${{ inputs.ref || 'ε' }} with markers ${{ inputs.markers }}
 
 on:
   workflow_call:

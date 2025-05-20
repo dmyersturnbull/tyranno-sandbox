@@ -7,12 +7,6 @@
 # Requires `_build_dist.yaml`.
 run-name: Publish ${{ github.ref }} to ${{ inputs.repository }}
 
-concurrency:
-  group: _publish-pypi / ${{ inputs.ref }}
-  # Per the logic in `_publish-docker.yaml`, we should always cancel.
-  # The publish step is atomic, so it's safe to do this.
-  cancel-in-progress: true
-
 on:
   workflow_call:
     inputs:
@@ -20,6 +14,12 @@ on:
         type: string
         required: true
         description: Either 'pypi' or 'testpypi'.
+
+concurrency:
+  group: _publish-pypi / ${{ inputs.ref }}
+  # Per the logic in `_publish-docker.yaml`, we should always cancel.
+  # The publish step is atomic, so it's safe to do this.
+  cancel-in-progress: true
 
 env:
   ARTIFACT_NAME: dist-${{ github.ref_name }}

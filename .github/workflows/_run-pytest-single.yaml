@@ -5,7 +5,7 @@
 # "Function" workflow that runs pytest for a single OS and Python version.
 # Normally run by `_run-pytest`.
 run-name: >-
-  Run PyTest on ${{ inputs.ref }}
+  Run PyTest on ${{ inputs.ref || 'ε' }}
   ${{ inputs.os }}/py${{ inputs.python }}
   with markers ${{ inputs.markers }}
 
@@ -30,6 +30,15 @@ on:
       fail-fast:
         type: boolean
         default: false
+
+concurrency:
+  group: >-
+    _run-pytest-single /
+    ${{ inputs.ref }} /
+    ${{ inputs.os }} /
+    ${{ inputs.python }} /
+    ${{ inputs.markers }}
+  # Don't cancel in-progress.
 
 env:
   MARKERS: ${{ inputs.markers || 'not (ux or e2e)' }}

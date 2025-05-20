@@ -4,6 +4,7 @@
 
 # "Function" workflow that verifies the PR name, description, and issues are correct.
 # TODO: This was hastily written and not tested at all.
+run-name: Check metadata {{ inputs.label && ' and add labels' || '' }} on ${{ inputs.ref || 'ε' }}
 
 on:
   workflow_call:
@@ -52,8 +53,8 @@ jobs:
             test
             chore
           scopes: |
-            dev
-            deps
+            dev-infra
+            docs-infra
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   add-labels:

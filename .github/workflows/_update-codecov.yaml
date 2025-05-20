@@ -4,7 +4,7 @@
 
 # "Function" workflow that sends code coverage reports to Codecov.
 # Requires `_run-pytest.yaml` and the secret `CODECOV_TOKEN`.
-run-name: Send ${{ inputs.ref_name }} coverage to CodeCov
+run-name: Send ${{ inputs.ref_name || 'ε' }} coverage to CodeCov
 
 on:
   workflow_call:

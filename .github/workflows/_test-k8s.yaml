@@ -4,7 +4,7 @@
 
 # "Function" workflow that tests Helm charts by deploying in a test cluster.
 # TODO: This is experimental.
-run-name: Test ${{ inputs.ref }} on K8s ${{ inputs.only-if-changed && ' if changed' || '' }}
+run-name: Test ${{ inputs.ref || 'ε' }} on K8s ${{ inputs.only-if-changed && ' if changed' || '' }}
 
 on:
   workflow_call:
