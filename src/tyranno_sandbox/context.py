@@ -22,9 +22,13 @@ from tyranno_sandbox.dot_tree import DotTree, Toml
 from tyranno_sandbox.james import TyrannoJmesFunctions
 
 __all__ = ["Context", "ContextFactory", "Data", "DefaultContextFactory"]
-SIMPLE_KEY_REGEX: Final[Pattern[str]] = re.compile(r"([A-Za-z_][A-Za-z0-9_-]*+)(\.([A-Za-z_][A-Za-z0-9_-]*+))*+")
+SIMPLE_KEY_REGEX: Final[Pattern[str]] = re.compile(
+    r"([A-Za-z_][A-Za-z0-9_-]*+)(\.([A-Za-z_][A-Za-z0-9_-]*+))*+"
+)
 # Match `${{group1}}` using a possessive `[^}]++` and `}` with a negative lookahead.
-EXPR_REGEX: Final[Pattern[str]] = re.compile(r"\$\{\{ (?P<expr>(?: [^}]++ | }(?!}) )*) }}", re.VERBOSE)
+EXPR_REGEX: Final[Pattern[str]] = re.compile(
+    r"\$\{\{ (?P<expr>(?: [^}]++ | }(?!}) )*) }}", re.VERBOSE
+)
 
 
 @dataclass(frozen=True)
@@ -49,7 +53,10 @@ class Data:
         return self.tree.access(key)
 
     def replace_vars_in(self, template: str, *, in_key: str = "") -> str:
-        return EXPR_REGEX.sub(lambda m: self.expand_var(m.group("expr"), in_key=in_key), template)
+        def xyz(m: re.Match) -> str:
+            return self.expand_var(m.group("expr"), in_key=in_key)
+
+        return EXPR_REGEX.sub(xyz, template)
 
     def expand_var(self, expression: str, *, in_key: str = "") -> str:
         expression = expression.strip()

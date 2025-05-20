@@ -5,7 +5,7 @@
 # Declare the core build args.
 # These must exist outside of any stage and be declared before the first FROM.
 ARG ALPINE_VERSION=""
-# ::tyranno:: ARG PYTHON_VERSION="$<<~.cicd.python.version>>"
+# ::tyranno:: ARG PYTHON_VERSION="$<<~.python.major-version>>"
 ARG PYTHON_VERSION="3.13"
 
 #
@@ -122,8 +122,8 @@ CMD [ \
 # This is equivalent to our choice for K8s "liveness" probe.
 # Ubuntu's `curl` doesn't support `--http3` yet, but HTTP/2 will be fine.
 # (`--http2-prior-knowledge` initiates an HTTP/2 request without a prior HTTP/1.1 request.)
+#  --start-interval=2.5s \
 HEALTHCHECK \
-  --start-interval=2.5s \
   --start-period=5s \
   --timeout=10s \
   CMD curl --fail --http2-prior-knowledge http://localhost/ || exit 1

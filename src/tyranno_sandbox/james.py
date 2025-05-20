@@ -5,206 +5,400 @@
 JMESPath utilities.
 """
 
-# ruff: noqa: UP013, PIE804  # We'll use the `**{}` style for consistency.
 from __future__ import annotations
 
+import calendar
+import inspect
 import math
-from datetime import datetime
+import re
+from datetime import UTC, datetime
 from operator import itemgetter
-from typing import Any, Final, TypedDict
+from types import TracebackType
+from typing import Any, Final, NamedTuple, Self, TypedDict
 
-import niquests
-from jmespath import functions
+from jmespath.exceptions import JMESPathError
+from niquests import Session
 from packaging.specifiers import SpecifierSet
-from packaging.version import Version
+from packaging.version import Version as Pep440
+from semver import VersionInfo as Semver
 
 from tyranno_sandbox._global_vars import STARTUP
 
 __all__ = ["TyrannoJmesFunctions"]
 
-LicenseDict = TypedDict(
-    "LicenseDict", {"id": str, "spdx-id": str, "name": str, "uri": str, "uris": list[str], "header": str, "text": str}
-)
+from tyranno_sandbox.dot_tree import Json
 
-Pep440Dict = TypedDict(
-    "Pep440Dict",
-    {
-        "string": str,
-        "epoch": int,
-        "major": int,
-        "minor": int,
-        "patch": int,
-        "micro": int,
-        "pre": str,
-        "dev": str,
-        "post": str,
-    },
-)
-SemverDict = TypedDict(
-    "SemverDict", {"string": str, "major": int, "minor": int, "patch": int, "pre": str, "build": str}
-)
 
-TimestampDict = TypedDict(
-    "TimestampDict",
-    {
-        "year": int,
-        "month": int,
-        "day": int,
-        "hour": int,
-        "minute": int,
-        "second": int,
-        "microsecond": int,
-        "utc-offset": str | None,
-        "zone": str | None,
-        "is-dst": bool,
-        "raw-string": str,
-        "formatted": str,
-        "iso-8601": str,
-        "rfc-3339": str,
-        "date": str,
-        "time": str,
-        "raw-time": str,
-        "week-parity": str,
-        "unix-time": str,
-    },
-)
+class CallerInfo(NamedTuple):
+    """The name and args of a calling function."""
+
+    name: str
+    args: dict[str, Any]
+
+
+def get_caller_info() -> CallerInfo:
+    """
+    Finds the function name and args fo the caller.
+    """
+    frame = inspect.currentframe().f_back.f_back
+    return CallerInfo(frame.f_code.co_name, {**frame.f_locals})
+
+
+class DateTuple(NamedTuple):
+    year: int
+    month: int
+    day: int
+
+
+class TimeTuple(NamedTuple):
+    hour: int
+    minute: int
+    second: int
+    microsecond: int
+
+
+class LicenseDict(TypedDict):
+    id: str
+    spdx_id: str
+    name: str
+    uri: str
+    links: list[str]
+    header: str
+    text: str
+
+
+class Pep440Dict(TypedDict):
+    full_version: str
+    normalized_version: str
+    public_version: str
+    major_version: str
+    minor_version: str
+    micro_version: str
+    epoch: int
+    major: int
+    minor: int
+    micro: int
+    patch: int
+    pre: str
+    dev: str
+    post: str
+    pre_type: str
+    pre_number: int | None
+
+
+class SemverDict(TypedDict):
+    full_version: str
+    public_version: str
+    minor_version: str
+    patch_version: str
+    major: int
+    minor: int
+    patch: int
+    pre: str
+    pre_ids: list[str]
+    build: str
+
+
+class Pep440SpecDict(TypedDict):
+    package: str
+    predicate: str
+
+
+class NpmSpecDict(TypedDict):
+    package: str
+    predicate: str
+
+
+class DatetimeDict(TypedDict):
+    rfc_9557: str
+    rfc_9557_utc: str
+    rfc_3339: str
+    rfc_3339_utc: str
+    iso_8601_week_date: str
+    unix_time: int
+    formatted_local: str
+    formatted: str
+    date: str
+    date_tuple: DateTuple
+    time: str
+    truncated_time: str
+    time_tuple: TimeTuple
+    year: int
+    month: int
+    day: int
+    hour: int
+    minute: int
+    second: int
+    microsecond: int
+    offset: str
+    zone: str
+    is_dst: bool
+    is_leap_year: bool
+    month_name: str
+    month_abbr: str
+    week_number: int
+    week_parity: int
+    day_name: str
+    day_abbr: str
+    day_number: int
+
+
+class DurationDict(TypedDict):
+    string: str
+    iso_8601_hms: str
+    iso_8601_dhms: str
+    hms: str
+    days: float
+    hours: float
+    minutes: float
+    seconds: float
+    microseconds: int
+    day_part: int
+    second_part: int
+    microsecond_part: int
+
+
+class JmesFunctionError(JMESPathError):
+    """An error in fetching data from e.g. PyPi."""
+
+    def __init__(self, message: str) -> None:
+        self.function, self.args = get_caller_info()
+        self.message = message
+
+    def __str__(self) -> str:
+        return f"Error in {self.function} with args {self.args}: {self.message}"
 
 
 class _Utils:
     """Internal utilities used by custom JMESPath functions."""
 
-    @staticmethod
-    def pep440_info(v: Version) -> Pep440Dict:
+    def __init__(self) -> None:
+        self.__session = Session()
+
+    def __enter__(self) -> Self:
+        self.__session.__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        self.__session.__exit__(exc_type, exc_val, exc_tb)
+
+    # IANA timezones that are aliases for Etc/UTC.
+    UTC_NAMES: Final[frozenset[str]] = frozenset(
+        {"Etc/UTC", "Etc/Universal", "Etc/UCT", "Etc/Zulu"}
+    )
+    PEP440_PRE_STRS: Final[dict[str, str]] = {
+        "alpha": "a",
+        "beta": "b",
+        "c": "rc",
+        "pre": "rc",
+        "preview": "rc",
+    }
+    PEP440_SPEC_RE: Final[re.Pattern] = re.compile(r"""([A-Za-z0-9_-]++)(.++)""")
+
+    def pep440_info(self, v: Pep440) -> Pep440Dict:
+        major_vr = f"{v.epoch}!{v.major}" if v.epoch else str(v.major)
+        minor_vr = f"{major_vr}.{v.minor}"
         return Pep440Dict(
-            **{
-                "string": _Utils.sanitize_pep440(v),
-                "epoch": v.epoch,
-                "major": v.major,
-                "minor": v.minor,
-                "patch": v.micro,
-                "micro": v.micro,
-                "pre": f"{v.pre[0]}{v.pre[1]}" if v.pre else "",
-                "dev": str(v.dev) if v.dev else "",
-                "post": str(v.post) if v.post else "",
-            }
+            full_version=self.sanitize_pep440(v),
+            normalized_version=self.normalize_pep440(v),
+            public_version=v.public,
+            major_version=major_vr,
+            minor_version=minor_vr,
+            micro_version=v.base_version,
+            epoch=v.epoch,
+            major=v.major,
+            minor=v.minor,
+            patch=v.micro,
+            micro=v.micro,
+            pre=f"{v.pre[0]}{v.pre[1]}" if v.pre else "",
+            dev=str(v.dev) if v.dev else "",
+            post=str(v.post) if v.post else "",
+            pre_type=v.pre[0] if v.pre else "",
+            pre_number=v.pre[1] if v.pre else None,
         )
 
-    @staticmethod
-    def format_dt(dt: datetime, *, sep: str = "T", ts: str = "seconds") -> str:
+    def semver_info(self, v: Semver) -> SemverDict:
+        return SemverDict(
+            full_version=str(v),
+            public_version=str(Semver(v.major, v.minor, v.patch, v.prerelease)),
+            minor_version=f"{v.major}.{v.minor}",
+            patch_version=str(v.finalize_version()),
+            major=v.major,
+            minor=v.minor,
+            patch=v.patch,
+            pre=v.prerelease,
+            pre_ids=v.prerelease.split("."),
+            build=v.build,
+        )
+
+    def format_dt(self, dt: datetime, *, sep: str = "T", ts: str = "microseconds") -> str:
         stamp = dt.isoformat(sep, ts)
         # Don't replace +00:00 with Z for Europe/London (canonical), Europe/Jersey, etc.
-        if dt.tzname().removeprefix("Etc/") in {"UTC", "Zulu", "UCT", "GMT", "Greenwich", "Universal"}:
-            # I couldn't confirm that Python never uses -00:00, which RFC-3339 supports.
+        if dt.tzname().removeprefix("Etc/") in _Utils.UTC_NAMES:
+            # I couldn't confirm that Python never uses -00:00, which RFC 3339 supports.
             # ISO 8601 inexplicably supports ±, but let's not check that.
             stamp = stamp.replace("+00:00", "Z").replace("-00:00", "Z")
         return stamp
 
-    @staticmethod
-    def datetime_to_dict(dt: datetime) -> TimestampDict:
+    def datetime_to_dict(self, dt: datetime) -> DatetimeDict:
         # starting at 1
         week_of_month: int = math.ceil(dt.day + dt.replace(day=1).weekday() / 7)
-        even_week = week_of_month % 2 == 0
-        return TimestampDict(
-            **{
-                "year": dt.year,
-                "month": dt.month,
-                "day": dt.day,
-                "hour": dt.hour,
-                "minute": dt.minute,
-                "second": dt.second,
-                "microsecond": dt.microsecond,
-                "utc-offset": dt.utcoffset(),
-                "zone": dt.tzname(),
-                "is-dst": dt.dst() is not None and dt.dst() != 0,
-                "raw-string": _Utils.format_dt(dt, ts="microseconds"),
-                "formatted": _Utils.format_dt(dt, sep=" "),
-                "iso-8601": _Utils.format_dt(dt),
-                "rfc-3339": _Utils.format_dt(dt),
-                "date": dt.strftime("%Y-%m-%d"),
-                "time": dt.strftime("%H:%M:%S"),
-                "raw-time": dt.strftime("%H:%M:%S:%ffffff"),
-                "week-parity": "even" if even_week else "odd",
-                "unix-time": str(int(dt.timestamp())),
-            }
+        rfc_9557 = self.format_dt(dt) + (f"[{dt.tzname()}]" if dt.tzname() else "")
+        return DatetimeDict(
+            rfc_9557=rfc_9557,
+            rfc_9557_utc=self.format_dt(dt.astimezone(UTC)) + "[Etc/UTC]",
+            rfc_3339=self.format_dt(dt),
+            rfc_3339_utc=self.format_dt(dt.astimezone(UTC)),
+            iso_8601_week_date=dt.strftime("%G-W%V-%u"),
+            unix_time=int(dt.timestamp()),
+            formatted_local=dt.strftime("%Y-%m-%d %H:%M:%S"),
+            formatted=self.format_dt(dt, sep=" ", ts="seconds"),
+            year=dt.year,
+            month=dt.month,
+            day=dt.day,
+            hour=dt.hour,
+            minute=dt.minute,
+            second=dt.second,
+            microsecond=dt.microsecond,
+            offset=dt.strftime("%z"),
+            zone=dt.tzname(),
+            is_dst=dt.dst() not in {None, 0},
+            date=dt.strftime("%Y-%m-%d"),
+            date_tuple=DateTuple(dt.year, dt.month, dt.day),
+            time=dt.strftime("%H:%M:%S:%ffffff"),
+            truncated_time=dt.strftime("%H:%M:%S"),
+            time_tuple=TimeTuple(dt.hour, dt.minute, dt.second, dt.microsecond),
+            day_number=dt.weekday(),
+            day_name=dt.strftime("%A"),
+            day_abbr=dt.strftime("%a"),
+            month_name=dt.strftime("%B"),
+            month_abbr=dt.strftime("%b"),
+            week_number=dt.isocalendar().week,
+            week_parity=week_of_month % 2,
+            is_leap_year=calendar.isleap(dt.year),
         )
 
-    @staticmethod
-    def license_data(spdx_id: str) -> LicenseDict:
-        data = _Utils._dl_license(spdx_id)
-        uris = _Utils._get_license_uris(data)
+    def license_data(self, spdx_id: str) -> LicenseDict:
+        data = self._dl_license(spdx_id)
+        uris = self._get_license_uris(data)
         return LicenseDict(
-            **{
-                "id": spdx_id,
-                "spdx-id": spdx_id,
-                "name": data["name"],
-                "uri": f"https://spdx.org/licenses/{spdx_id}.html",
-                "uris": uris,
-                "header": f"SPDX-License-Identifier: ${spdx_id}",
-                "text": data["licenseText"],
-            }
+            id=spdx_id,
+            spdx_id=spdx_id,
+            name=data["name"],
+            uri=f"https://spdx.org/licenses/{spdx_id}.html",
+            links=uris,
+            header=f"SPDX-License-Identifier: {spdx_id}",
+            text=data["licenseText"],
         )
 
-    @staticmethod
-    def _dl_license(spdx_id: str) -> dict[str, Any]:
-        url = "https://raw.githubusercontent.com/spdx/license-list-data/main/json/details/" + spdx_id + ".json"
-        return niquests.get(url).raise_for_status().json()
+    def _dl_license(self, spdx_id: str) -> dict[str, Any]:
+        dir_ = "https://raw.githubusercontent.com/spdx/license-list-data/main/json/details"
+        url = f"{dir_}/{spdx_id}.json"
+        return self.__session.get(url).raise_for_status().json()
 
-    @staticmethod
-    def _get_license_uris(data: dict[str, Any]) -> list[str]:
+    def _get_license_uris(self, data: Json) -> list[str]:
         urls = (u for u in data["crossRef"] if u.get("isValid") and u.get("isLive"))
         urls = sorted(urls, key=itemgetter("order"))
         # noinspection HttpUrlsUsage
         return [u["url"].replace("http://", "https://") for u in urls]
 
-    @staticmethod
-    def dl_pypi_metadata(name: str) -> dict[str, Any]:
+    def extract_pypi_versions(self, pypi_data: Json) -> set[str]:
+        versions = set()
+        for vr, files in pypi_data.get("releases", {}).items():
+            if any(not f.get("yanked", False) for f in files):
+                versions.add(vr)
+        return versions
+
+    def dl_pypi_metadata(self, name: str) -> Json:
         url = f"https://pypi.org/pypi/{name}/json"
         # niquests `.json()` uses orjson if it's installed.
-        return niquests.get(url).raise_for_status().json()
+        return self.__session.get(url).raise_for_status().json()
 
-    @staticmethod
-    def sanitize_pep440(v: Version | str) -> str:
+    def split_pep440_spec(self, spec: str) -> tuple[str, str]:
+        if m := self.PEP440_SPEC_RE.fullmatch(spec):
+            return m.group(1), m.group(2)
+        raise ValueError(spec)
+
+    def sanitize_pep440(self, v: Pep440 | str) -> str:
         if isinstance(v, str):
-            v = Version(v)
-        epoch = f"{v.epoch}::" if v.epoch else ""
+            v = Pep440(v)
+        epoch = f"{v.epoch}!" if v.epoch else ""
         main = f"{v.major}.{v.minor}.{v.micro}"
         pre = f"-{v.pre}" if v.pre else ""
         dev = f".dev{v.dev}" if v.dev else ""
         post = f".post{v.post}" if v.post else ""
         return epoch + main + pre + dev + post
 
+    def normalize_pep440(self, v: Pep440 | str, *, force_epoch: bool = False) -> str:
+        if isinstance(v, str):
+            v = Pep440(v)
+        main = f"{v.major}.{v.minor}.{v.micro}"
+        epoch = f"{v.epoch}!" if v.epoch or force_epoch else ""
+        pre = self.PEP440_PRE_STRS.get(v.pre[0], v.pre[0]) + str(v.pre[1]) if v.pre else ""
+        dev = f".dev{v.dev}"
+        post = f".post{v.post}" if v.post else ""
+        return epoch + main + pre + dev + post
 
-_UTC_TIME_DICT: Final[TimestampDict] = _Utils.datetime_to_dict(STARTUP.utc)
-_LOCAL_TIME_DICT: Final[TimestampDict] = _Utils.datetime_to_dict(STARTUP.local)
+
+U: Final[_Utils] = _Utils()
+_UTC_TIME_DICT: Final[DatetimeDict] = U.datetime_to_dict(STARTUP.utc)
+_LOCAL_TIME_DICT: Final[DatetimeDict] = U.datetime_to_dict(STARTUP.local)
 
 
-class TyrannoJmesFunctions(functions.Functions):
+class TyrannoJmesFunctions:
     """Collection of custom JMESPath functions."""
 
-    @functions.signature({"types": ["list", "string"]})
-    def _func_pep440_filter_by_spec(self, versions: list[str], specifier: str) -> list[str]:
-        return [_Utils.sanitize_pep440(v) for v in versions if Version(v) in SpecifierSet(specifier)]
+    def pep440_filter(self, versions: list[str], predicate: str) -> list[str]:
+        return [U.sanitize_pep440(v) for v in versions if Pep440(v) in SpecifierSet(predicate)]
 
-    @functions.signature({"types": ["list"]})
-    def _func_pep440_max(self, versions: list[str]) -> str:
-        return _Utils.sanitize_pep440(max(Version(v) for v in versions))
+    def pep440_find_for_spec(self, spec: str) -> list[str]:
+        pkg, predicate = U.split_pep440_spec(spec)
+        versions = self.pypi_versions(pkg)
+        return self.pep440_filter(versions, predicate)
 
-    @functions.signature({"types": ["list"]})
-    def _func_pep440_min(self, versions: list[str]) -> str:
-        return _Utils.sanitize_pep440(min(Version(v) for v in versions))
+    def pep440_ascending(self, versions: list[str]) -> list[str]:
+        return [U.sanitize_pep440(p) for p in sorted(Pep440(v) for v in versions)]
 
-    @functions.signature({"types": ["string"]})
-    def _func_pep440_parse(self, pep440_string: str) -> Pep440Dict:
-        return _Utils.pep440_info(Version(pep440_string))
+    def pep440_descending(self, versions: list[str]) -> list[str]:
+        return [U.sanitize_pep440(p) for p in sorted((Pep440(v) for v in versions), reverse=True)]
 
-    @functions.signature({"types": ["string"]})
-    def _func_spdx_license(self, spdx_id: str) -> LicenseDict:
-        return _Utils.license_data(spdx_id)
+    def pep440_max_per(self, versions: list[str], per: str) -> str:
+        # vrs = [Pep440(v) for v in versions]
+        # TODO
+        valid = {"major", "minor", "micro"}
+        if per not in valid:
+            msg = f"Argument '{per}' is not one of {valid}."
+            raise JmesFunctionError(msg)
+        return U.sanitize_pep440(max(Pep440(v) for v in versions))
 
-    @functions.signature({"types": ["string"]})
-    def _func_utc_datetime(self) -> dict[str, str | int]:
+    def pep440_max(self, versions: list[str]) -> str:
+        return U.sanitize_pep440(max(Pep440(v) for v in versions))
+
+    def pep440_min(self, versions: list[str]) -> str:
+        return U.sanitize_pep440(min(Pep440(v) for v in versions))
+
+    def pep440(self, pep440_string: str) -> Pep440Dict:
+        return U.pep440_info(Pep440(pep440_string))
+
+    def pypi_versions(self, pkg: str) -> set[str]:
+        return U.extract_pypi_versions(U.dl_pypi_metadata(pkg))
+
+    def spdx_license(self, spdx_id: str) -> LicenseDict:
+        return U.license_data(spdx_id)
+
+    def timestamp(self, ts: str) -> DatetimeDict:
+        return U.datetime_to_dict(datetime.fromisoformat(ts))
+
+    def now_utc(self) -> DatetimeDict:
         return _UTC_TIME_DICT
 
-    @functions.signature({"types": ["dict"]})
-    def _func_pypi_data(self, package_name: str) -> dict[str, Any]:
-        return _Utils.dl_pypi_metadata(package_name)
+    def now_local(self) -> DatetimeDict:
+        return _LOCAL_TIME_DICT
+
+    def pypi_data(self, package_name: str) -> dict[str, Any]:
+        return U.dl_pypi_metadata(package_name)

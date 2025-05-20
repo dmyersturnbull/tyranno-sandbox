@@ -6,7 +6,7 @@
 Project metadata.
 
 This is a separate module so that it's easy to import.
-For example, your `mypkg/app.py` may want to write `"{__about__.name} (version v{__about__.version})"`,
+For example, `mypkg/app.py` may want to write `"{__about__.name} (version v{__about__.version})"`,
 while your `mypkg/__init__.py` includes lines like `from mypkg.app import Entry` for its public API.
 (This would break if `mypkg.app` tried to `from mypkg import __about__`.)
 """
@@ -115,7 +115,9 @@ __about__: Final[About] = About(
     # ::tyranno:: maintainers=$<<project.maintainers[*].name>>,
     maintainers=_FrozenList("Douglas Myers-Turnbull"),
     # ::tyranno:: name=$<<project.keywords>>,
-    keywords=_FrozenList("ci/cd", "cookiecutter", "github-workflow", "pyproject", "python-template"),
+    keywords=_FrozenList(
+        "ci/cd", "cookiecutter", "github-workflow", "pyproject", "python-template"
+    ),
     # ::tyranno:: license="$<<project.license.text>>",
     license="Apache-2.0",
     urls=UrlDict(
@@ -136,4 +138,4 @@ __about__: Final[About] = About(
 
 
 if __name__ == "__main__":
-    print(__about__)
+    print(__about__)  # noqa: T201

@@ -170,7 +170,7 @@ default-python = "3.13.2"
 There are two ways to fill multiple lines:
 
 - consecutive `::tyranno::` lines, or
-- output surrounded by `::tyranno-start::` and `::tyranno-end::`. (**blocks**).
+- output surrounded by `::tyranno start::` and `::tyranno end::`. (**blocks**).
 
 <b>Consecutive `::tyranno::` lines:</b>
 
@@ -184,17 +184,17 @@ public final String NOTICE = project.name
 <b>Blocks:</b>
 
 ```java
-// ::tyranno-start::
+// ::tyranno start::
 // ::tyranno:: List<String> command = List.of($<<~.command|yaml_multiline(@, 4, true)>>);
 List<String> command = List.of(
     "#!/usr/bin/env bash",
     "printf 'Hello, world!\\n'",
     "exit 0"
 );
-// ::tyranno-end::
+// ::tyranno end::
 ```
 
-`::tyranno-start::` and `::tyranno-end::` are needed whenever the number of lines can vary.
+`::tyranno start::` and `::tyranno end::` are needed whenever the number of lines can vary.
 Tyrannosaurus otherwise doesn't know how many existing lines it needs to replace.
 
 In `pyproject.toml` (or a file listed in `tool.tyranno.sources`), you can use

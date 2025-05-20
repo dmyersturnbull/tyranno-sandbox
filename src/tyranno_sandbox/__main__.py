@@ -20,6 +20,7 @@ from tyranno_sandbox._global_vars import EnvGlobalVarsFactory, GlobalVars
 from tyranno_sandbox.context import ContextFactory, DefaultContextFactory
 
 try:
+    # noinspection PyUnresolvedReferences
     from rich.console import Console
 
     console = Console(stderr=sys.stdout.isatty())
@@ -58,11 +59,17 @@ def set_cli_state(verbose: int, quiet: int) -> None:
 
 class _Opts:
     dry_run: Annotated[bool, Option("--dry-run", help="Just log; don't make any changes")] = False
-    verbose: Annotated[int, Option("--verbose", "-v", count=True, help="Log INFO (repeat for DEBUG, TRACE)")] = 0
-    quiet: Annotated[int, Option("--quiet", "-q", count=True, help="Hide SUCCESS (repeat for WARNING, ERROR)")] = 0
+    verbose: Annotated[
+        int, Option("--verbose", "-v", count=True, help="Log INFO (repeat for DEBUG, TRACE)")
+    ] = 0
+    quiet: Annotated[
+        int, Option("--quiet", "-q", count=True, help="Hide SUCCESS (repeat for WARNING, ERROR)")
+    ] = 0
 
 
-messenger: Final[Messenger] = Messenger(success_color=_ENV.success_color, failure_color=_ENV.failure_color)
+messenger: Final[Messenger] = Messenger(
+    success_color=_ENV.success_color, failure_color=_ENV.failure_color
+)
 cli: Final[Typer] = Typer(name="tyranno")
 context_factory: Final[ContextFactory] = DefaultContextFactory()
 
@@ -88,7 +95,12 @@ class CliCommands:
 
     @staticmethod
     @cli.command()
-    def sync(*, dry_run: _Opts.dry_run = False, verbose: _Opts.verbose = False, quiet: _Opts.quiet = False) -> None:
+    def sync(
+        *,
+        dry_run: _Opts.dry_run = False,
+        verbose: _Opts.verbose = False,
+        quiet: _Opts.quiet = False,
+    ) -> None:
         """
         Syncs project metadata between configured files.
         """

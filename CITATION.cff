@@ -19,10 +19,10 @@ authors:
 date-released: 2020-05-10
 
 keywords:
-  # ::tyranno-start:: $<<project.keywords|yaml(@)>>
+  # ::tyranno start:: $<<project.keywords|yaml(@)>>
   - ci/cd
   - cookiecutter
   - github-workflow
   - pyproject
   - python-template
-  # ::tyranno-end::
+  # ::tyranno end::

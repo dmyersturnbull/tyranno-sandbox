@@ -8,12 +8,12 @@ See [DotTree][].
 
 import json
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Callable, Generator
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from re import Pattern
-from typing import Any, ClassVar, Self, TypeGuard, overload
+from typing import Any, ClassVar, Literal, Self, TypeGuard, overload
 
 type Primitive = str | int | float | bool | date | datetime | time
 type Array = list[Toml]
@@ -22,19 +22,43 @@ type Branch = dict[str, Toml]
 type Limb = dict[str, Leaf]
 type Toml = Leaf | Branch
 
-type JsonPrimitive = str | int | float | bool | None
-type JsonArray = list[Json]
-type JsonLeaf = JsonPrimitive | JsonArray
-type JsonBranch = dict[str, Json]
-type JsonLimb = dict[str, JsonLeaf]
-type Json = JsonLeaf | JsonBranch
+
+@dataclass(frozen=True, slots=True)
+class LeafIntersectionError(Exception):
+    """There are leaves in common between two or more trees."""
+
+    intersection: dict[str, list[Leaf]]
+
+    def __str__(self) -> str:
+        j = self.intersection
+        n_intersect = str(len(j)) + " leaves are" if len(j) > 1 else " leaf is"
+        intersect = "{ " + ", ".join(j.keys()) + " }"
+        msg = f"{n_intersect} present in multiple trees: {intersect}."
+        if conflicts := {k: v for k, v in j.items() if len(set(v)) > 1}:
+            conflict_str = ", ".join(f"{k}: {'/'.join(v)}" for k, v in conflicts.items())
+            n_conflict = str(len(conflicts)) + ("have" if len(conflicts) > 1 else "has")
+            msg += f" {n_conflict} conflicting values: {conflict_str}."
+        return msg
+
+
+@dataclass(frozen=True, slots=True)
+class LeafConflictError(Exception):
+    """There are leaves with different values in common between two or more trees."""
+
+    intersection: dict[str, list[Leaf]]
+
+    def __str__(self) -> str:
+        clashes = {k: v for k, v in self.intersection.items() if len(set(v)) > 1}
+        n_clash = str(len(clashes)) + (" leaves are" if len(clashes) > 1 else " leaf is")
+        clash_list = ", ".join(f"{k}: {'/'.join(v)}" for k, v in clashes.items())
+        return f"{n_clash} are present with clashing values in multiple trees: {clash_list}"
 
 
 @dataclass(frozen=True, slots=True)
 class Checker:
     """Utilities to validate."""
 
-    key_pattern: ClassVar[Pattern] = re.compile(r"[\w~&|,;<>+-]+")
+    key_pattern: ClassVar[Pattern[str]] = re.compile(r"[\w~&|,;<>+-]+")
 
     @classmethod
     @overload
@@ -200,13 +224,14 @@ class Utils:
             yield at, items
 
 
-class DotTree(dict[str, Toml]):
+class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correctly
     """
-    A dictionary with TOML data types, with methods to access nested values via e.g. `animal.species.name`.
+    A dict with TOML data types and methods to access nested values via e.g. `animal.species.name`.
     Keys must be strings and cannot contain `.`, which is reserved for nested access.
 
     Designed with JSON, YAML, and especially TOML in mind.
-    The [tyranno_sandbox.dot_tree.Primitive][] type includes the TOML-native `date`, `datetime`, and `time`.
+    The [tyranno_sandbox.dot_tree.Primitive][] type includes the TOML-native
+    `date`, `datetime`, and `time`.
     JSON and YAML do not natively understand these types.
     This class's philosophy is that null/none values should be omitted instead.
 
@@ -348,7 +373,8 @@ class DotTree(dict[str, Toml]):
 
     def leaves(self) -> Limb:
         """
-        Gets the leaves in this tree; e.g. `{"info.pet.genus": "Felis", "info.pet.species": "catus"}`.
+        Gets the leaves in this tree.
+        For example: `{"info.pet.genus": "Felis", "info.pet.species": "catus"}`.
 
         Warning:
             A `DotTree` can contain empty branches (`{}`), which this method ignores.
@@ -388,7 +414,9 @@ class DotTree(dict[str, Toml]):
     @overload
     def get_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T], default: T) -> T: ...
 
-    def get_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T], default: T | None = None) -> T:
+    def get_primitive_as[T: Primitive](
+        self, keys: str, /, as_type: type[T], default: T | None = None
+    ) -> T:
         """
         Returns a primitive value after checking its type, or `default` if not found.
 
@@ -435,7 +463,9 @@ class DotTree(dict[str, Toml]):
             raise TypeError(msg)
         return v
 
-    def get_list_as[T: Primitive](self, keys: str, /, as_type: type[T], default: list[T] | None = None) -> list[T]:
+    def get_list_as[T: Primitive](
+        self, keys: str, /, as_type: type[T], default: list[T] | None = None
+    ) -> list[T]:
         """
         Returns a list, or `default` if not found, checking the types of the list elements.
         `default=None` is equivalent to `default=[]`.
@@ -518,10 +548,15 @@ class DotTree(dict[str, Toml]):
         x = self
         split = keys.split(".")
         for i, k in enumerate(split):
+            if not isinstance(x, dict):
+                msg = (
+                    f"Value at key '{'.'.join(split[:i])}<<{k}>>{keys[i + 1 :]}' is not an object."
+                )
+                raise TypeError(msg)
             try:
                 x = x[k]
             except KeyError:
-                msg = f"No such key '{'.'.join(split[:i])}<<{k}>>{keys[i + 1 :]}'"
+                msg = f"No such key '{'.'.join(split[:i])}<<{k}>>{keys[i + 1 :]}'."
                 raise KeyError(msg) from None
         return x
 
@@ -536,6 +571,71 @@ class DotTree(dict[str, Toml]):
 
 class DotTrees:
     """Static factory methods for `DotTree`."""
+
+    @classmethod
+    def merge_leaves(
+        cls, *trees: DotTree, replace: Literal["always", "same_value", "never"] = "same_value"
+    ) -> DotTree:
+        """
+        Builds a tree containing the union of the leaves of `trees`.
+
+        Empty branches are removed, and arrays are **not** merged.
+
+        Args:
+            trees: Trees to merge.
+            replace: How to handle overlapping keys:
+              - `"always"`: Only retain the value from the rightmost tree.
+              - `"same_value"`: Error if two or more trees have identically named leaves
+                 with different values.
+              - `"never"`: Error if two or more trees have identically named leaves.
+
+        Raises:
+            LeafConflictError:
+              If `replace` is `same_value` and ≥ 1 key is in ≥ 2 trees with ≥ 2 unique values.
+            LeafIntersectionError:
+              If `replace` is `never`, and ≥ 1 key is in ≥ 2 trees (ignoring their values).
+        """
+        limbs = [tree.leaves() for tree in trees]
+        if replace == "never" and (intersect := cls.leaf_intersection(*limbs)):
+            raise LeafIntersectionError(intersect)
+        if (
+            replace == "same_value"
+            and (intersect := cls.leaf_intersection(*limbs))
+            and any(len(set(v)) > 1 for v in intersect.values())
+        ):
+            raise LeafConflictError(intersect)
+        merged: dict[str, Leaf] = {}
+        for limb in limbs:
+            merged.update(limb)
+        return DotTree.from_dotted(merged)
+
+    @classmethod
+    def leaf_intersection(cls, *limbs: Limb) -> dict[str, list[Leaf]]:
+        """
+        Returns a dict mapping each leaf key to its values in `limbs`,
+        for keys that at least 2 limbs share.
+
+        The length of each list is equal to the number of limbs sharing that key.
+        Values are not checked and are not deduplicated.
+        """
+        all_keys: set[str] = set()
+        for limb in limbs:
+            all_keys |= limb.keys()
+        dict_ = {k: [limb[k] for limb in limbs if k in limb] for k in all_keys}
+        return {k: v for k, v in dict_.items() if len(v) > 1}
+
+    @classmethod
+    def leaf_intersection_size(cls, *limbs: Limb) -> dict[str, int]:
+        """
+        Returns a dict mapping each leaf key to the number of limbs containing it,
+        for keys that at least 2 limbs share.
+
+        This is simply faster than [leaf_intersection][].
+        """
+        counts: Counter[str] = Counter()
+        for limb in limbs:
+            counts.update(limb.keys())
+        return dict(counts.most_common())
 
     @classmethod
     def from_json(cls, data: str, /) -> DotTree:

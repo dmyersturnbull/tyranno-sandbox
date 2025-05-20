@@ -30,7 +30,9 @@ class Markers:
     @classmethod
     def create(cls) -> Self:
         return cls(
-            tyranno_inline="::tyranno::", tyranno_block_start="::tyranno-start::", tyranno_block_end="::tyranno-end::"
+            tyranno_inline="::tyranno::",
+            tyranno_block_start="::tyranno start::",
+            tyranno_block_end="::tyranno end::",
         )
 
     @cache  # noqa: B019
@@ -73,7 +75,13 @@ MARKERS: Final[Markers] = Markers.create()
 
 def get_comment_markers() -> dict[str, tuple[str, str]]:
     pound: set[str] = {".toml", ".yaml", ".yml", ".sh", "CITATION.cff", "Dockerfile", "justfile"}
-    ignore: set[str] = {".gitignore", ".dockerignore", ".helmignore", ".prettierignore", ".editorconfig"}
+    ignore: set[str] = {
+        ".gitignore",
+        ".dockerignore",
+        ".helmignore",
+        ".prettierignore",
+        ".editorconfig",
+    }
     slash: set[str] = {".java", ".scala", ".ks", ".c", ".cpp", ".js", ".ts", ".py"}
     semicolon: set[str] = {".ini", ".antlr"}
     html_like: set[str] = {".md", ".html"}
@@ -131,7 +139,12 @@ class DeltaBlock:
     def __str__(self) -> str:
         if self.kind == "block":
             return repr(self)  # TODO
-        l0, ln, ob, nb = self.first_line_number, self.last_line_number, self.old_lines, self.new_lines
+        l0, ln, ob, nb = (
+            self.first_line_number,
+            self.last_line_number,
+            self.old_lines,
+            self.new_lines,
+        )
         if len(nb) == 1 and nb == ob:
             return f"Line {l0} unchanged."
         if len(nb) == 1:
