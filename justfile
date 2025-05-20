@@ -22,8 +22,8 @@ alias help := list
 [group('setup')]
 init:
   uv sync --all-extras --exact
-  uv run --no-sync pre-commit install --install-hooks --overwrite
-  uv run --no-sync pre-commit gc
+  uv run pre-commit install --install-hooks --overwrite
+  uv run pre-commit gc
 
 # Update the lock file, sync the venv, auto-fix + format changes, and clean.
 [group('project')]
@@ -44,14 +44,14 @@ alias upgrade := update
 [group('project')]
 update-lock:
   uv sync --upgrade --all-extras --exact
-  uv run --no-sync pre-commit gc
+  uv run pre-commit gc
 alias upgrade-lock := update-lock
 
 # Auto-update commit hooks.
 [group('project')]
 update-hooks:
   uv run pre-commit autoupdate
-  uv run --no-sync pre-commit gc
+  uv run pre-commit gc
 alias upgrade-hooks := update-hooks
 
 # This is an alternative to 'git gc':
@@ -68,8 +68,8 @@ maintain-git:
 # Minify the repo by deleting nearly all recreatable files (UNSAFE).
 [group('project'), private]
 strip-down-repo: clean (prune-git "1.hour") && delete-unsafe _pkg_idea
-  uv run --no-sync pre-commit clean
-  uv run --no-sync pre-commit uninstall
+  uv run pre-commit clean
+  uv run pre-commit uninstall
   - rm -f -r .venv
   - rm -f uv.lock
 
@@ -83,7 +83,7 @@ _pkg_idea:
 # Remove temporary files and most caches.
 [group('project')]
 clean: && delete-trash
-  uv run --no-sync pre-commit gc
+  uv run pre-commit gc
   uv cache prune
 
 # Runs 'git gc --prune={prune}' and 'git remote prune --all'.
@@ -150,12 +150,11 @@ alias format := format-changes
 format-all: (_format "--all-files")
 
 _format *args:
-  uv sync
-  - uv run --no-sync pre-commit run end-of-file-fixer {{args}}
-  - uv run --no-sync pre-commit run fix-byte-order-marker {{args}}
-  - uv run --no-sync pre-commit run trailing-whitespace {{args}}
-  - uv run --no-sync pre-commit run ruff-format {{args}}
-  - uv run --no-sync pre-commit run prettier {{args}}
+  - uv run pre-commit run end-of-file-fixer {{args}}
+  - uv run pre-commit run fix-byte-order-marker {{args}}
+  - uv run pre-commit run trailing-whitespace {{args}}
+  - uv run pre-commit run ruff-format {{args}}
+  - uv run pre-commit run prettier {{args}}
 
 ###################################################################################################
 
@@ -188,19 +187,17 @@ _fix_ruff *args:
 # Check basic rules (via pre-commit).
 [group('check')]
 check *args:
-  uv sync
-  uv run --no-sync pre-commit run check-filenames
-  uv run --no-sync pre-commit run check-symlinks
-  uv run --no-sync pre-commit run check-case-conflict
-  uv run --no-sync pre-commit run check-illegal-windows-names
-  uv run --no-sync pre-commit run check-shebang-scripts-are-executable
+  uv run pre-commit run check-filenames
+  uv run pre-commit run check-symlinks
+  uv run pre-commit run check-case-conflict
+  uv run pre-commit run check-illegal-windows-names
+  uv run pre-commit run check-shebang-scripts-are-executable
 
 # Check JSON and YAML files against known schemas (via pre-commit).
 [group('check')]
 check-schemas *args:
-  uv sync
-  uv run --no-sync pre-commit run check-github-workflows
-  uv run --no-sync pre-commit run check-compose-spec
+  uv run pre-commit run check-github-workflows
+  uv run pre-commit run check-compose-spec
 
 # Check Ruff rules without auto-fix.
 [group('check')]
