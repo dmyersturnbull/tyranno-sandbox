@@ -34,10 +34,10 @@ keywords = ["python", "ci", "cd"]
 # Authors and maintainers
 # These are named the same in `importlib.metadata`.
 authors = [
-  { name = "Douglas Myers-Turnbull", email = " dmyersturnbull@gmail.com" },
+  { name = "Douglas Myers-Turnbull", email = "dmyersturnbull@gmail.com" },
 ]
 maintainers = [
-  { name = "Douglas Myers-Turnbull", email = " dmyersturnbull@gmail.com" },
+  { name = "Douglas Myers-Turnbull", email = "dmyersturnbull@gmail.com" },
 ]
 
 # License
@@ -515,14 +515,17 @@ frag = "dmyersturnbull/tyranno-sandbox"
 # ::tyranno:: copyright = "Copyright $<<now_utc().year>>, Contributors to $<<project.name>>"
 copyright = "Copyright 2025, Contributors to sandbox-tyranno"
 doi = "10.5281/zenodo.4485186" # <<<comment out for new
+# Defines 'id', 'name', (canonical) 'uri', 'links', etc.
+# ::tyranno alias:: license = $<< project.license.text.spdx_license(@) >>
 
-# -------------------------- Project versioning scheme ----------------------------
+# -------------------------- Project versioning scheme ------------------------
 [tool.tyranno.data.cicd.tag]
 # We want compatibility with both SemVer and PyPa versioning, including identical ordering.
 # Enforcing normalization of PyPa version string results in `<major>.<minor>.<micro>`.
 # Without normalization, PyPa permits `-` and `.` with prerelease segments, thereby allowing `-(<type>).<number>`.
 # (We need the `.` to get identical ordering: SemVer sorts `1.0.0-rc15 ≺ 1.0.0-rc2`.)
 # References: https://semver.org/ and https://packaging.python.org/en/latest/specifications/version-specifiers
+# Omit `^` and `$` to make these easier to use.
 
 # Tags that trigger a full release.
 release-trigger = 'v(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){2}'
@@ -531,28 +534,18 @@ release-trigger = 'v(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){2}'
 # ::tyranno:: prerelease-trigger = '$<<.release-trigger>>-([ab]|rc)\.(0|[1-9][0-9]*)'
 prerelease-trigger = 'v(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){2}-([ab]|rc)\.(0|[1-9][0-9]*)'
 
-# -------------------------- Python versions in CI/CD ----------------------------
-[tool.tyranno.data.cicd.python]
+# -------------------------- Python versions ----------------------------------
+[tool.tyranno.data.python]
 
 # List all compatible Python versions.
 # E.g. if `requires-python == '~=3.12'`,
 # ::tyranno alias:: spec = $<<project.requires-python>>
-# then `valid == ["3.12.0", [...], "3.12.10", "3.13.0", "3.13.1", "3.13.2"]`.
-# ::tyranno alias:: valid = $<< .spec .join('', ['python', @]) .pep440_find_for_spec(@) >>
+# then `compatible == ["3.12.0", [...], "3.12.10", "3.13.0", "3.13.1", "3.13.2"]`.
+# ::tyranno alias:: compatible = $<< .spec .join('', ['python', @]) .pep440_find_for_spec(@) >>
 
-# ::tyranno alias:: version = $<< .valid | pep440_max(@) >>
-# ::tyranno alias:: minor-version = $<< .version .pep440(@) .minor_version >>
-# ::tyranno alias:: versions-to-test = $<< .valid | pep440_max_per(@, 'minor') >>
-
-# ::tyranno alias:: py=$<<project.requires-python>>
-# ::tyranno alias:: valid = $<< .py .join('', ['python', @]) .pep440_find_for_spec(@) >>
+# Select default version.
+# ::tyranno alias:: minor-version = $<< .compatible | pep440_max(@) .minor_version >>
 
 # Select versions to test in CI.
 # E.g. if `python-pep440 == 'python~=3.12'`, then `versions-to-test == ["3.12.10", "3.13.3"]`.
-# ::tyranno alias:: versions-to-test = $<< .valid | pep440_max_per(@, 'minor') >>
-
-# ::tyranno:: version = "$<< .valid | pep440_max(@) >>"
-version = "3.13.3"
-
-# ::tyranno:: minor-version = "$<< .version .pep440(@) .minor_version >>"
-minor-version = "3.13"
+# ::tyranno alias:: test-versions = $<< .compatible | pep440_max_per(@, 'minor') >>

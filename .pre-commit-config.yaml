@@ -40,13 +40,13 @@ repos:
 
   # UV lock and sync
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.7.3
+    rev: 0.7.4
     hooks:
       - id: uv-sync # first locks (without `--upgrade`)
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.9
+    rev: v0.11.10
     hooks:
       - id: ruff
         args:
