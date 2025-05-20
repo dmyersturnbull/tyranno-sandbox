@@ -108,19 +108,19 @@ delete-trash:
   - rm -f .coverage.json
   - rm -f **/*.py[codi]
   # Use `-` for the rare case that neither Linux nor macOS nor Windows applies.
-  - just _trash_os_specific
+  @- just _trash_os_specific
 
 [group('project'), linux]
-@_trash_os_specific:
+_trash_os_specific:
   - rm -f **/.directory
 
 [group('project'), macos]
-@_trash_os_specific:
+_trash_os_specific:
   - rm -f **/.DS_Store
   - rm -f **/.localized
 
 [group('project'), windows]
-@_trash_os_specific:
+_trash_os_specific:
   - rm -f **/Thumbs.db
 
 # Delete files whose names indicate they're temporary (UNSAFE).
@@ -151,24 +151,30 @@ format-all: (_format "--all-files")
 
 _format *args:
   uv sync
-  uv run --no-sync pre-commit run end-of-file-fixer {{args}}
-  uv run --no-sync pre-commit run fix-byte-order-marker {{args}}
-  uv run --no-sync pre-commit run trailing-whitespace {{args}}
-  uv run --no-sync pre-commit run ruff-format {{args}}
-  uv run --no-sync pre-commit run prettier {{args}}
+  - uv run --no-sync pre-commit run end-of-file-fixer {{args}}
+  - uv run --no-sync pre-commit run fix-byte-order-marker {{args}}
+  - uv run --no-sync pre-commit run trailing-whitespace {{args}}
+  - uv run --no-sync pre-commit run ruff-format {{args}}
+  - uv run --no-sync pre-commit run prettier {{args}}
 
 ###################################################################################################
 
 # Fix configured Ruff rule violations in modified files (via pre-commit).
 [group('fix')]
 fix-changes:
-  uv run pre-commit run ruff-fix
+  git add .pre-commit-config.yaml
+  - uv run pre-commit run ruff
+  git add .pre-commit-config.yaml
+  uv run --no-sync pre-commit run ruff
 alias fix := fix-changes
 
 # Fix configured Ruff rule violations in ALL files (via pre-commit).
 [group('fix')]
 fix-all:
-  uv run pre-commit run ruff-fix --all-files
+  git add .pre-commit-config.yaml
+  - uv run pre-commit run ruff --all-files
+  git add .pre-commit-config.yaml
+  uv run --no-sync pre-commit run ruff --all-files
 
 # Fix configured Ruff rule violations.
 [group('fix')]

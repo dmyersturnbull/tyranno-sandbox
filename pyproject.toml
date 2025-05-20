@@ -147,7 +147,7 @@ dev = [
   "pytest-datadir>=1.6",
   "pytest-randomly>=3.16",
   "pytest-xdist[psutil]>=3.6",
-  "ruff>=0.11.9",
+  "ruff>=0.11.10",
 ]
 test = [
   "coverage[toml]>=7.8", # Required for coverage.
@@ -168,7 +168,7 @@ docs = [
   "mkdocs-api-autonav>=0.2", # Required for API docs. Extracts docs automatically.
   "mkdocstrings[python]>=0.29", # Required for API docs.
 ]
-ruff = ["ruff>=0.11.9"]
+ruff = ["ruff>=0.11.10"]
 precommit = ["pre-commit>=4.2"]
 
 #
