@@ -2,16 +2,15 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# This file is important -- don't delete it!
+# ***** This file is important -- don't delete it! *****
+# First, it keeps `\r\n` out by transparently converting
+# `\r\n` to `\n` -- even if `git config core.autocrlf` is false.
+# Second, it hides diffs for lock files and Jupyter notebooks.
+# As a bonus, it configures github-linguist.
 
-# First, it **keeps `\r\n` out of the repository**, by transparently converting `\r\n` to `\n`,
-# **even if `git config core.autocrlf` is false**.
-# It also **hides diffs for lock files** and `.ipynb` notebooks.
-
-# Also configures github-linguist.
-# https://github.com/github-linguist/linguist/blob/main/docs/overrides.md#using-gitattributes
-
-# See: https://git-scm.com/docs/gitattributes
+# See:
+# - https://git-scm.com/docs/gitattributes
+# - https://github.com/github-linguist/linguist/blob/main/docs/overrides.md#using-gitattributes
 
 *                     text=auto eol=lf
 *-lock.yaml           -diff

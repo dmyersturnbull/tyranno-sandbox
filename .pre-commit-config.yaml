@@ -35,6 +35,7 @@ repos:
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.33.0
     hooks:
+      - id: check-github-actions
       - id: check-github-workflows
       - id: check-compose-spec
 
@@ -61,14 +62,14 @@ repos:
         additional_dependencies:
           - prettier@3.5.3
           - prettier-plugin-ini@1.3.0
-          - prettier-plugin-toml@2.0.1
-          - prettier-plugin-sh@0.14.0
+          - prettier-plugin-toml@2.0.5
+          - prettier-plugin-sh@0.17.4
         args:
           - --experimental-ternaries # will be the default soon
           - --experimental-operator-position=start # won't be the default but should be
           - --plugin=prettier-plugin-ini
           - --plugin=prettier-plugin-toml
-          - --plugin=prettier-plugin-sh # also covers .properties and Dockerfile
+          - --plugin=prettier-plugin-sh # also covers .properties, Dockerfile, .gitignore, and more
         # IMPORTANT: Sync this list with file types in this repo.
         # It's ok to list unused suffixes, but Prettier or a plugin must understand them.
         # See: https://prettier.io/docs/en/plugins.html

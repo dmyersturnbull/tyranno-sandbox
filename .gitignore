@@ -21,9 +21,11 @@
 # Dotted files and directories
 .*
 
-# Paths starting or ending in `~`, `$`, or `#` (normally temp files; e.g. `~$doc.docx`, `.profile#`, etc.)
+# Paths starting or ending in `~`, `$`, or `#`; or starting in `.~`.
+# These are normally temp files like `~$doc.docx` or `.profile#`.
 *[~#$]
 [~#$]*
+.~*
 
 # Temp and misc. unwanted files
 *[.~]bak
@@ -107,7 +109,7 @@ tsconfig.tsbuildinfo
 *.jl.mem
 deps/deps.jl
 
-# Documentation
+# Documentation (`.site/` is preferred)
 /docs/html/
 /docs/_build/
 /docs/autoapi/

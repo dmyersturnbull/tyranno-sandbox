@@ -18,8 +18,6 @@ alias help := list
 
 ###################################################################################################
 
-###################################################################################################
-
 # Sync the venv and install commit hooks.
 [group('setup')]
 init:
@@ -60,7 +58,7 @@ alias upgrade-hooks := update-hooks
 
 # Prune various temp data, including from uv, pre-commit, and git.
 [group('project')]
-clean: delete-trash clean-main clean-git
+clean: delete-temp clean-main clean-git
 
 # Delete unused uv and pre-commit cache data.
 [group('project'), private]
@@ -78,9 +76,12 @@ clean-git:
     --task=incremental-repack \
     --task=pack-refs
 
-# Delete temporary project files and directories.
+# Delete cache and other temporary data.
 [group('project'), private]
-delete-trash:
+delete-temp:
+  # Generated docs:
+  - rm -f -r .site/
+  # Python temp files:
   - rm -f -r .ruff_cache/
   - rm -f -r .hypothesis/
   - rm -f -r **/__pycache__/
@@ -88,38 +89,38 @@ delete-trash:
   - rm -f -r **/cython_debug/
   - rm -f -r **/*.egg-info/
   - rm -f -r **/.node-modules/
-  - rm -f -r .site/
   - rm -f .coverage.json
   - rm -f **/*.py[codi]
-  # Use `-` for the rare case that neither Linux nor macOS nor Windows applies.
-  @- just _trash_os_specific
-
-[group('project'), linux]
-_trash_os_specific:
+  # OS-specific files:
   - rm -f **/.directory
-
-[group('project'), macos]
-_trash_os_specific:
   - rm -f **/.DS_Store
   - rm -f **/.localized
-
-[group('project'), windows]
-_trash_os_specific:
   - rm -f **/Thumbs.db
 
-# Delete files whose names indicate they're temporary [CAUTION]
+# Delete files whose names indicate they're temporary. [CAUTION]
 [group('project'), private]
-@delete-unsafe:
-  - rm -f -r .trash
+@delete-probable-temp:
+  # Log files directly in `/`, `src/`, or `tests/`
   - rm -f *.log
-  - rm -f src/**/*.log
+  - rm -f src/*.log
   - rm -f tests/*.log
-  - rm -f **/*.tmp
-  - rm -f **/*.temp
-  - rm -f **/*.swp
+  # Directories named exactly `.(bak|junk|temp|tmp|trash)`
+  - rm -f -r **/.bak
+  - rm -f -r **/.junk
+  - rm -f -r **/.temp
+  - rm -f -r **/.tmp
+  - rm -f -r **/.trash
+  # Files with extensions `.(bak|junk|temp|tmp|trash|swp)`
   - rm -f **/*.bak
-  - rm -f **/.#*
-  - rm -f **/*[~\$]
+  - rm -f **/*.junk
+  - rm -f **/*.temp
+  - rm -f **/*.tmp
+  - rm -f **/*.trash
+  - rm -f **/*.swp
+  # Files starting or end with `~|#|$` (or starting with `.~`).
+  - rm -f **/[~#\$]*
+  - rm -f **/*[~#\$]
+  - rm -f **/.~*
 
 # Run 'git remote prune --all' and 'git maintenance run gc'. Runs in background. [CAUTION]
 [group('project'), private]
@@ -139,7 +140,7 @@ minify-repo: clean
   - rm -f -r .venv
   - rm -f -r .idea
   - rm -f uv.lock
-  just delete-unsafe
+  just delete-probable-temp
 
 ###################################################################################################
 
@@ -199,6 +200,7 @@ check *args:
 # Check JSON and YAML files against known schemas (via pre-commit).
 [group('check')]
 check-schemas *args:
+  uv run pre-commit run check-github-actions
   uv run pre-commit run check-github-workflows
   uv run pre-commit run check-compose-spec
 
@@ -307,7 +309,7 @@ pre-commit *args:
 # `uv run --locked pre-commit run {hook}`.
 [group('alias'), no-exit-message]
 hook name *args:
-  uv run --locked pre-commit run name {{args}}
+  uv run --locked pre-commit run {{name}} {{args}}
 
 # `uv run --locked ruff`.
 [group('alias'), no-exit-message]

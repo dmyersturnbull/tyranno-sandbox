@@ -63,6 +63,7 @@ jobs:
           chk end-of-file-fixer
           chk trailing-whitespace
           if [[ "$CHECK_SCHEMAS" == true ]]; then
+            chk check-github-actions
             chk check-github-workflows
             chk check-compose-spec
           fi
