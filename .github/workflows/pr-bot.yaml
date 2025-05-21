@@ -153,6 +153,7 @@ jobs:
       # Reformat files changed since BASE.
       ref: ${{ github.head_ref }}
       compare-to-ref: ${{ github.base_ref }}
+      push: true
 
   label:
     if: ${{ contains(needs.cmd.outputs.nullary, 'label') }}
