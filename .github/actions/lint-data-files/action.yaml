@@ -13,6 +13,11 @@ inputs:
     default: .
     description: Glob of files to lint. Unrecognized file types are ignored.
 
+outputs:
+  yaml-error:
+    description: Error message for YAML linting, if any
+    value: ${{ steps.yamllint-error.outputs.message }}
+
 runs:
   using: composite
   steps:
@@ -20,10 +25,12 @@ runs:
       with:
         ref: ${{ inputs.ref }}
     - name: Lint for serious issues in YAML files.
+      id: yamllint
       uses: ibiqlik/action-yamllint@v3
       with:
         strict: true
         file_or_dir: "${{ inputs.glob }}"
+        format: github
         config_data: |
           rules:
             anchors:
@@ -44,3 +51,10 @@ runs:
               allowed-values:
                 - true
                 - false
+    - if: ${{ steps.yamllint.outcome == 'failure' }}
+      name: Get yamllint log data
+      id: yamllint-error
+      shell: bash
+      run: |
+        message="$(cat '${{ steps.yaml-lint.outputs.logfile }}' }}"
+        echo "message=$message" >> "$GITHUB_OUTPUT"

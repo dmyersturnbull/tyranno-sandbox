@@ -24,4 +24,4 @@ runs:
     - name: Run pre-commit hooks
       shell: bash
       run: |
-        just check
+        just check-simple

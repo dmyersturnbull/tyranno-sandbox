@@ -16,7 +16,7 @@ runs:
     - shell: bash
       run: |
         uv sync --locked --only-group docs
-        uv run mkdocs build --strict
+        uv run --no-sync mkdocs build --strict
     - uses: actions/upload-pages-artifact@v3
       with:
         path: .site

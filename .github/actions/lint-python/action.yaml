@@ -29,24 +29,33 @@ runs:
       run: |
         uv sync --locked --only-group lint
     - name: Check Ruff rules
+      env:
+        FILES: ${{ inputs.glob || '.' }}
+        RULES: ${{ inputs.rules }}
       shell: bash
       run: |
-        if [[ -z '${{ inputs.rules }}' ]]; then
-          uv run --no-sync ruff check --no-fix '${{ inputs.glob }}'
+        if [[ -z "$RULES" ]]; then
+          uv run --no-sync ruff check --no-fix "$FILES"
         else
-          uv run --no-sync ruff check --no-fix --select '${{ inputs.rules }}' ${{ inputs.glob }}'
+          uv run --no-sync ruff check --no-fix --select "$RULES" "$FILES"
         fi
     - name: Check Ruff formatting.
       shell: bash
+      env:
+        FILES: ${{ inputs.glob || '.' }}
       run: |
-        uv run --no-sync ruff format --check '${{ inputs.glob }}'
+        uv run --no-sync ruff format --check "$FILES"
     - name: Check Deal rules (if set up)
       shell: bash
+      env:
+        FILES: ${{ inputs.glob || '.' }}
       run: |
         if uv run --no-sync python -m deal --help >> /dev/null; then
-          uv run --no-sync python -m deal lint '${{ inputs.glob }}'
+          uv run --no-sync python -m deal lint "$FILES"
         fi
     - name: Check typing with ty.
       shell: bash
+      env:
+        FILES: ${{ inputs.glob || '.' }}
       run: |
-        uv run --no-sync ty check '${{ inputs.glob }}'
+        uv run --no-sync ty check "$FILES"

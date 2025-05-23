@@ -8,11 +8,11 @@ description: Auto-fixes issues and auto-formats, committing the changes.
 inputs:
   ref:
     required: true
-    description: The ref, which must be a branch.
+    description: The ref, which must be a branch if 'push' is true.
   compare-to-ref:
-    required: true
     description: >-
-      Only reformat files that differ from this ref; if empty, runs on all files.
+      Only reformat files that differ from this ref.
+      If empty, runs on all files.
       For a PR, this is probably the base commit.
   push:
     required: true
@@ -20,10 +20,12 @@ inputs:
 
 outputs:
   auto-fix:
-    description: Whether lint rule violations were fixed.
+    description: >-
+      'true' if lint rule violations were fixed; '' otherwise.
     value: ${{ steps.auto-fix.outputs.changed }}
   auto-format:
-    description: Whether formatting changes were made.
+    description: >-
+      'true' if formatting changes were made; '' otherwise.
     value: ${{ steps.auto-format.outputs.changed }}
 
 runs:
@@ -34,7 +36,6 @@ runs:
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git config --global color.diff never
     # ====================
     # 2. Fetch refs.
     - name: Fetch the HEAD commit
@@ -75,8 +76,8 @@ runs:
         if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
           git diff --histogram # Show in logs.
           echo "changed=true" >> $GITHUB_OUTPUT
-          git add --upgrade
-          git commit -m "fix: auto-fix ruff rule violations"
+          git add --update
+          git commit -m "style: auto-fix Ruff rule violations"
         fi
     # ====================
     # 3. Auto-format.
@@ -97,7 +98,7 @@ runs:
         if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
           git diff --histogram # Show in logs.
           echo "changed=true" >> $GITHUB_OUTPUT
-          git add --upgrade
+          git add --update
           git commit -m "style: auto-format"
         fi
     # ====================
@@ -111,6 +112,7 @@ runs:
           printf "\n\nWARNING: Found unexpected untracked files: (((\n%s\n)))\n\n" "$untracked"
         fi
         if [[ '${{ inputs.push }}' == true ]]; then
+          # NOTE: Let it fail if another commit was added!
           git push
         else
           printf "Changes are needed, as shown above.\n"

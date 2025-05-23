@@ -10,9 +10,9 @@ description: >-
   Needs secrets: 'UV_PUBLISH_TOKEN'.
 
 inputs:
-  repository:
+  upload-to:
     required: true
-    description: Either 'pypi' or 'testpypi'.
+    description: Either 'pypi', 'testpypi', or an upload URI.
 
 runs:
   using: composite
@@ -20,6 +20,7 @@ runs:
     - id: define
       shell: bash
       run: |
+        # Define `ref_name` and `artifact_name`.
         ref_name="${{ github.ref }}"
         if [[ ! "$ref_name" =~ ^refs/tags/ ]]; then
           printf >&2 "Ref is not for a tag: '%s'\n" "$ref_name"
@@ -28,6 +29,14 @@ runs:
         ref_name="${ref_name#refs/tags/}"
         echo "ref_name=$ref_name" >> "$GITHUB_OUTPUT"
         echo "artifact_name=dist-$ref_name" >> "$GITHUB_OUTPUT"
+        # Define `repo`.
+        repo=${{ inputs.upload-to }}
+        if [[ "$repo" == pypi ]]; then
+          repo=https://upload.pypi.org/legacy/
+        elif [[ "$repo" == testpypi ]]; then
+          repo=https://test.pypi.org/legacy/
+        fi
+        echo "repo=$repo" >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v4
       with:
         ref: ${{ inputs.ref || github.ref }}
@@ -39,12 +48,9 @@ runs:
     - name: Publish to PyPi using uv.
       # See: https://docs.pypi.org/trusted-publishers/adding-a-publisher/
       env:
-        UV_PUBLISH_URL: >-
-          ${{
-            inputs.repository == 'pypi'
-              && 'https://upload.pypi.org/legacy/'
-              || 'https://test.pypi.org/legacy/'
-          }}
+        UV_PUBLISH_URL: ${{ steps.define.outputs.repo }}
+        # TODO: Unfortunately, this requires the same token for PyPi and testpypi.
+        UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN }}
       shell: bash
       run: |
         uv publish --trusted-publishing always

@@ -58,7 +58,7 @@ jobs:
     needs: accept
     uses: ./.github/actions/publish-to-pypi/action.yaml
     with:
-      repository: ${{ needs.accept.outputs.is-real-release && 'pypi' || 'testpypi' }}
+      upload-to: ${{ needs.accept.outputs.is-real-release && 'pypi' || 'testpypi' }}
     secrets: inherit
   publish-docker:
     needs: accept

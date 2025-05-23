@@ -9,6 +9,14 @@ inputs:
   ref:
     required: true
     description: The ref of a branch, tag, or hash.
+  compare-to-ref:
+    description: >-
+      Only check Helm charts that differ from this ref.
+      If empty, runs on all charts.
+      For a PR, this is probably the base commit.
+  chart-dirs:
+    default: charts/,helm/,helm/charts/
+    description: Comma-separated list of directories containing charts.
 
 runs:
   using: composite
@@ -24,6 +32,20 @@ runs:
         version: v3.17.0
     - name: Set up chart-testing
       uses: helm/chart-testing-action@v2.7.0
-    - name: Run chart-testing (ct lint)
+    - if: ${{ inputs.compare-to-ref }}
+      name: Run chart-testing (ct lint) on changed charts
       shell: bash
-      run: ct lint
+      run: |
+        ct lint \
+          --since '${{ inputs.compare-to-ref }}' \
+          --chart-dirs '${{ inputs.chart-dirs }}' \
+          --use-helmignore \
+          --github-groups
+    - if: ${{ ! inputs.compare-to-ref }}
+      name: Run chart-testing (ct lint) on all charts
+      shell: bash
+      run: |
+        ct lint \
+          --all \
+          --chart-dirs '${{ inputs.chart-dirs }}' \
+          --github-groups

@@ -13,11 +13,20 @@ description: >-
 inputs:
   push:
     required: true
-    description: Push to container registries; otherwise, only performs a dry run.
+    description: >-
+      A boolean 'true' or 'false'.
+      Push to container registries; otherwise, only performs a dry run.
 
 runs:
   using: composite
   steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        if [[ ! '${{ inputs.push }}' ^(true|false)$ ]]; then
+          printf >&2 "'push' must be 'true' or 'false', not '%s'.\n" '${{ inputs.push }}'
+          exit 2
+        fi
     - uses: actions/checkout@v4
     - uses: docker/setup-buildx-action@v3
     - name: Extract Docker metadata
@@ -52,4 +61,4 @@ runs:
         cache-from: type=gha
         # type=gha,mode=max is meant to maximize cache hits.
         cache-to: type=gha,mode=max
-        push: ${{ inputs.push }}
+        push: ${{ inputs.push == 'push' }}

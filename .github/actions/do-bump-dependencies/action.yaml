@@ -17,11 +17,11 @@ outputs:
   changed-lock-file:
     description: >-
       'true' if uv.lock was modified; '' otherwise.
-    value: ${{ steps.lock.outputs.diff }}
+    value: ${{ steps.lock.outputs.diff || 'false' }}
   changed-hooks:
     description: >-
       'true' if .pre-commit-config.yaml was modified; '' otherwise.
-    value: ${{ steps.precommit.outputs.diff }}
+    value: ${{ steps.precommit.outputs.diff || 'false' }}
 
 runs:
   using: composite

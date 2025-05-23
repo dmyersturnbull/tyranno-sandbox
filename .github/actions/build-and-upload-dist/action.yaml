@@ -47,7 +47,7 @@ runs:
     - id: define
       shell: bash
       run: |
-        ref_name="${{ inputs.ref }}"
+        ref_name='${{ inputs.ref }}'
         ref_name="${ref_name#refs/heads/}"
         ref_name="${ref_name#refs/tags/}"
         echo "ref_name=$ref_name" >> "$GITHUB_OUTPUT"
@@ -60,7 +60,7 @@ runs:
       shell: bash
       run: |
         uv build
-    - if: ${{ inputs.retention-days > 0 }}
+    - if: ${{ inputs.retention-days }}
       name: Upload artifact '${{ steps.define.outputs.artifact_name }}'
       id: upload
       uses: actions/upload-artifact@v4
