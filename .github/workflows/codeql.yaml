@@ -4,10 +4,8 @@
 
 # Runs CodeQL on pull requests.
 # This file MUST be named `.github/workflows/codeql.yaml`, or GitHub won't recognize it.
-name: CodeQL
-run-name: >-
-  CodeQL PR ${{ github.event.pull_request.number }}
-  by ${{ github.event.pull_request.user.login }}
+name: codeql
+run-name: CodeQL ${{ github.event.pull_request.number }}
 
 on:
   pull_request:
@@ -29,7 +27,7 @@ on:
       - "**/*.kt"
 
 concurrency:
-  group: ${{ github.workflow }} / ${{ github.ref_name }}
+  group: ${{ github.workflow }} / ${{ github.ref }}
   cancel-in-progress: true
 
 permissions:

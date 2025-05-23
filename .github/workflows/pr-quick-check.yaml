@@ -3,16 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Checks basic things on every push to a PR.
-name: PR-quick-check
-run-name: >-
-  Quick-check PR ${{ github.event.pull_request.number }}
-  by ${{ github.event.pull_request.user.login }}
+name: pr-quick-check
+run-name: Quick-check PR ${{ github.event.pull_request.number }}
 
 on:
   pull_request:
 
 concurrency:
-  group: ${{ github.workflow }} / ${{ github.ref_name }}
+  group: ${{ github.workflow }} / ${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -25,12 +23,6 @@ defaults:
 jobs:
   check-hooks:
     if: ${{ ! contains(github.event.pull_request, 'draft') || ! github.event.pull_request.draft }}
-    uses: ./.github/workflows/_check-hooks.yaml
+    uses: ./.github/actions/check-hooks/action.yaml
     with:
       ref: ${{ github.head_ref }}
-  # TODO:
-  # check-pr-metadata:
-  #   if: ${{ ! contains(github.event.pull_request, 'draft') || ! github.event.pull_request.draft }}
-  #   uses: ./.github/workflows/_check-pr-metadata.yaml
-  #   with:
-  #     pr: ${{ github.event.pull_request.number }}

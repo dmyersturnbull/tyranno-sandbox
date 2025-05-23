@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: do-label-pr
+description: >-
+  Adds and removes labels on the PR.
+  Current 'type:', 'scope:', and 'breaking' labels are removed and replaced with new ones.
+  Needs PR write permission.
+# TODO: This is only a sketch.
+inputs:
+  pr:
+    required: true
+    description: The PR number.
+  type:
+    required: true
+    description: The commit type.
+  scopes:
+    required: true
+    description: A list comma-separated list of scopes.
+  breaking:
+    required: true
+    description: Whether there are breaking changes.
+
+outputs:
+  labels:
+    description: Comma-separated list of the labels that were required.
+    value: ${{ steps.label.outputs.labels }}
+
+runs:
+  using: composite
+  steps:
+    - id: label
+      env:
+        GH_TOKEN: ${{ github.token }} # https://github.com/github/docs/issues/21930
+      shell: bash
+      run: |
+        # Get a label for the commit type.
+        label='type: ${{ inputs.type }}'
+        label=${label//depr/deprecation}
+        label=${label//perf/performance}
+        label=${label//ci/cicd}
+        # Get labels for the scopes.
+        labels=($type_label)
+        IFS=',' read -r -a parts <<< '${{ inputs.scopes }}'
+        for part in "${parts[@]}"; do labels+=("scope: $part"); done
+        # gh issue edit "$PR" --add-label "${labels[@]}"
+        # TODO: Remove other type and scope labels.
+        # TODO: Sync labels with issue?
+        echo "labels=$labels" >> "$GITHUB_OUTPUT"

@@ -4,7 +4,7 @@
 
 # When a commit is pushed to main or releases/**,
 # runs tests and either opens an issue or uploads coverage reports.
-name: Main-test
+name: main-test
 run-name: Test ${{ github.ref_name }} (${{ github.sha }})
 
 on:
@@ -19,7 +19,7 @@ on:
       - releases/**
 
 concurrency:
-  group: ${{ github.workflow }} / ${{ github.ref_name }}
+  group: ${{ github.workflow }} / ${{ github.ref }}
   # More restrictive groups defined on jobs.
 
 permissions:
@@ -36,7 +36,7 @@ defaults:
 
 jobs:
   test:
-    uses: ./.github/workflows/_run-pytest.yaml
+    uses: ./.github/workflows/_test-pytest-matrix.yaml
     with:
       ref: ${{ github.ref }}
       retention-days: 1 # Only to upload coverage reports.

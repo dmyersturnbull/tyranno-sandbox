@@ -52,6 +52,7 @@ repos:
       - id: ruff-check
         args:
           - --fix-only
+          - --show-fixes
       - id: ruff-format
 
   # Format various formats with Prettier

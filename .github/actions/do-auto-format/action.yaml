@@ -1,0 +1,118 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: do-auto-format
+description: Auto-fixes issues and auto-formats, committing the changes.
+
+inputs:
+  ref:
+    required: true
+    description: The ref, which must be a branch.
+  compare-to-ref:
+    required: true
+    description: >-
+      Only reformat files that differ from this ref; if empty, runs on all files.
+      For a PR, this is probably the base commit.
+  push:
+    required: true
+    description: Push changes; otherwise, errors if there were changes.
+
+outputs:
+  auto-fix:
+    description: Whether lint rule violations were fixed.
+    value: ${{ steps.auto-fix.outputs.changed }}
+  auto-format:
+    description: Whether formatting changes were made.
+    value: ${{ steps.auto-format.outputs.changed }}
+
+runs:
+  using: composite
+  steps:
+    - name: Configure Git
+      shell: bash
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git config --global color.diff never
+    # ====================
+    # 2. Fetch refs.
+    - name: Fetch the HEAD commit
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref }}
+    - if: ${{ inputs.compare-to-ref }}
+      name: Fetch base commit for comparison
+      # If we need to compare against another ref, we'll need to fetch that, too.
+      shell: bash
+      run: |
+        git fetch --no-tags --depth=1 origin '${{ inputs.compare-to-ref }}'
+    - uses: astral-sh/setup-uv@v6
+    - shell: bash
+      run: |
+        uv sync --locked --only-group precommit
+    - name: Sanity-check that there are no local changes
+      shell: bash
+      run: |
+        if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+          printf >&2 "\n\nERROR: Non-empty diff! (((\n%b\n)))\n\n" "$(git diff --histogram)"
+          exit 1
+        fi
+    # ====================
+    # 2. Auto-fix.
+    - name: Auto-fix lint rule violations.
+      id: auto-fix
+      shell: bash
+      env:
+        FROM: ${{ inputs.compare-to-ref }}
+        TO: ${{ inputs.ref }}
+      run: |
+        if [[ -z $FROM ]]; then
+          uv run --no-sync pre-commit run ruff-check --all-files || true
+        else
+          uv run --no-sync pre-commit run ruff-check --from-ref $FROM --to-ref $TO || true
+        fi
+        if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+          git diff --histogram # Show in logs.
+          echo "changed=true" >> $GITHUB_OUTPUT
+          git add --upgrade
+          git commit -m "fix: auto-fix ruff rule violations"
+        fi
+    # ====================
+    # 3. Auto-format.
+    - name: Auto-format
+      id: auto-format
+      shell: bash
+      env:
+        FROM: ${{ inputs.compare-to-ref }}
+        TO: ${{ inputs.ref }}
+      run: |
+        if [[ -z $FROM ]]; then
+          uv run --no-sync pre-commit run ruff-format --all-files || true
+          uv run --no-sync pre-commit run prettier --all-files || true
+        else
+          uv run --no-sync pre-commit run ruff-format --from-ref $FROM --to-ref $TO || true
+          uv run --no-sync pre-commit run prettier --from-ref $FROM --to-ref $TO || true
+        fi
+        if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+          git diff --histogram # Show in logs.
+          echo "changed=true" >> $GITHUB_OUTPUT
+          git add --upgrade
+          git commit -m "style: auto-format"
+        fi
+    # ====================
+    # 4. Push changes.
+    - if: ${{ steps.auto-fix.outputs.changed || steps.auto-format.outputs.changed }}
+      name: ${{ inputs.push && 'Push' || 'Note' }} changes
+      shell: bash
+      run: |
+        untracked="$(git ls-files --others --exclude-standard)"
+        if [[ -n "$untracked" ]]; then
+          printf "\n\nWARNING: Found unexpected untracked files: (((\n%s\n)))\n\n" "$untracked"
+        fi
+        if [[ '${{ inputs.push }}' == true ]]; then
+          git push
+        else
+          printf "Changes are needed, as shown above.\n"
+          exit 1
+        fi

@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: check-hooks
+description: Runs basic pre-commit hooks.
+inputs:
+  ref:
+    required: true
+    description: The ref of a branch, tag, or hash.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref }}
+    - uses: astral-sh/setup-uv@v6
+    - name: Sync and confirm lock file is up-to-date
+      shell: bash
+      run: |
+        uv sync --frozen --only-group precommit
+    - uses: extractions/setup-just@v3
+    - name: Run pre-commit hooks
+      shell: bash
+      run: |
+        just check

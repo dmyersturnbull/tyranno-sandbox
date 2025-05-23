@@ -2,9 +2,9 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# "Function" workflow that runs end-to-end PyTest tests inside a container via docker compose.
+# Reusable workflow that runs end-to-end PyTest tests inside a container via docker compose.
 # TODO: This is experimental.
-run-name: End-to-end test ${{ inputs.ref || 'ε' }}
+run-name: Test ${{ inputs.ref }} end-to-end
 
 on:
   workflow_call:
@@ -12,7 +12,7 @@ on:
       ref:
         type: string
         required: true
-        description: The branch, tag, or hash; for a PR, this should be the merge commit.
+        description: The ref of a branch, tag, or hash.
       fail-fast:
         type: boolean
         default: true

@@ -1,0 +1,78 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: build-and-upload-dist
+description: >-
+  Builds wheels and sdists, uploading them in a zip file
+  as GitHub workflow artifact 'dist-{ref-name}', where 'ref-name' is taken from input 'ref'.
+
+inputs:
+  ref:
+    required: true
+    description: The ref of a branch, tag, or hash.
+  retention-days:
+    default: "1"
+    description: >-
+      Non-negative integer.
+      If > 0, uploads the zip file as GitHub artifact 'dist-<REF>' with this expiration.
+
+outputs:
+  ref-name:
+    description: The ref name (provided for convenience).
+    value: ${{steps.define.ref_name }}
+  artifact-name:
+    description: The artifact name.
+    value: ${{steps.define.artifact-name }}
+  artifact-id:
+    description: The artifact id.
+    value: ${{steps.upload.artifact-id }}
+  artifact-url:
+    description: The artifact URL.
+    value: ${{steps.upload.artifact-url }}
+  artifact-digest:
+    description: The artifact digest.
+    value: ${{steps.upload.artifact-digest }}
+
+runs:
+  using: composite
+  steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        if [[ ! '${{ inputs.retention-days }}' =~ 0|[1-9][0-9]* ]]; then
+          printf >&2 "retention-days is invalid: '%s'.\n" '${{ inputs.retention-days }}'
+          exit 2
+        fi
+    - id: define
+      shell: bash
+      run: |
+        ref_name="${{ inputs.ref }}"
+        ref_name="${ref_name#refs/heads/}"
+        ref_name="${ref_name#refs/tags/}"
+        echo "ref_name=$ref_name" >> "$GITHUB_OUTPUT"
+        echo "artifact_name=dist-$ref_name" >> "$GITHUB_OUTPUT"
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref }}
+    - uses: astral-sh/setup-uv@v6
+    - name: Build sources and wheels
+      shell: bash
+      run: |
+        uv build
+    - if: ${{ inputs.retention-days > 0 }}
+      name: Upload artifact '${{ steps.define.outputs.artifact_name }}'
+      id: upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.define.outputs.artifact_name }}
+        path: dist/
+        if-no-files-found: error
+        compression-level: 0 # they're already gzip-compressed
+        retention-days: ${{ inputs.retention-days }}
+    - name: Print artifact info
+      shell: bash
+      run: |
+        printf "Uploaded artifact '%s': '%s'\n" \
+          '${{ steps.define.outputs.artifact_name }}' \
+          '${{ steps.upload.outputs }}'

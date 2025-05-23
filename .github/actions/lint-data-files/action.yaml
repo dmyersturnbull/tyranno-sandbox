@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: lint-data-files
+description: Lints YAML and other data files, ignoring formatting.
+
+inputs:
+  ref:
+    required: true
+    description: The ref of a branch, tag, or hash.
+  glob:
+    default: .
+    description: Glob of files to lint. Unrecognized file types are ignored.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref }}
+    - name: Lint for serious issues in YAML files.
+      uses: ibiqlik/action-yamllint@v3
+      with:
+        strict: true
+        file_or_dir: "${{ inputs.glob }}"
+        config_data: |
+          rules:
+            anchors:
+              forbid-undeclared-aliases: true
+              forbid-duplicated-anchors: true
+              forbid-unused-anchors: true
+            float-values:
+              require-numeral-before-decimal: true
+              forbid-scientific-notation: true
+              forbid-nan: true
+              forbid-inf: true
+            key-duplicates:
+              forbid-duplicated-merge-keys: true
+            octal-values:
+              forbid-implicit-octal: true
+              forbid-explicit-octal: true
+            truthy:
+              allowed-values:
+                - true
+                - false

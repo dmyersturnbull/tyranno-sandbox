@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: publish-mkdocs-to-pages
+description: >-
+  Builds mkdocs docs and publishes them to GitHub Pages.
+  The GitHub context should be a tag but can be a branch.
+  Needs permissions: 'contents: write', 'pages: write'.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+    - uses: astral-sh/setup-uv@v6
+    - shell: bash
+      run: |
+        uv sync --locked --only-group docs
+        uv run mkdocs build --strict
+    - uses: actions/upload-pages-artifact@v3
+      with:
+        path: .site
+    - uses: actions/deploy-pages@v4

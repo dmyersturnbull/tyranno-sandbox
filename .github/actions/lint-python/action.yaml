@@ -1,0 +1,52 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: lint-python
+description: >-
+  Lints Python source and related files.
+  Needs permissions: 'contents: read'.
+
+inputs:
+  ref:
+    required: true
+    description: The ref of a branch, tag, or hash.
+  glob:
+    default: .
+    description: Glob of files to lint. Unrecognized file types are ignored.
+  ruff-rules:
+    default: ""
+    description: Ruff rule specifier passed as 'ruff check --select <rules>'.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref }}
+    - uses: astral-sh/setup-uv@v6
+    - shell: bash
+      run: |
+        uv sync --locked --only-group lint
+    - name: Check Ruff rules
+      shell: bash
+      run: |
+        if [[ -z '${{ inputs.rules }}' ]]; then
+          uv run --no-sync ruff check --no-fix '${{ inputs.glob }}'
+        else
+          uv run --no-sync ruff check --no-fix --select '${{ inputs.rules }}' ${{ inputs.glob }}'
+        fi
+    - name: Check Ruff formatting.
+      shell: bash
+      run: |
+        uv run --no-sync ruff format --check '${{ inputs.glob }}'
+    - name: Check Deal rules (if set up)
+      shell: bash
+      run: |
+        if uv run --no-sync python -m deal --help >> /dev/null; then
+          uv run --no-sync python -m deal lint '${{ inputs.glob }}'
+        fi
+    - name: Check typing with ty.
+      shell: bash
+      run: |
+        uv run --no-sync ty check '${{ inputs.glob }}'

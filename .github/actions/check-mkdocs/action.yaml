@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: check-mkdocs
+description: Checks that 'mkdocs build' works.
+
+inputs:
+  ref:
+    required: true
+    description: The ref of a branch, tag, or hash.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref }}
+    - uses: astral-sh/setup-uv@v6
+    - shell: bash
+      run: |
+        uv sync --locked --only-group docs
+        uv run --no-sync mkdocs build --strict

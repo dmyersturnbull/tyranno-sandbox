@@ -11,12 +11,13 @@ import calendar
 import inspect
 import math
 import re
+from contextlib import AbstractContextManager
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from operator import itemgetter
-from types import TracebackType
-from typing import Any, Final, NamedTuple, Self, TypedDict
+from types import FrameType, TracebackType
+from typing import Any, Final, Literal, NamedTuple, Self, TypedDict, override
 
-from jmespath.exceptions import JMESPathError
 from niquests import Session
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version as Pep440
@@ -26,7 +27,7 @@ from tyranno_sandbox._global_vars import STARTUP
 
 __all__ = ["TyrannoJmesFunctions"]
 
-from tyranno_sandbox.dot_tree import Json
+from tyranno_sandbox._core import Json
 
 
 class CallerInfo(NamedTuple):
@@ -36,11 +37,20 @@ class CallerInfo(NamedTuple):
     args: dict[str, Any]
 
 
-def get_caller_info() -> CallerInfo:
+def get_caller_info(depth: int) -> CallerInfo:
     """
-    Finds the function name and args fo the caller.
+    Finds the function name and args for the caller (for `depth == 1`), etc.
     """
-    frame = inspect.currentframe().f_back.f_back
+    this_frame = inspect.currentframe()
+    if not this_frame:
+        msg = "Current frame is unavailable."
+        raise AssertionError(msg)
+    frame: FrameType = this_frame
+    for i in range(depth + 1):  # + 1 for this function
+        if not frame.f_back:
+            msg = f"Caller of frame {frame} (depth {i} from {this_frame}) is unavailable."
+            raise AssertionError(msg)
+        frame = frame.f_back
     return CallerInfo(frame.f_code.co_name, {**frame.f_locals})
 
 
@@ -82,8 +92,10 @@ class Pep440Dict(TypedDict):
     pre: str
     dev: str
     post: str
-    pre_type: str
-    pre_number: int | None
+    pre_type: str  # `""` if none
+    pre_number: int | Literal[""]
+    dev_number: int | Literal[""]
+    post_number: int | Literal[""]
 
 
 class SemverDict(TypedDict):
@@ -158,27 +170,34 @@ class DurationDict(TypedDict):
     microsecond_part: int
 
 
-class JmesFunctionError(JMESPathError):
+@dataclass(frozen=True, slots=True)
+class JmesFunctionError(Exception):
     """An error in fetching data from e.g. PyPi."""
 
-    def __init__(self, message: str) -> None:
-        self.function, self.args = get_caller_info()
-        self.message = message
+    function: str
+    args: dict[str, Any]
+    message: str
+
+    @classmethod
+    def from_call(cls, message: str, *, depth: int) -> JmesFunctionError:
+        return JmesFunctionError(*get_caller_info(depth), message)
 
     def __str__(self) -> str:
         return f"Error in {self.function} with args {self.args}: {self.message}"
 
 
-class _Utils:
+class _Utils(AbstractContextManager):
     """Internal utilities used by custom JMESPath functions."""
 
     def __init__(self) -> None:
         self.__session = Session()
 
+    @override
     def __enter__(self) -> Self:
         self.__session.__enter__()
         return self
 
+    @override
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
@@ -215,14 +234,17 @@ class _Utils:
             minor=v.minor,
             patch=v.micro,
             micro=v.micro,
-            pre=f"{v.pre[0]}{v.pre[1]}" if v.pre else "",
-            dev=str(v.dev) if v.dev else "",
-            post=str(v.post) if v.post else "",
-            pre_type=v.pre[0] if v.pre else "",
-            pre_number=v.pre[1] if v.pre else None,
+            pre=f"{v.pre[0]}{v.pre[1]}" if v.pre is not None else "",
+            dev=f"dev{v.dev}" if v.dev is not None else "",
+            post=f"post{v.post}" if v.post is not None else "",
+            pre_type=v.pre[0] if v.pre is not None else "",
+            pre_number=v.pre[1] if v.pre is not None else "",
+            dev_number=v.dev if v.dev is not None else "",
+            post_number=v.post if v.post is not None else "",
         )
 
     def semver_info(self, v: Semver) -> SemverDict:
+        pre = v.prerelease or ""
         return SemverDict(
             full_version=str(v),
             public_version=str(Semver(v.major, v.minor, v.patch, v.prerelease)),
@@ -231,12 +253,15 @@ class _Utils:
             major=v.major,
             minor=v.minor,
             patch=v.patch,
-            pre=v.prerelease,
-            pre_ids=v.prerelease.split("."),
+            pre=pre,
+            pre_ids=pre.split("."),
             build=v.build,
         )
 
     def format_dt(self, dt: datetime, *, sep: str = "T", ts: str = "microseconds") -> str:
+        if dt.tzname() is None:
+            msg = f"Datetime instance {dt} is not zoned."
+            raise JmesFunctionError.from_call(msg, depth=2)
         stamp = dt.isoformat(sep, ts)
         # Don't replace +00:00 with Z for Europe/London (canonical), Europe/Jersey, etc.
         if dt.tzname().removeprefix("Etc/") in _Utils.UTC_NAMES:
@@ -327,21 +352,34 @@ class _Utils:
     def sanitize_pep440(self, v: Pep440 | str) -> str:
         if isinstance(v, str):
             v = Pep440(v)
+        has_pre = v.pre is not None
+        has_post = v.post is not None
+        has_dev = v.dev is not None
+        if sum((has_pre, has_post, has_dev)):
+            msg = f"PyPa package version {v} mixes pre, post, and/or dev numbers."
+            raise JmesFunctionError.from_call(msg, depth=2)
         epoch = f"{v.epoch}!" if v.epoch else ""
         main = f"{v.major}.{v.minor}.{v.micro}"
-        pre = f"-{v.pre}" if v.pre else ""
-        dev = f".dev{v.dev}" if v.dev else ""
-        post = f".post{v.post}" if v.post else ""
+        pre = f"-{v.pre[0]}{v.pre[1]}" if has_pre else ""
+        dev = f"-dev{v.dev}" if has_dev else ""
+        post = f"-post{v.post}" if has_post else ""
         return epoch + main + pre + dev + post
 
     def normalize_pep440(self, v: Pep440 | str, *, force_epoch: bool = False) -> str:
         if isinstance(v, str):
             v = Pep440(v)
+        has_pre = v.pre is not None
+        has_post = v.post is not None
+        has_dev = v.dev is not None
         main = f"{v.major}.{v.minor}.{v.micro}"
         epoch = f"{v.epoch}!" if v.epoch or force_epoch else ""
-        pre = self.PEP440_PRE_STRS.get(v.pre[0], v.pre[0]) + str(v.pre[1]) if v.pre else ""
-        dev = f".dev{v.dev}"
-        post = f".post{v.post}" if v.post else ""
+        if has_pre and v.pre[0] not in self.PEP440_PRE_STRS:
+            msg = f"PyPa package version {v} has an unrecognized prerelease type {v.pre[0]}."
+            raise JmesFunctionError.from_call(msg, depth=2)
+        # The normal-form separators are '' for pre, '-' for dev, and '-' for post.
+        pre = self.PEP440_PRE_STRS[v.pre[0]] + str(v.pre[1]) if has_pre else ""
+        post = f".post{v.post}" if has_post else ""
+        dev = f".dev{v.dev}" if has_dev else ""
         return epoch + main + pre + dev + post
 
 
@@ -373,7 +411,7 @@ class TyrannoJmesFunctions:
         valid = {"major", "minor", "micro"}
         if per not in valid:
             msg = f"Argument '{per}' is not one of {valid}."
-            raise JmesFunctionError(msg)
+            raise JmesFunctionError.from_call(msg, depth=1)
         return U.sanitize_pep440(max(Pep440(v) for v in versions))
 
     def pep440_max(self, versions: list[str]) -> str:

@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 #
-###################################################################################################
-#                                        [build-system]
-###################################################################################################
+####################################################################################################
+#                                      [build-system]
+####################################################################################################
 
 [build-system]
 
@@ -13,42 +13,29 @@ build-backend = "hatchling.build"
 requires = ["hatchling>=1.27"]
 
 #
-###################################################################################################
-#                                        [project]
-###################################################################################################
+####################################################################################################
+#                                      [project]
+####################################################################################################
 
 [project]
 
-# Important basics
 name = "tyranno-sandbox"
-version = "0.0.1-alpha.0" # See `[tool.tyranno.data.versioning]` for details.
+version = "0.0.1-alpha.0" # See `[tool.tyranno.data.versioning]` for requirements.
 requires-python = "~=3.13"
 
 # 'readme' is 'description' in `importlib.metadata`.
 readme = { file = "README.md", content-type = "text/markdown" }
 # 'description' is 'summary' in `importlib.metadata`.
 description = "Sandbox to test CI/CD in Tyrannosaurus"
-# 'keywords' is named the same in `importlib.metadata`.
 keywords = ["python", "ci", "cd"]
-
-# Authors and maintainers
-# These are named the same in `importlib.metadata`.
 authors = [
   { name = "Douglas Myers-Turnbull", email = "dmyersturnbull@gmail.com" },
 ]
 maintainers = [
   { name = "Douglas Myers-Turnbull", email = "dmyersturnbull@gmail.com" },
 ]
-
-# License
-# The Python Packaging Authority has contradictory recommendations; see:
-# - https://peps.python.org/pep-0639/#deprecate-license-classifiers
-# - https://discuss.python.org/t/pep-639-round-3-improving-license-clarity-with-better-package-metadata/53020
-# - https://github.com/python/peps/pull/3866
-# 'license' is importlib.metadata 'License-Expression'.
 license = { text = "Apache-2.0" }
 
-# Classifiers used on PyPi
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
   "Environment :: Console",
@@ -121,14 +108,14 @@ Download = "https://pypi.org/project/tyranno-sandbox/"
 # Sponsor = "https://dmyersturnbull.github.io/tyranno-sandbox/placeholder#sponsor"
 
 #
-###################################################################################################
-#                                        [dependency-groups]
-###################################################################################################
+####################################################################################################
+#                                      [dependency-groups]
+####################################################################################################
 
 # See https://docs.astral.sh/uv/concepts/projects/dependencies/#dependency-groups
 [dependency-groups]
 
-# `--only-dev` literally means only the `dev` group, so include everything.
+# uv includes the `dev` group by default (and with `--only-dev`), so include everything in that.
 # The other groups are solely intended for use in CI.
 dev = [
   "coverage[toml]>=7.8",
@@ -142,19 +129,17 @@ dev = [
   "mkdocs-api-autonav>=0.2",
   "mkdocstrings[python]>=0.29",
   "pre-commit>=4.2",
-  "pyright[nodejs]>=1.1.400", # Type checker. Will replace with Astral's Red Knot.
   "pytest>=8.3",
   "pytest-cov>=6.1",
   "pytest-datadir>=1.6",
   "pytest-randomly>=3.16",
   "pytest-xdist[psutil]>=3.6",
   "ruff>=0.11.10",
+  "ty>=0.0.1a6",
 ]
 test = [
   "coverage[toml]>=7.8", # Required for coverage.
-  "deal>=4.24", # Optional. Automated contract testing.
-  "hypofuzz>=25.4", # Optional. Fuzzing, used alongside Hypothesis.
-  "hypothesis[cli,codemods]>=6.130", # Optional. Required. `cli` and `codemods` optional.
+  "hypothesis>=6.130", # Required.
   "pytest>=8.3", # Required.
   "pytest-cov>=6.1", # Required for coverage.
   "pytest-datadir>=1.6", # Optional. To read test resources in the same dir.
@@ -169,13 +154,16 @@ docs = [
   "mkdocs-api-autonav>=0.2", # Required for API docs. Extracts docs automatically.
   "mkdocstrings[python]>=0.29", # Required for API docs.
 ]
-ruff = ["ruff>=0.11.10"]
+lint = [
+  "ruff>=0.11.10",
+  "ty>=0.0.1a6", # Astral's fledgling type checker.
+]
 precommit = ["pre-commit>=4.2"]
 
 #
-###################################################################################################
-#                                        [tool.hatch]
-###################################################################################################
+####################################################################################################
+#                                      [tool.hatch]
+####################################################################################################
 
 [tool.hatch.build.targets.wheel]
 
@@ -185,26 +173,25 @@ precommit = ["pre-commit>=4.2"]
 packages = ["src/tyranno_sandbox"]
 
 #
-###################################################################################################
-#                                        [tool.ruff]
-###################################################################################################
+####################################################################################################
+#                                      [tool.ruff]
+####################################################################################################
 
 [tool.ruff]
 exclude = [] # Rely on https://docs.astral.sh/ruff/settings/#respect-gitignore
 src = ["src"] # Needed for import sorting
 line-length = 100 # See `.editorconfig`.
 
-#=========================== [tool.ruff.format] ==============================#
+# -------------------------- [tool.ruff.format] -------------------------------
 [tool.ruff.format]
 docstring-code-format = true
 skip-magic-trailing-comma = true
 
-#=========================== [tool.ruff.lint] ================================#
+# -------------------------- [tool.ruff.lint] ---------------------------------
 [tool.ruff.lint]
 
 preview = true
 
-# -------------------------- Ruff selected rules ------------------------------
 #          >>>#<<< align to col 15 (max possible width)
 select = [
   "A",        # flake8-builtins
@@ -296,7 +283,6 @@ select = [
   "RUF027",   # possible f-string (PREVIEW)
 ]
 
-# -------------------------- Ruff ignored rules -------------------------------
 ignore = [
   "PLR6301",  # 'self' not used (correct for overrides; more OOP)
   "RUF001",   # confusable characters
@@ -306,23 +292,23 @@ ignore = [
   "RUF021",   # demands parentheses in `or (x and y)`
 ]
 
-# -------------------------- Ruff unfixable rules -----------------------------
 unfixable = [
   "ERA001",   # commented-out code (not autofixable currently, but just in case)
   "F841",     # unused variable
   "SIM112",   # uncapitalized env var
   "RUF027",   # possible f-string -- can make mistakes
   "RUF102",   # invalid noqa
+  "T201",     # print function
 ]
 
-# -------------------------- Ruff delegated options ---------------------------
+# Delegated options
 flake8-bandit.check-typed-exception = true
 pydocstyle.convention = "google"
 flake8-tidy-imports.ban-relative-imports = "all"
 isort.detect-same-package = false # Use `tool.ruff.src` instead.
 isort.split-on-trailing-comma = false
 
-# -------------------------- delegated pylint options -------------------------
+# Delegated options for pylint
 [tool.ruff.lint.pylint]
 max-args = 10 # default is 5 (leave `max_positional_args` at 5)
 max-bool-expr = 10 # default is 5
@@ -330,7 +316,6 @@ max-public-methods = 30 # default is 20
 max-nested-blocks = 4 # default is 5
 allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 
-# -------------------------- Ruff per-file ignores ----------------------------
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*" = [
   "INP001",  # missing __init__
@@ -344,18 +329,16 @@ allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 ]
 
 #
-###################################################################################################
-#                                        [tool.pytest]
-###################################################################################################
+####################################################################################################
+#                                      [tool.pytest]
+####################################################################################################
 
 [tool.pytest.ini_options] # pending `[tool.pytest]`
 
 # ******************************* Notes for running tests ******************************************
-#
 # - When running tests, the working directory should be the project root.
 # - pytest-cov is not compatible with the PyCharm/IntelliJ debugger.
 #   See https://www.jetbrains.com/help/pycharm/run-debug-configuration-py-test.html
-#
 # **************************************************************************************************
 
 # This pytest 7+ option avoids repeating the package name in various options.
@@ -410,21 +393,18 @@ addopts = """
 
 #
 ###################################################################################################
-#                                        [tool.coverage]
+#                                      [tool.coverage]
 ###################################################################################################
 
-#============================ [tool.coverage.run] ============================#
 [tool.coverage.run]
 data_file = ".coverage.json"
 branch = true # Quantify the % coverage of execution branches.
-relative_files = true # See <https://coverage.readthedocs.io/en/7.6.12/config.html#run-relative-files>
+relative_files = true # See https://coverage.readthedocs.io/en/7.6.12/config.html#run-relative-files
 omit = ["**/__main__.py"]
 
-#============================ [tool.coverage.paths] ==========================#
 [tool.coverage.paths]
 source = ["src/"]
 
-#============================ [tool.coverage.report] =========================#
 [tool.coverage.report]
 fail_under = 2 # Require % coverage to ensure config is correct
 format = "markdown"
@@ -441,48 +421,14 @@ exclude_also = [
 ]
 
 #
-###################################################################################################
-#                                        [tool.pyright]
-###################################################################################################
-
-[tool.pyright]
-
-include = ["src/**/*.py", "tests/**/*.py"]
-
-# Set the typing profile.
-# The "type checking mode" sets most of the other options.
-# https://github.com/microsoft/pyright/blob/main/docs/configuration.md#type-check-diagnostics-settings
-# `strict` sets most `strict*` options to `true` and most `report*` options to "error".
-typeCheckingMode = "strict"
-# Everything below overrides specific `typeCheckingMode` options.
-
-# Override type evaluation settings.
-# https://github.com/microsoft/pyright/blob/main/docs/configuration.md#type-evaluation-settings
-deprecateTypingAliases = true
-
-# Override reporting options.
-# Can be "none", "information", "warning", or "error.
-# https://github.com/microsoft/pyright/blob/main/docs/configuration.md#diagnostic-settings-defaults
-reportCallInDefaultInitializer = "information"
-reportImplicitOverride = "error"
-reportImportCycles = "error"
-reportMissingSuperCall = "error"
-reportPropertyTypeMismatch = "error"
-reportShadowedImports = "warning"
-reportUninitializedInstanceVariable = "warning"
-reportUnnecessaryTypeIgnoreComment = "warning"
-reportUnusedCallResult = "information"
-
-#
-###################################################################################################
-#                                        [tool.tyranno]
-###################################################################################################
+####################################################################################################
+#                                      [tool.tyranno]
+####################################################################################################
 
 [tool.tyranno]
 
 # These are `.gitignore`-type patterns.
 # All `.gitignore`-ed files are automatically excluded.`
-
 # Target files to sync on `tyranno sync`
 targets = [
   "/.*ignore",
@@ -500,13 +446,11 @@ targets = [
   "Dockerfile",
 ]
 
-#============================ [tool.tyranno.data] ============================#
-
+# -------------------------- [tool.tyranno.data] ------------------------------
+[tool.tyranno.data]
 # These keys are used in `::tyranno::` comments; none have special meanings.
 # You can freely add, change, or remove keys.
 # Tyrannosaurus will fail if an undefined key is referenced.
-
-[tool.tyranno.data]
 
 vendor = "dmyersturnbull"
 # ::tyranno:: namespace = "$<< project.name .replace(@, '_', '-') .lower(@) >>"
@@ -519,34 +463,19 @@ doi = "10.5281/zenodo.4485186" # <<<comment out for new
 # Defines 'id', 'name', (canonical) 'uri', 'links', etc.
 # ::tyranno alias:: license = $<< project.license.text.spdx_license(@) >>
 
-# -------------------------- Project versioning scheme ------------------------
+# Project versioning scheme
 [tool.tyranno.data.cicd.tag]
-# We want compatibility with both SemVer and PyPa versioning, including identical ordering.
-# Enforcing normalization of PyPa version string results in `<major>.<minor>.<micro>`.
-# Without normalization, PyPa permits `-` and `.` with prerelease segments, thereby allowing `-(<type>).<number>`.
-# (We need the `.` to get identical ordering: SemVer sorts `1.0.0-rc15 ≺ 1.0.0-rc2`.)
-# References: https://semver.org/ and https://packaging.python.org/en/latest/specifications/version-specifiers
+# Enforce PyPa **and** SemVer compatibility.
+# Prereleases are non-normalized PyPa matching `v<major>.<minor>.<patch>-<alpha|beta|rc>.<pre>`.
+# Real releases are normalized Pya without prerelease numbers: `v<major>.<minor>.<patch>`.
 # Omit `^` and `$` to make these easier to use.
+prerelease-trigger = 'v(0|[1-9]\d*)(\.(0|[1-9]\d*)){2}-(alpha|beta|rc)\.(0|[1-9]\d*)'
+release-trigger = 'v(0|[1-9]\d*)(\.(0|[1-9]\d*)){2}'
 
-# Tags that trigger a full release.
-release-trigger = 'v(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){2}'
-
-# Tags that trigger a test/preview release.
-# ::tyranno:: prerelease-trigger = '$<<.release-trigger>>-([ab]|rc)\.(0|[1-9][0-9]*)'
-prerelease-trigger = 'v(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){2}-([ab]|rc)\.(0|[1-9][0-9]*)'
-
-# -------------------------- Python versions ----------------------------------
+# Python versions
 [tool.tyranno.data.python]
-
-# List all compatible Python versions.
-# E.g. if `requires-python == '~=3.12'`,
-# ::tyranno alias:: spec = $<<project.requires-python>>
-# then `compatible == ["3.12.0", [...], "3.12.10", "3.13.0", "3.13.1", "3.13.2"]`.
-# ::tyranno alias:: compatible = $<< .spec .join('', ['python', @]) .pep440_find_for_spec(@) >>
-
-# Select default version.
-# ::tyranno alias:: minor-version = $<< .compatible | pep440_max(@) .minor_version >>
-
-# Select versions to test in CI.
-# E.g. if `python-pep440 == 'python~=3.12'`, then `versions-to-test == ["3.12.10", "3.13.3"]`.
-# ::tyranno alias:: test-versions = $<< .compatible | pep440_max_per(@, 'minor') >>
+# List compatible Python versions; e.g. ["3.12.0", [...], "3.12.10", "3.13.0", "3.13.1", "3.13.2"]`.
+# Then choose a default (max), and versions to test (max per minor version).
+# ::tyranno alias:: valid = $<< project.requires-python .join('', ['python', @]) .pep440_find(@) >>
+# ::tyranno alias:: minor-version = $<< .valid | pep440_max(@) .minor_version >>
+# ::tyranno alias:: test-versions = $<< .valid | pep440_max_per(@, 'minor') >>

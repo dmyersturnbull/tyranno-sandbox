@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: publish-to-github-releases
+description: >-
+  Publishes a GitHub Release.
+  The GitHub context should be a tag but can be a branch.
+  Needs permissions: 'contents: write'.
+
+outputs:
+  release-id:
+    description: The ID of the release.
+    value: ${{ steps.release.outputs.id }}
+  release-url:
+    description: The URL of the release.
+    value: ${{ steps.release.outputs.url }}
+
+runs:
+  using: composite
+  steps:
+    - id: define
+      shell: bash
+      run: |
+        ref_name="${{ github.ref }}"
+        ref_name="${ref_name#refs/heads/}"
+        ref_name="${ref_name#refs/tags/}"
+        echo "ref_name=$ref_name" >> "$GITHUB_OUTPUT"
+        echo "artifact_name=dist-$ref_name" >> "$GITHUB_OUTPUT"
+        if [[ $ref_name =~ ^main|master$ ]]; then
+          echo "is_latest=true" >> "$GITHUB_OUTPUT"
+        fi
+    - name: Download workflow artifact ${{ steps.define.outputs.artifact_name }}
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ steps.define.outputs.artifact_name }}
+    - name: Publish to GitHub Releases
+      id: release
+      uses: softprops/action-gh-release@v2
+      with:
+        prerelease: ${{ contains(github.ref_name, '-') }}
+        generate_release_notes: true
+        fail_on_unmatched_files: true
+        files: dist/*
+    - name: Print info
+      shell: bash
+      run: |
+        printf "Published release to %s\n" '${{ steps.release.outputs.url }}'
+    - uses: Actions-R-Us/actions-tagger@v2
+      with:
+        publish_latest_tag: ${{ steps.define.outputs.is-latest }}

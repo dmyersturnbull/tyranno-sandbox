@@ -2,10 +2,8 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# "Function" workflow that runs `_run-pytest-single` for each OS and Python version.
-# See:
-# https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategyfail-fast
-run-name: PyTest matrix on ${{ inputs.ref || 'ε' }} with markers ${{ inputs.markers }}
+# Reusable workflow that runs PyTest for each OS and Python version.
+run-name: PyTest ${{ inputs.ref }} (${{ inputs.markers }})
 
 on:
   workflow_call:
@@ -13,21 +11,24 @@ on:
       ref:
         type: string
         required: true
-        description: The branch, tag, or hash; for a PR, this should be the merge commit.
+        description: The ref of a branch, tag, or hash.
       markers:
         type: string
         default: not (ux or e2e)
       retention-days:
         type: number
         default: 0
-        description: If > 0, uploads coverage reports 'coverage-<ref>-<os>-<python>', using this retention time.
+        description: >-
+          If > 0, uploads coverage reports 'coverage-<ref>-<os>-<python>',
+          using this retention time.
       fail-fast:
         type: boolean
         default: true
         description: >-
           Fail this workflow immediately when any test on any OS and Python version fails.
           Applies 'fast-fail' to the strategy, and runs pytest with '--exitfirst'.
-          Recommended when only confirming that tests pass, such as immediately before publishing or reporting coverage.
+          Recommended when only confirming that tests pass,
+          such as immediately before publishing or reporting coverage.
       max-parallel:
         type: number
         default: 1

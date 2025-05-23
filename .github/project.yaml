@@ -144,3 +144,6 @@ labels:
   #- name: "scope: i18n"
   #  description: 🌐 Internationalization
   #  color: "#009000"
+  #- name: "scope: a11y"
+  #  description: 👤 Accessibility
+  #  color: "#009000"

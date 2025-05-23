@@ -2,9 +2,9 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# "Function" workflow that tests Helm charts by deploying in a test cluster.
+# Reusable workflow that tests Helm charts by deploying in a test cluster.
 # TODO: This is experimental.
-run-name: Test ${{ inputs.ref || 'ε' }} on K8s ${{ inputs.only-if-changed && ' if changed' || '' }}
+run-name: Test ${{ inputs.ref }} on K8s
 
 on:
   workflow_call:
@@ -12,11 +12,11 @@ on:
       ref:
         type: string
         required: true
-        description: The branch, tag, or hash; for a PR, this should be the merge commit.
+        description: The ref of a branch, tag, or hash.
       only-if-changed:
         type: boolean
         default: false
-        description: Skip testing if the charts are not different from the current stable release.
+        description: Skip testing if the charts are identical to the current stable release's.
       cancel-in-progress:
         type: boolean
         description: >-

@@ -2,12 +2,10 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# "Function" workflow that runs pytest for a single OS and Python version.
-# Normally run by `_run-pytest`.
+# Reusable workflow that runs pytest for a single OS and Python version.
 run-name: >-
-  Run PyTest on ${{ inputs.ref || 'ε' }}
-  ${{ inputs.os }}/py${{ inputs.python }}
-  with markers ${{ inputs.markers }}
+  PyTest ${{ inputs.ref }} (${{ inputs.markers }})
+  on ${{ inputs.os }}/py${{ inputs.python }}
 
 on:
   workflow_call:

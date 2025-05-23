@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Runs the release process when `validate` completes successfully (after a tag is pushed).
-name: Publish
+name: publish
 run-name: >-
   ${{ github.event.workflow_run.conclusion == 'success' && 'Publish' || 'Ignore' }}
   ${{ github.ref_name }}
@@ -25,10 +25,6 @@ concurrency:
 permissions:
   contents: read
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   accept:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -38,6 +34,7 @@ jobs:
       is-real-release: ${{ steps.check-ref.outputs.is_real }}
     steps:
       - id: check-ref
+        shell: bash
         run: |
           # ::tyranno:: regex_1='^refs/tags/$<<~.cicd.tag.release-trigger>>$'
           regex_1='^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$'
@@ -49,23 +46,26 @@ jobs:
     permissions:
       contents: write
       pages: write
-    uses: ./.github/workflows/_publish-docs.yaml
+    uses: ./.github/actions/publish-mkdocs-to-pages/action.yaml
     secrets: inherit
   publish-github:
     needs: accept
     permissions:
       contents: write
-    uses: ./.github/workflows/_publish-github.yaml
+    uses: ./.github/actions/publish-to-github-releases/action.yaml
     secrets: inherit
   publish-pypi:
     needs: accept
-    uses: ./.github/workflows/_publish-pypi.yaml
+    uses: ./.github/actions/publish-to-pypi/action.yaml
     with:
       repository: ${{ needs.accept.outputs.is-real-release && 'pypi' || 'testpypi' }}
     secrets: inherit
   publish-docker:
     needs: accept
-    uses: ./.github/workflows/_publish-docker.yaml
+    permissions:
+      packages: write
+      id-token: write
+    uses: ./.github/actions/publish-to-container-registries/action.yaml
     with:
       push: ${{ needs.accept.outputs.is-real-release }}
     secrets: inherit

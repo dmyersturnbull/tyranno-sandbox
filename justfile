@@ -8,6 +8,10 @@
 
 set ignore-comments	:= true
 
+git_sha := `git rev-parse --short=16 HEAD`
+git_ref := `git rev-parse --abbrev-ref HEAD`
+git_rev_date := `git --no-pager log -1 --format=%cd`
+
 ###################################################################################################
 
 # List available recipes.
@@ -15,6 +19,19 @@ set ignore-comments	:= true
 list:
   @just --list --unsorted
 alias help := list
+
+# Print info for a bug report.
+[group('help')]
+info:
+  @echo "os: {{os()}}"
+  @echo "cpu_arch: {{arch()}}"
+  @echo "cpu_count: {{num_cpus()}}"
+  @echo "shell: {{env('SHELL', '?')}}"
+  @echo "lang: {{env('LANG', '?')}}"
+  @echo "repo: {{file_name(justfile_directory())}}"
+  @echo "git_ref: {{git_ref}}"
+  @echo "git_sha: {{git_sha}}"
+  @echo "git_rev: {{git_rev_date}}"
 
 ###################################################################################################
 
@@ -60,13 +77,13 @@ alias upgrade-hooks := update-hooks
 [group('project')]
 clean: delete-temp clean-main clean-git
 
-# Delete unused uv and pre-commit cache data.
+# Delete unused uv and pre-commit cache data. (Called by `clean`.)
 [group('project'), private]
 clean-main:
   uv run pre-commit gc
   uv cache prune
 
-# Run incremental optimization tasks (see 'git maintenance'). Runs in background.
+# Start incremental 'git maintenance' tasks. (Called by 'clean'.)
 [group('project'), private]
 clean-git:
   git maintenance run \
@@ -122,7 +139,8 @@ delete-temp:
   - rm -f **/*[~#\$]
   - rm -f **/.~*
 
-# Run 'git remote prune --all' and 'git maintenance run gc'. Runs in background. [CAUTION]
+# NOTE: "Advanced" or "optional" recipe, unlisted but invoked directly.
+# Run 'git remote prune --all' and start 'git maintenance run gc'. [CAUTION]
 [group('project'), private]
 prune-git:
   # Needed on macOS.
@@ -132,15 +150,15 @@ prune-git:
   # Uses 'gc.pruneExpire'.
   git maintenance run --task gc
 
-# Minify the repo by deleting nearly all recreatable files. [DANGER]
+# NOTE: "Advanced" or "optional" recipe, unlisted but invoked directly.
+# Minify the repo by deleting nearly all recreatable files. [CAUTION]
 [group('project'), private]
-minify-repo: clean
+minify-repo: clean delete-probable-temp
   uv run pre-commit clean
   uv run pre-commit uninstall
   - rm -f -r .venv
   - rm -f -r .idea
   - rm -f uv.lock
-  just delete-probable-temp
 
 ###################################################################################################
 
@@ -177,53 +195,52 @@ fix-all:
 
 # Fix configured Ruff rule violations.
 [group('fix')]
-fix-ruff *args: (_fix_ruff args)
+fix-ruff *args="--show-fixes": (_fix_ruff args)
 
-# Fix Ruff rule violations, including preview, unsafe, and noqa-suppressed.
+# Fix Ruff rule violations, including preview and unsafe. [CAUTION]
 [group('fix')]
-fix-ruff-unsafe *args: (_fix_ruff "--preview" "--unsafe-fixes" "--ignore-noqa" args)
+fix-ruff-unsafe *args="--show-fixes": (_fix_ruff "--preview" "--unsafe-fixes" args)
 
 _fix_ruff *args:
-  - uv run ruff check --fix-only --show-fixes --output-format grouped {{args}}
+  - uv run ruff check --fix-only --output-format grouped {{args}}
 
 ###################################################################################################
 
 # Check basic rules (via pre-commit).
 [group('check')]
-check *args:
-  uv run pre-commit run check-filenames
-  uv run pre-commit run check-symlinks
-  uv run pre-commit run check-case-conflict
-  uv run pre-commit run check-illegal-windows-names
-  uv run pre-commit run check-shebang-scripts-are-executable
-
-# Check JSON and YAML files against known schemas (via pre-commit).
-[group('check')]
-check-schemas *args:
-  uv run pre-commit run check-github-actions
-  uv run pre-commit run check-github-workflows
-  uv run pre-commit run check-compose-spec
+check:
+  # Keep slower hooks lower in the list.
+  uv run --no-sync pre-commit run check-filenames
+  uv run --no-sync pre-commit run check-symlinks
+  uv run --no-sync pre-commit run check-case-conflict
+  uv run --no-sync pre-commit run check-illegal-windows-names
+  uv run --no-sync pre-commit run check-shebang-scripts-are-executable
+  uv run --no-sync pre-commit run check-github-actions
+  uv run --no-sync pre-commit run check-github-workflows
+  uv run --no-sync pre-commit run check-compose-spec
+  uv run --no-sync pre-commit run forbid-new-submodules
+  uv run --no-sync pre-commit run trailing-whitespace
+  uv run --no-sync pre-commit run check-added-large-files
 
 # Check Ruff rules without auto-fix.
 [group('check')]
 check-ruff *args:
-  uv run ruff check --no-fix --output-format grouped {{args}}
+  uv run --no-sync ruff check --no-fix --output-format grouped {{args}}
 
 # Check Ruff Bandit-derived 'S' rules.
 [group('check')]
 check-bandit *args:
   just check-ruff --select S {{args}}
 
-# Check Pyright typing rules.
+# Check ty (https://github.com/astral-sh/ty/) typing rules.
 [group('check')]
-check-pyright *args:
-  uv run pyright {{args}}
-# Soon: https://github.com/astral-sh/ruff/issues/3893
+check-ty *args:
+  uv run --no-sync ty check {{args}}
 
 # Detect broken hyperlinks (via pre-commit).
 [group('check')]
 check-links:
-  uv run pre-commit run markdown-link-check --hook-stage manual --all-files
+  uv run --no-sync pre-commit run markdown-link-check --hook-stage manual --all-files
 
 ###################################################################################################
 

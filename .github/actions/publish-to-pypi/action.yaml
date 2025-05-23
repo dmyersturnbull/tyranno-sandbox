@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: publish-to-pypi
+description: >-
+  Publishes to PyPi or test PyPi.
+  The GitHub context MUST be a tag.
+  Needs permissions: 'contents: read'.
+  Needs secrets: 'UV_PUBLISH_TOKEN'.
+
+inputs:
+  repository:
+    required: true
+    description: Either 'pypi' or 'testpypi'.
+
+runs:
+  using: composite
+  steps:
+    - id: define
+      shell: bash
+      run: |
+        ref_name="${{ github.ref }}"
+        if [[ ! "$ref_name" =~ ^refs/tags/ ]]; then
+          printf >&2 "Ref is not for a tag: '%s'\n" "$ref_name"
+          exit 2
+        fi
+        ref_name="${ref_name#refs/tags/}"
+        echo "ref_name=$ref_name" >> "$GITHUB_OUTPUT"
+        echo "artifact_name=dist-$ref_name" >> "$GITHUB_OUTPUT"
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref || github.ref }}
+    - uses: astral-sh/setup-uv@v6
+    - name: Download artifact ${{ steps.define.outputs.artifact_name }}
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ steps.define.outputs.artifact_name }}
+    - name: Publish to PyPi using uv.
+      # See: https://docs.pypi.org/trusted-publishers/adding-a-publisher/
+      env:
+        UV_PUBLISH_URL: >-
+          ${{
+            inputs.repository == 'pypi'
+              && 'https://upload.pypi.org/legacy/'
+              || 'https://test.pypi.org/legacy/'
+          }}
+      shell: bash
+      run: |
+        uv publish --trusted-publishing always

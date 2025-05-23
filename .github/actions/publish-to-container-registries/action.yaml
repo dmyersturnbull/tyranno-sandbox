@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: publish-to-container-registries
+description: >-
+  Builds a Docker image named '{owner}/{repo}' and publishes it to container registries.
+  The GitHub context should be a tag but can be a branch.
+  Needs permissions: 'contents: read', 'packages: write', 'id-tokens: write'.
+  Needs variables: 'DOCKERHUB_USERNAME', 'GHCR_USERNAME' (skips when omitted).
+  Needs secrets: 'DOCKERHUB_TOKEN', 'GHCR_TOKEN'.
+
+inputs:
+  push:
+    required: true
+    description: Push to container registries; otherwise, only performs a dry run.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+    - uses: docker/setup-buildx-action@v3
+    - name: Extract Docker metadata
+      id: docker-metadata
+      uses: docker/metadata-action@v5 # https://github.com/docker/metadata-action
+      with:
+        images: "${{ github.repository }}"
+    - name: Print metadata
+      shell: bash
+      run: |
+        printf "Docker metadata:\n%s\n" '${{ steps.docker-metadata.outputs.json }}'
+    # Help for specific registries at https://github.com/docker/login-action
+    - if: ${{ vars.DOCKERHUB_USERNAME }}
+      name: Log into Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ vars.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - if: ${{ vars.GHCR_USERNAME }}
+      name: Log into GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ vars.GHCR_USERNAME }} # For GHCR, this is probably ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Publish the image to configured registries
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        tags: ${{ steps.docker-metadata.outputs.tags }}
+        labels: ${{ steps.docker-metadata.outputs.labels }}
+        cache-from: type=gha
+        # type=gha,mode=max is meant to maximize cache hits.
+        cache-to: type=gha,mode=max
+        push: ${{ inputs.push }}

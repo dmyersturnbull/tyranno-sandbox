@@ -2,9 +2,9 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# "Function" workflow that sends code coverage reports to Coveralls.
-# Requires `_run-pytest.yaml` and the secret `COVERALLS_TOKEN`.
-run-name: Send ${{ inputs.ref_name || 'ε' }} coverage to Coveralls
+# Reusable workflow that sends code coverage reports to Coveralls.
+# Requires `dist-` artifacts and the secret `COVERALLS_TOKEN`.
+run-name: Send ${{ inputs.ref_name }} Coveralls report
 
 on:
   workflow_call:
@@ -15,7 +15,7 @@ on:
         description: The name of the branch or tag.
 
 concurrency:
-  group: _update-coveralls / ${{ inputs.ref_name }}
+  group: _update-coveralls / ${{ inputs.ref }}
   cancel-in-progress: true
 
 defaults:

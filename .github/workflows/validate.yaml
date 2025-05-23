@@ -30,6 +30,7 @@ jobs:
       is-match: ${{ steps.match.outputs.match }}
     steps:
       - id: match
+        shell: bash
         run: |
           # ::tyranno:: regex_1='^refs/tags/$<<~.cicd.tag.release-trigger>>$'
           regex_1='^v[0-9]+\.[0-9]+\.[0-9]+$'
@@ -47,31 +48,31 @@ jobs:
     needs: check-tag
     runs-on: ubuntu-latest
     steps:
-      - run: |
+      - shell: bash
+        run: |
           printf "Proceeding.\n"
   check-hooks:
     needs: guard
-    uses: ./.github/workflows/_check-hooks.yaml
+    uses: ./.github/actions/check-hooks/action.yaml
     with:
       ref: ${{ github.ref }}
-      check-schemas: true
   run-tests:
     needs: guard
-    uses: ./.github/workflows/_run-pytest.yaml
+    uses: ./.github/workflows/_test-pytest-matrix.yaml
     with:
       ref: ${{ github.ref }}
   check-security:
     needs: guard
-    uses: ./.github/workflows/_lint.yaml
+    uses: ./.github/actions/lint-python/action.yaml
     with:
       ref: ${{ github.ref }}
-      rules: S
+      ruff-rules: S
   check-docker:
     needs: guard
-    uses: ./.github/workflows/_check-docker.yaml
+    uses: ./.github/workflows/_test-docker.yaml
     with:
       ref: ${{ github.ref }}
-  build-dist:
+  build-and-upload-dist:
     needs:
       - check-hooks
       - run-tests
@@ -79,6 +80,6 @@ jobs:
       - check-docker
     permissions:
       contents: write
-    uses: ./.github/workflows/_build_dist.yaml
+    uses: ./.github/actions/build-and-upload-dist/action.yaml
     with:
       ref: ${{ github.ref }}

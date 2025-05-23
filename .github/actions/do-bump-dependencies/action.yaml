@@ -1,0 +1,72 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: do-bump-dependencies
+description: Upgrades the uv lock file and pre-commit config. Commits and pushes if 'push' is true.
+
+inputs:
+  ref:
+    required: true
+    description: The ref, which must be a branch.
+  push:
+    default: "true"
+    description: If false, skips the git push.
+
+outputs:
+  changed-lock-file:
+    description: >-
+      'true' if uv.lock was modified; '' otherwise.
+    value: ${{ steps.lock.outputs.diff }}
+  changed-hooks:
+    description: >-
+      'true' if .pre-commit-config.yaml was modified; '' otherwise.
+    value: ${{ steps.precommit.outputs.diff }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref }}
+    - uses: astral-sh/setup-uv@v6
+    - name: Configure Git
+      shell: bash
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    - name: Upgrade the lock file
+      id: lock
+      shell: bash
+      run: |
+        uv lock --upgrade
+        if [[ -n "$(git status --porcelain uv.lock)" ]]; then
+          echo "diff=true" >> $GITHUB_OUTPUT
+        fi
+    - if: ${{ steps.lock.outputs.diff }}
+      name: Commit uv.lock changes
+      shell: bash
+      run: |
+        git add uv.lock
+        git commit --no-verify -m "chore: update lock file"
+    - name: Upgrade the pre-commit config
+      id: precommit
+      shell: bash
+      run: |
+        uv sync --frozen --only-group precommit
+        uv run --no-sync pre-commit install
+        uv run --no-sync pre-commit autoupdate
+        if [[ -n "$(git status --porcelain .pre-commit-config.yaml)" ]]; then
+          echo "diff=true" >> $GITHUB_OUTPUT
+        fi
+    - if: ${{ steps.precommit.outputs.diff }}
+      name: Commit pre-commit changes
+      shell: bash
+      run: |
+        git add .pre-commit-config.yaml
+        git commit --no-verify -m "chore: update commit hooks"
+    - if: ${{ inputs.push && (steps.lock.outputs.diff || steps.precommit.outputs.diff) }}
+      name: Push changes
+      shell: bash
+      run: |
+        git push

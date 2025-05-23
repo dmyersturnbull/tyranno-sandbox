@@ -3,10 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Checks that the Docker image is buildable on PRs with relevant changes.
-name: PR-check-Docker
-run-name: >-
-  Check images on PR ${{ github.event.pull_request.number }}
-  by ${{ github.event.pull_request.user.login }}
+name: pr-check-docker
+run-name: Check PR ${{ github.event.pull_request.number }} Docker
 
 on:
   pull_request:
@@ -19,18 +17,14 @@ on:
       - .dockerignore
 
 concurrency:
-  group: ${{ github.workflow }} / ${{ github.ref_name }}
+  group: ${{ github.workflow }} / ${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   check-docker:
-    uses: ./.github/workflows/_check-docker.yaml
+    uses: ./.github/workflows/_test-docker.yaml
     with:
       ref: ${{ github.ref }}

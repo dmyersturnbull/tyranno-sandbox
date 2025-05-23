@@ -8,4 +8,4 @@ Example ETL to run in background.
 import os
 from typing import Final
 
-MONGO_URI: Final[str] = os.environ.get("MONGO_URI")
+MONGO_URI: Final[str] = os.environ["MONGO_URI"]

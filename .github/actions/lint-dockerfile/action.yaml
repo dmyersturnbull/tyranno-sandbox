@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: lint-dockerfile
+description: Lints a Dockerfile named 'Dockerfile'.
+
+inputs:
+  ref:
+    required: true
+    description: The ref of a branch, tag, or hash.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref }}
+    # hadolint's last release was in 2022.
+    # However, it's decidedly not abandoned: https://github.com/hadolint/hadolint/issues/1041
+    # It's also so widely used that it will find a new maintainer if needed.
+    # Unfortunately, some issues aren't being fixed.
+    - name: Temporary hadolint workaround
+      shell: bash
+      run: sed 's/\--start-interval=1s //g' Dockerfile > .~hadolint.temp~
+    - uses: hadolint/hadolint-action@v3.1.0 # Currently doesn't publish e.g. `v3`.
+      with:
+        dockerfile: .~hadolint.temp~
+    - if: ${{ always() }}
+      shell: bash
+      run: |
+        rm -r -f .~hadolint.temp~

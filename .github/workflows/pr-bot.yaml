@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Responds to `/plz <command>` comments on pull requests.
-name: PR-bot
-run-name: Handle PR ${{ github.event.pull_request.number }} comment by ${{ github.sender.login }}
+name: pr-bot
+run-name: PR ${{ github.event.pull_request.number }} comment by ${{ github.sender.login }}
 
 on:
   issue_comment:
@@ -21,16 +21,13 @@ env:
   UNARY_CMD: >-
     ^\/plz ++(?<cmd>(?:(?:[a-z0-9-]++) *)+?)(?: ++(?:in|on)?+ ++(?<ref>head|merge)(?: ref)?+)?+ *+$
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   # Parse the body and find lines matching `/plz <cmd> [<ref>]`.
   # Individual jobs could check e.g. `contains(github.event.comment.body, '/plz test')`.
   # However, that can't capture command "arguments" (though, currently, we only need `<ref>`).
   # Note that we allow multiple commands per comment.
   # To associate arguments with their respective commands, we need Bash for regex, etc.
+  # TODO: We need more robust parsing.
   cmd:
     if: ${{ github.event.issue.pull_request }}
     name: Parse comment cmd
@@ -43,12 +40,12 @@ jobs:
     steps:
       - name: Extract commands using regex
         id: extract
-        # TODO: Process with jq, and capture options like lint types.
+        shell: bash
         run: |
           nullary=$( \
             grep --only-matching --perl-regexp "$NULLARY_CMD" <<< "$TEXT" \
-              | sed -r 's/-/ /g' | sed -r 's/plz ++//g' \
-              | sed -r 's/reformat/format/g'
+              | sed -E 's/-/ /g' | sed -E 's/plz ++//g' \
+              | sed -E 's/reformat/format/g'
           )
           echo "nullary=$nullary" >> "$GITHUB_OUTPUT"
           unary=$( \
@@ -60,9 +57,9 @@ jobs:
   audit:
     if: ${{ contains(needs.cmd.outputs.unary, 'audit') }}
     needs: cmd
-    uses: ./.github/workflows/_lint.yaml
+    uses: ./.github/actions/lint-python/action.yaml
     with:
-      rules: S
+      ruff-rules: S
       # Run on HEAD, unless "on merge" is specifically requested.
       ref: >-
         ${{ contains(needs.cmd.outputs.unary, 'audit /merge') && github.ref || github.head_ref }}
@@ -70,16 +67,28 @@ jobs:
   lint:
     if: ${{ contains(needs.cmd.outputs.unary, 'lint') }}
     needs: cmd
-    uses: ./.github/workflows/_lint.yaml
-    with:
+    runs-on: ubuntu-latest
+    env:
       # Run on HEAD, unless "on merge" is specifically requested.
-      ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'lint /merge') && github.ref || github.head_ref }}
+      R: ${{ contains(needs.cmd.outputs.unary, 'lint /merge') && github.ref || github.head_ref }}
+    steps:
+      - uses: ./.github/actions/lint-python/action.yaml
+        with:
+          ref: ${{ env.R }}
+      - uses: ./.github/actions/lint-dockerfile/action.yaml
+        with:
+          ref: ${{ env.R }}
+      - uses: ./.github/actions/lint-data-files/action.yaml
+        with:
+          ref: ${{ env.R }}
+      - uses: ./.github/actions/lint-helm-charts/action.yaml
+        with:
+          ref: ${{ env.R }}
 
   check-image:
     if: ${{ contains(needs.cmd.outputs.unary, 'check image') }}
     needs: cmd
-    uses: ./.github/workflows/_check-docker.yaml
+    uses: ./.github/workflows/_test-docker.yaml
     with:
       # Run on HEAD, unless "on merge" is specifically requested.
       ref: >-
@@ -88,56 +97,27 @@ jobs:
   check-docs:
     if: ${{ contains(needs.cmd.outputs.unary, 'check docs') }}
     needs: cmd
-    uses: ./.github/workflows/_check-docs.yaml
+    uses: ./.github/actions/check-mkdocs/action.yaml
     with:
       # Run on HEAD, unless "on merge" is specifically requested.
       ref: >-
         ${{ contains(needs.cmd.outputs.unary, 'check docs /merge') && github.ref || github.head_ref }}
 
-  validate-schemas:
-    if: ${{ contains(needs.cmd.outputs.unary, 'validate schemas') }}
-    needs: cmd
-    uses: ./.github/workflows/_check-hooks.yaml
-    with:
-      # Run on HEAD, unless "on merge" is specifically requested.
-      ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'validate schemas /merge') && github.ref || github.head_ref }}
-      check-schemas: true
-
   test:
     if: ${{ contains(needs.cmd.outputs.unary, 'test') }}
     needs: cmd
-    uses: ./.github/workflows/_run-pytest.yaml
+    uses: ./.github/workflows/_test-pytest-matrix.yaml
     with:
       # Run on MERGE, unless "on head" is specifically requested.
       ref: >-
         ${{ contains(needs.cmd.outputs.unary, 'test /head') && github.head_ref || github.ref }}
-
-  quick-test:
-    if: ${{ contains(needs.cmd.outputs.unary, 'quick test') }}
-    needs: cmd
-    uses: ./.github/workflows/_run-pytest.yaml
-    with:
-      # Run on MERGE, unless "on head" is specifically requested.
-      ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'quick test /head') && github.head_ref || github.ref }}
-      markers: not (ux or slow or net or e2e)
-
-  e2e-test:
-    if: ${{ contains(needs.cmd.outputs.unary, 'e2e test') }}
-    needs: cmd
-    uses: ./.github/workflows/_test-e2e.yaml
-    with:
-      # Run on MERGE, unless "on head" is specifically requested.
-      ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'e2e test /head') && github.head_ref || github.ref }}
 
   upgrade:
     if: ${{ contains(needs.cmd.outputs.nullary, 'upgrade') }}
     needs: cmd
     permissions:
       contents: write
-    uses: ./.github/workflows/_bump-deps.yaml
+    uses: ./.github/actions/do-bump-dependencies/action.yaml
     with:
       # Always run on HEAD (doesn't make sense on merge).
       ref: ${{ github.head_ref }}
@@ -147,20 +127,9 @@ jobs:
     needs: cmd
     permissions:
       contents: write
-    uses: ./.github/workflows/_reformat.yaml
+    uses: ./.github/actions/do-auto-format/action.yaml
     with:
       # Always run on HEAD (doesn't make sense on merge).
-      # Reformat files changed since BASE.
       ref: ${{ github.head_ref }}
       compare-to-ref: ${{ github.base_ref }}
       push: true
-
-  label:
-    if: ${{ contains(needs.cmd.outputs.nullary, 'label') }}
-    needs: cmd
-    permissions:
-      pull-requests: write
-    uses: ./.github/workflows/_check-pr-metadata.yaml
-    with:
-      pr: ${{ github.event.pull_request.number }}
-      label: true
