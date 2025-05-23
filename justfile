@@ -44,17 +44,17 @@ init:
 
 ###################################################################################################
 
-# Update the lock file, sync the venv, auto-fix + format changes, and clean.
+# `update`, `fix-changes`, `format-changes`, `clean`.
 [group('project')]
 revamp: update fix-changes format-changes clean
 
-# Lock and sync the venv exactly with all extras.
+# Lock and sync the venv with all extras.
 [group('project')]
 sync:
   uv sync --all-extras --exact
 alias lock := sync
 
-# Update pre-commit hooks, update the lock file, and sync the venv.
+# `update-lock`, `update-hooks`.
 [group('project')]
 update: update-lock update-hooks
 alias upgrade := update
@@ -73,7 +73,7 @@ update-hooks:
   uv run pre-commit gc
 alias upgrade-hooks := update-hooks
 
-# Prune various temp data, including from uv, pre-commit, and git.
+# Prune temp data, including from uv, pre-commit, and git.
 [group('project')]
 clean: delete-temp clean-main clean-git
 
@@ -162,15 +162,16 @@ minify-repo: clean delete-probable-temp
 
 ###################################################################################################
 
-# Format modified files (via pre-commit).
+# Format modified files (pre-commit).
 [group('format')]
 format-changes: _format
 alias format := format-changes
 
-# Format ALL files (via pre-commit).
+# Format ALL files (pre-commit).
 [group('format')]
 format-all: (_format "--all-files")
 
+# <Internal.>
 _format *args:
   - uv run pre-commit run end-of-file-fixer {{args}}
   - uv run pre-commit run fix-byte-order-marker {{args}}
@@ -180,35 +181,37 @@ _format *args:
 
 ###################################################################################################
 
-# Fix configured Ruff rule violations in modified files (via pre-commit).
-[group('fix')]
+# Ruff auto-fix modified files (pre-commit).
+[group('fix'), no-exit-message]
 fix-changes:
   git add .pre-commit-config.yaml
-  - uv run pre-commit run ruff-check
+  uv run pre-commit run ruff-check
 alias fix := fix-changes
 
-# Fix configured Ruff rule violations in ALL files (via pre-commit).
-[group('fix')]
+# Ruff auto-fix ALL files (pre-commit).
+[group('fix'), no-exit-message]
 fix-all:
   git add .pre-commit-config.yaml
-  - uv run pre-commit run ruff-check --all-files
+  uv run pre-commit run ruff-check --all-files
 
-# Fix configured Ruff rule violations.
-[group('fix')]
+# Ruff auto-fix rule violations.
+[group('fix'), no-exit-message]
 fix-ruff *args="--show-fixes": (_fix_ruff args)
 
-# Fix Ruff rule violations, including preview and unsafe. [CAUTION]
-[group('fix')]
-fix-ruff-unsafe *args="--show-fixes": (_fix_ruff "--preview" "--unsafe-fixes" args)
+# Ruff auto-fix, including unsafe fixes. [CAUTION]
+[group('fix'), no-exit-message]
+fix-ruff-unsafe *args="--show-fixes": (_fix_ruff "--unsafe-fixes" args)
 
+# <Internal.>
+[no-exit-message]
 _fix_ruff *args:
-  - uv run ruff check --fix-only --output-format grouped {{args}}
+  uv run ruff check --fix-only --output-format grouped {{args}}
 
 ###################################################################################################
 
-# Check basic rules (via pre-commit).
+# Check basic rules (pre-commit).
 [group('check')]
-check:
+check-simple:
   # Keep slower hooks lower in the list.
   uv run --no-sync pre-commit run check-filenames
   uv run --no-sync pre-commit run check-symlinks
@@ -223,80 +226,78 @@ check:
   uv run --no-sync pre-commit run check-added-large-files
 
 # Check Ruff rules without auto-fix.
-[group('check')]
+[group('check'), no-exit-message]
 check-ruff *args:
   uv run --no-sync ruff check --no-fix --output-format grouped {{args}}
 
 # Check Ruff Bandit-derived 'S' rules.
-[group('check')]
-check-bandit *args:
-  just check-ruff --select S {{args}}
+[group('check'), no-exit-message]
+check-bandit *args: (check-ruff "--select" "S" args)
 
-# Check ty (https://github.com/astral-sh/ty/) typing rules.
-[group('check')]
+# Check Astral's ty typing rules.
+[group('check'), no-exit-message]
 check-ty *args:
   uv run --no-sync ty check {{args}}
 
-# Detect broken hyperlinks (via pre-commit).
-[group('check')]
+# Detect broken hyperlinks (pre-commit).
+[group('check'), no-exit-message]
 check-links:
   uv run --no-sync pre-commit run markdown-link-check --hook-stage manual --all-files
 
 ###################################################################################################
 
-# Run PyTest tests (except 'ux' and 'e2e').
+# Run tests NOT marked 'ux'.
 [group('test'), no-exit-message]
-test *args:
-  uv run --locked pytest --no-cov -m "not (ux or e2e)" {{args}}
+test-non-ux *args: (_with_cov "-m" "not ux" args)
 
-# Run PyTest tests not marked 'slow', 'net', 'ux', or 'e2e'.
+# Run tests marked 'ux' (manual interaction or verification).
 [group('test'), no-exit-message]
-test-main *args:
-  uv run --locked pytest -m "not (slow or net or ux or e2e)" {{args}}
+test-ux *args: (_no_cov "-m" "ux" args)
 
-# Run PyTest tests marked 'ux' (interaction or manual review).
+# Run tests NOT marked 'ux', 'e2e', 'slow', or 'net'.
 [group('test'), no-exit-message]
-test-ux *args:
-  uv run --locked pytest --no-cov -m ux {{args}}
+test-simple *args: (_with_cov "-m" "not (ux or e2e or slow or net)" args)
 
-# Run PyTest tests marked 'property' with extra Hypothesis options.
+# Run tests marked 'property' with Hypothesis options.
 [group('test'), no-exit-message]
-test-property *args:
-  uv run --locked pytest -m property --hypothesis-explain --hypothesis-show-statistics {{args}}
+test-property *args: (_no_cov "-m" "property" "--hypothesis-explain" "--hypothesis-show-statistics" args)
 
 # Run all PyTest tests stepwise (starting at last failure).
 [group('test'), no-exit-message]
-test-stepwise *args:
-  uv run --locked pytest --no-cov {{args}}
+test-stepwise *args: (_no_cov "--stepwise" args)
 
 # Run all PyTest tests, highlighting test durations.
 [group('test'), no-exit-message]
-test-durations *args:
-  uv run --locked pytest --no-cov --durations=0 --durations-min=0 {{args}}
+test-durations *args: (_no_cov "--durations=0" "--durations-min=0" args)
 
 # Run doctest tests (via PyTest).
 [group('test'), no-exit-message]
-doctest *args:
-  uv run --locked pytest --doctest-modules src/ {{args}}
+doctest *args: (_no_cov "--doctest-modules" "src/" args)
 
 # Run all PyTest tests, showing minimal output.
 [group('test'), no-exit-message, private]
-test-quietly *args:
-  uv run --locked pytest --no-cov --capture=no --tb=line {{args}}
+test-quietly *args: (_no_cov "--capture=no" "--tb=line" args)
 
 # Run all PyTest tests, showing tracebacks, locals, and INFO.
 [group('test'), no-exit-message, private]
-test-loudly *args:
-  uv run --locked pytest --no-cov --showlocals --full-trace --log-level INFO {{args}}
+test-loudly *args: (_no_cov "--showlocals" "--full-trace" "--log-level=INFO" args)
 
 # Run all PyTest tests with pdb debugger.
 [group('test'), no-exit-message, private]
-test-with-pdb *args:
-  uv run --locked pytest --no-cov --pdb {{args}}
+test-with-pdb *args: (_no_cov "--pdb" args)
+
+# <Internal.>
+[no-exit-message]
+_no_cov *args:
+  uv run --locked pytest --no-cov {{args}}
+
+# <Internal.>
+[no-exit-message]
+_with_cov *args: (pytest args)
 
 ###################################################################################################
 
-# Build mkdocs docs from scratch, treating warnings as errors.
+# Build mkdocs docs from scratch, failing for warnings.
 [group('docs'), no-exit-message]
 build-docs *args:
   uv run --locked mkdocs build --clean --strict {{args}}

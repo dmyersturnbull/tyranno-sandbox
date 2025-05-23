@@ -133,7 +133,7 @@ dev = [
   "pytest-cov>=6.1",
   "pytest-datadir>=1.6",
   "pytest-randomly>=3.16",
-  "pytest-xdist[psutil]>=3.6",
+  "pytest-xdist>=3.6",
   "ruff>=0.11.10",
   "ty>=0.0.1a6",
 ]
@@ -144,7 +144,7 @@ test = [
   "pytest-cov>=6.1", # Required for coverage.
   "pytest-datadir>=1.6", # Optional. To read test resources in the same dir.
   "pytest-randomly>=3.16", # Optional. Sets and prints the seed, also randomizing test order.
-  "pytest-xdist[psutil]>=3.6", # Optional. Used to distribute tests over multiple cores.
+  "pytest-xdist>=3.6", # Optional. Used to distribute tests over multiple cores.
 ]
 docs = [
   "mkdocs>=1.6", # Required.
@@ -197,33 +197,27 @@ select = [
   "A",        # flake8-builtins
   "AIR",      # Airflow (does nothing if not used)
   "ANN",      # flake8-annotations
-  #"ARG",     # flake8-unused-args //DISABLED: unused args may be necessary in overridden//
+  "ARG",     # flake8-unused-args (use dummy name in private/lambda, or noqa in public)
   "ASYNC",    # flake8-async
   "B",        # flake8-bugbear
-  "B901",     # PREVIEW: Both `return` and `yield` in function/method
-  #"BLE",     # flake8-blind-exception (try: * except: only) //DISABLED: covered by E722//
+  "BLE",      # flake8-blind-exception: `Exception`, `RuntimeException`, or no type (don't use E722)
   "C4",       # flake8-comprehensions
   #"C90",     # mmcabe //DISABLED: useful but thin-lined and time-intensive//
   #"COM",     # flake8-commas //DISABLED: handled by formatter//
-  #"CPY",     # flake8-copyright //DISABLED: handle carefully instead; also unmaintained//
+  #"CPY",     # flake8-copyright //DISABLED: handle carefully instead//
   #"D",       # pydocstyle //DISABLED: most rules handled by formatter//
   "D100",     # undocumented public module (could be just 1 line)
   "D101",     # undocumented public class (could be just 1 line)
-  #"D102",    # undocumented public method //DISABLED: unnecessary if obviously named//
-  #"D103",    # undocumented public method //DISABLED: unnecessary if obviously named//
-  #"D104",    # undocumented public package //DISABLED: unnecessary if obviously named//
-  #"D105",    # undocumented magic method //DISABLED: usually unnecessary//
-  #"D106",    # undocumented nested public class //DISABLED: often covered by enclosing class//
-  #"D107",    # undocumented `__init__` method //DISABLED: refactor if it needs documenting//
+  "D200",     # unnecessarily multiline docstring
+  "D205",     # missing blank line after summary in multiline docstring
+  "D209",     # `...final text."""` in multiline docstring
   "D210",     # whitespace around text (almost all auto-fixable)
+  "D213",     # `"""Summary...` in multiline docstring
   "D214",     # over-indented section
   "D3",       # docstring ''', \, etc. (almost all auto-fixable)
   "D4",       # blank docstring sections, etc. (almost all auto-fixable)
   "DJ",       # flake8-django (does nothing if not used)
   #"DOC",     # pydoclint //DISABLED: encourages writing sections out of habit//
-  "DOC202",   # says "return" but does not (PREVIEW)
-  "DOC403",   # says "yield" but does not (PREVIEW)
-  "DOC502",   # says "raise" but does not (PREVIEW)
   "DTZ",      # flake8-datetimez
   #"E",       # pycodestyle ERRORs //DISABLED: almost all handled by formatter//
   "E7",       # == True, bare except, lambda assignment, 'l' in names, etc.
@@ -234,10 +228,8 @@ select = [
   "F",        # pyflakes
   "FA",       # flake8-future-annotations
   "FAST",     # fastapi (does nothing if unused)
-  #"FBT",     # flake8-boolean-trap //DISABLED: debatable and sometimes unavoidable//
-  #"FIX",     # flake8-fix*me //DISABLED: unnecessary //
-  "FIX003",   # 'XXX: ' comments (use F*I*X*M*E or T*O*D*O instead)
-  "FIX004",   # 'HACK: ' comments (use F*I*X*M*E or T*O*D*O instead)
+  "FBT",      # flake8-boolean-trap (e.g. position boolean args)
+  "FIX",      # flake8-fix*me
   "FLY",      # flynt (https://pypi.org/project/flynt/; updates .format)
   "FURB",     # refurb (misc., mostly fixable)
   #"E",       # flake8 errors //DISABLED: handled by formatter or nitpicky//
@@ -257,9 +249,9 @@ select = [
   "PL",       # pylint (PLC, PLE, PLR, and PLW)
   "PT",       # flake8-pytest-style
   "PTH",      # flake8-use-pathlib
-  #"PYI",     # flake8-pyi (rules for stub files) //DISABLED: auto-generate stub files//
+  "PYI",      # flake8-pyi (rules for stub files)
   #"Q",       # flake8-quotes //DISABLED: discouraged by Ruff: formatter covers it//
-  #"RSE",     # flake8-raise //DISABLED: should pass exception args; auto-fix makes mistakes//
+  "RSE",      # flake8-raise
   "RET",      # flake8-return (almost all auto-fixable)
   "RUF",      # Ruff-specific tests
   "S",        # bandit
@@ -268,11 +260,11 @@ select = [
   "SLOT",     # flake8-slots
   "T10",      # flake8-debugger (bans debugger)
   "T20",      # flake8-print (bands print and pprint)
-  #"TC",      # flake8-type-checking //DISABLED: don't worry about TYPE_CHECKING blocks//
+  "TC",      # flake8-type-checking (TYPE_CHECKING blocks)
   "TC004",    # move imports that can't be in TYPE_CHECKING blocks
   "TC005",    # remove empty TYPE_CHECKING blocks
   "TC008",    # remove quotes from type aliases
-  #"TD",      # flake8-to*do //DISABLED: bans fix*me, needs specific syntax, nitpicky//
+  #"TD",      # flake8-to*do //DISABLED: requires a specific format//
   "TID",      # flake8-tidy-imports (bans relative imports)
   "TRY",      # tryceratops (try-except-raise)
   "UP",       # pyupgrade
@@ -280,25 +272,28 @@ select = [
   "W60",      # E605 invalid escape character
   "YTT",      # flake8-2020 (incorrect Python version checks)
   "RUF",      # Ruff-specific rules
-  "RUF027",   # possible f-string (PREVIEW)
 ]
 
 ignore = [
+  "E722",     # "bare-except"; use "blind-except" (BLE001) instead
   "PLR6301",  # 'self' not used (correct for overrides; more OOP)
   "RUF001",   # confusable characters
   "RUF002",   # confusable characters
   "RUF003",   # confusable characters
-  "PLC0415",  # imports at top (sometimes want lazy import)
   "RUF021",   # demands parentheses in `or (x and y)`
 ]
 
 unfixable = [
   "ERA001",   # commented-out code (not autofixable currently, but just in case)
   "F841",     # unused variable
-  "SIM112",   # uncapitalized env var
+  "N804",     # first argument not named `cls`
+  "N805",     # first argument not named `self`
+  "PLE1141",  # unpack tuple from dict without `.items`
   "RUF027",   # possible f-string -- can make mistakes
   "RUF102",   # invalid noqa
+  "SIM112",   # uncapitalized env var
   "T201",     # print function
+  "T203",     # pprint function
 ]
 
 # Delegated options
@@ -365,20 +360,22 @@ doctest_optionflags = [
 ]
 
 # -------------------------- Test markers -------------------------------------
-# Create markers for very slow, network-dependent, or interactive tests.
-# To run only unit tests, use `-m 'not (slow or net or ux)'`.
+# Define markers that are useful to include/exclude sets of tests.
+# - Simple tests only: `-m 'not (slow or net or ux or e2e)'`
+# - Simple property tests: `-m 'property and not (slow or net or ux or e2e)'`
 markers = [
-  "slow: tests that take a long time to run (select with `-m slow`)",
-  "net: tests that require network access (select with `-m net`)",
-  "ux: tests that require user interaction or manual verification (select with `-m ux`)",
-  "property: tests that use Hypothesis or otherwise generate test data (select with `-m property`)",
-  "e2e: comprehensive tests that require external services (select with `-m e2e`)",
+  "property: property tests using Hypothesis",
+  "slow: tests that need a long time to run",
+  "net: tests that need network access",
+  "ux: tests that need user interaction or manual verification",
+  "e2e: tests that need external services",
 ]
 
 # -------------------------- Pytest CLI args ----------------------------------
 # The `--cov-*` options are handled by pytest-cov.
 # `--import-mode=importlib` is recommended but **requires test classes to have unique names**.
 # `--quiet` just hides ouptut about 'rootdir', 'testpaths', etc.
+# `-n auto` uses pytest-xdist to use as many jobs as you have physical cores.
 addopts = """
   --cov=src \
   --cov-report json:.coverage.json \
@@ -389,6 +386,7 @@ addopts = """
   --strict-markers \
   --quiet \
   --tb=short \
+  -n auto \
 """
 
 #
