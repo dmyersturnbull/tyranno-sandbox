@@ -1,9 +1,8 @@
 # SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
-"""
-Command-line interface.
-"""
+
+"""Command-line interface."""
 
 from __future__ import annotations
 
@@ -101,9 +100,7 @@ class CliCommands:
         verbose: _Opts.verbose = False,
         quiet: _Opts.quiet = False,
     ) -> None:
-        """
-        Syncs project metadata between configured files.
-        """
+        """Syncs project metadata between configured files."""
         set_cli_state(verbose=verbose, quiet=quiet)
         context = context_factory(Path.cwd(), _ENV, dry_run=dry_run)
         messenger.info("Syncing metadata...")

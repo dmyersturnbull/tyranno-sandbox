@@ -2,9 +2,7 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Tests.
-"""
+"""Tests."""
 
 import pytest
 

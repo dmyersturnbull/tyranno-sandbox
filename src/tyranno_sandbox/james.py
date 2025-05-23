@@ -1,9 +1,8 @@
 # SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
-"""
-JMESPath utilities.
-"""
+
+"""Custom JMESPath functions."""
 
 from __future__ import annotations
 
@@ -15,8 +14,7 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from operator import itemgetter
-from types import FrameType, TracebackType
-from typing import Any, Final, Literal, NamedTuple, Self, TypedDict, override
+from typing import TYPE_CHECKING, Any, Final, Literal, NamedTuple, Self, TypedDict, override
 
 from niquests import Session
 from packaging.specifiers import SpecifierSet
@@ -27,7 +25,11 @@ from tyranno_sandbox._global_vars import STARTUP
 
 __all__ = ["TyrannoJmesFunctions"]
 
-from tyranno_sandbox._core import Json
+
+if TYPE_CHECKING:
+    from types import FrameType, TracebackType
+
+    from tyranno_sandbox._core import Json
 
 
 class CallerInfo(NamedTuple):
@@ -38,9 +40,7 @@ class CallerInfo(NamedTuple):
 
 
 def get_caller_info(depth: int) -> CallerInfo:
-    """
-    Finds the function name and args for the caller (for `depth == 1`), etc.
-    """
+    """Finds the function name and args for the caller (for `depth == 1`), etc."""
     this_frame = inspect.currentframe()
     if not this_frame:
         msg = "Current frame is unavailable."

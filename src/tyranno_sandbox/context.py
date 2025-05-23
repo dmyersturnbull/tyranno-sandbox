@@ -1,9 +1,8 @@
 # SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
-"""
-Per-repo context.
-"""
+
+"""Per-repo context."""
 
 import re
 import tomllib
@@ -116,7 +115,7 @@ class ContextFactory:
     """A [Context][] factory."""
 
     def __call__(self, cwd: Path, env: GlobalVars, *, dry_run: bool) -> Context:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 @dataclass(frozen=True, slots=True)

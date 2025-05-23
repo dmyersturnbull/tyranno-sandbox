@@ -1,9 +1,8 @@
 # SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
-"""
-Utility to create custom JMESPath functions.
-"""
+
+"""Utility to create custom JMESPath functions."""
 
 import inspect
 from collections.abc import Callable
@@ -27,8 +26,7 @@ class JmesFunctionsFactory:
     """Factory for JMESPath functions."""
 
     def register_class[T](self, class_: type[T]) -> type[Functions]:
-        """
-        Registers the methods defined in `class_` as JMESPath functions.
+        """Registers the methods defined in `class_` as JMESPath functions.
 
         Methods whose names start with `_` are ignored.
         Copies methods from `class_` to a new class that inherits `jmespath.functions.Functions`.
@@ -49,7 +47,7 @@ class JmesFunctionsFactory:
         param_specs = [{"types": TYPE_MAP[type_hints[p.name]]} for p in sig.parameters.values()]
 
         def make_wrapped(m: Callable[P, V]) -> Callable[P, V]:
-            return lambda self_, *args: m(*args)
+            return lambda _self, *args: m(*args)
 
         wrapped = make_wrapped(method)
         wrapped.__name__ = f"_func_{name}"

@@ -1,8 +1,9 @@
 # SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
-"""
-Utilities for working with nested dicts, using `.` as a subkey delimiter.
+
+"""Utilities for working with nested dicts, using `.` as a subkey delimiter.
+
 See [DotTree][].
 """
 
@@ -22,9 +23,30 @@ type Branch = dict[str, Toml]
 type Limb = dict[str, Leaf]
 type Toml = Leaf | Branch
 
+__all__ = [
+    "Array",
+    "Branch",
+    "Checker",
+    "DotTree",
+    "DotTrees",
+    "Leaf",
+    "LeafConflictError",
+    "LeafIntersectionError",
+    "LeavesInCommonError",
+    "Limb",
+    "Primitive",
+    "Toml",
+    "Utils",
+]
+
 
 @dataclass(frozen=True, slots=True)
-class LeafIntersectionError(Exception):
+class LeavesInCommonError(Exception):
+    """Two or more trees have leaves in common."""
+
+
+@dataclass(frozen=True, slots=True)
+class LeafIntersectionError(LeavesInCommonError):
     """There are leaves in common between two or more trees."""
 
     intersection: dict[str, list[Leaf]]
@@ -42,7 +64,7 @@ class LeafIntersectionError(Exception):
 
 
 @dataclass(frozen=True, slots=True)
-class LeafConflictError(Exception):
+class LeafConflictError(LeavesInCommonError):
     """There are leaves with different values in common between two or more trees."""
 
     intersection: dict[str, list[Leaf]]
@@ -149,8 +171,8 @@ class Utils:
 
     @classmethod
     def nest(cls, items: Branch, /) -> Branch:
-        """
-        Converts a dict with dotted keys to a nested dict.
+        """Converts a dict with dotted keys to a nested dict.
+
         However, won't complain if `items` contains nested items.
 
         Examples:
@@ -191,8 +213,8 @@ class Utils:
 
     @classmethod
     def dotify(cls, items: Branch, /) -> Branch:
-        """
-        Converts a nested dict to a dict with dotted keys.
+        """Converts a nested dict to a dict with dotted keys.
+
         However, won't complain if a key in (or nested in) `items` contains `.`.
 
         Examples:
@@ -225,8 +247,8 @@ class Utils:
 
 
 class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correctly
-    """
-    A dict with TOML data types and methods to access nested values via e.g. `animal.species.name`.
+    """A dict with TOML data types and methods to access nested values via e.g. `pet.name`.
+
     Keys must be strings and cannot contain `.`, which is reserved for nested access.
 
     Designed with JSON, YAML, and especially TOML in mind.
@@ -283,8 +305,7 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
 
     @classmethod
     def from_mixed(cls, x: Branch, /) -> Self:
-        """
-        Builds from a potential mixture of nested and `"."`-separated keys.
+        """Builds from a potential mixture of nested and `"."`-separated keys.
 
         Raises:
             TypeError: If `x` is not a `dict` or a key is not a `str`.
@@ -294,25 +315,24 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
             >>> from tyranno_sandbox.dot_tree import DotTree
             >>> DotTree.from_mixed({"books": [{"title": "Bats", "ids.isbn": "123-4-56-123456-0"}]})
             {"books": [{"title": "Bats", "ids": {"isbn": "123-4-56-123456-0"}}]}
-        """  # noqa: DOC502
+        """
         return cls(Utils.nest(Utils.dotify(x)))
 
     @classmethod
     def from_nested(cls, x: Branch, /) -> Self:
-        """
-        Creates a tree from a nested dict.
+        """Creates a tree from a nested dict.
+
         In contrast to the constructor, this verifies that the keys are valid.
 
         Raises:
             ValueError: If a key contains `.`.
             TypeError: If or `x` is not a `dict`, a key is not a `str`, or a value is `None`.
-        """  # noqa: DOC502
+        """
         return cls(Checker.check(x))
 
     @classmethod
     def from_dotted(cls, x: Limb, /) -> Self:
-        """
-        Creates a new tree from a dict of leaves.
+        """Creates a new tree from a dict of leaves.
 
         Raises:
             ValueError: If `x` contains a `dict`; i.e. if there is nesting.
@@ -324,12 +344,11 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
             {"owner": {"name": {"first": "John"}}}
             >>> DotTree.from_dotted({"books": [{"title": "Bats", "ids.isbn": "123-4-56-123456-0"}]})
             {"books": [{"title": "Bats", "ids": {"isbn": "123-4-56-123456-0"}}]}
-        """  # noqa: DOC502
+        """
         return cls(Utils.nest(x))
 
     def transform_leaves(self, fn: Callable[[str, Leaf], Leaf | None], /) -> Self:
-        """
-        Applies a function to each leaf, returning a new tree.
+        """Applies a function to each leaf, returning a new tree.
 
         Arguments:
             fn: Returns a new `Leaf`, or `None` to drop the leaf.
@@ -358,8 +377,8 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
                 yield value
 
     def limbs(self) -> dict[str, Limb]:
-        """
-        Maps each bottom-level branch to a dict of its leaves.
+        """Maps each bottom-level branch to a dict of its leaves.
+
         Leaves directly under the root are assigned to key `""`.
 
         Returns:
@@ -372,8 +391,8 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
         return dicts
 
     def leaves(self) -> Limb:
-        """
-        Gets the leaves in this tree.
+        """Gets the leaves in this tree.
+
         For example: `{"info.pet.genus": "Felis", "info.pet.species": "catus"}`.
 
         Warning:
@@ -388,23 +407,22 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
         return dct
 
     def access_subtree(self, keys: str, /) -> Self:
-        """
-        Returns the subtree under the `.`-delimited key string, `keys`.
+        """Returns the subtree under the `.`-delimited key string, `keys`.
 
         Raises:
             TypeError: If the value is not a dict.
             KeyError: If `keys` is not found.
-        """  # noqa: DOC502
+        """
         return self.__class__(self._access(keys))
 
     def get_subtree(self, keys: str, /, default: Branch | None = None) -> Self:
-        """
-        Returns the subtree under the `.`-delimited key string, `keys`.
+        """Returns the subtree under the `.`-delimited key string, `keys`.
+
         If `keys` is not found, returns `default`; returns `{}` if `default=None`.
 
         Raises:
             TypeError: If the value is not a dict.
-        """  # noqa: DOC502
+        """
         try:
             x = self._access(keys)
         except KeyError:
@@ -417,8 +435,7 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
     def get_primitive_as[T: Primitive](
         self, keys: str, /, as_type: type[T], default: T | None = None
     ) -> T:
-        """
-        Returns a primitive value after checking its type, or `default` if not found.
+        """Returns a primitive value after checking its type, or `default` if not found.
 
         Raises:
             TypeError: If not `isinstance(value, as_type)`.
@@ -433,13 +450,12 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
         return x
 
     def access_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T]) -> T:
-        """
-        Returns a value after checking its type, or raises a `KeyError` if not found.
+        """Returns a value after checking its type, or raises a `KeyError` if not found.
 
         Raises:
             KeyError: If `keys` is not found.
             TypeError: If not `isinstance(value, as_type)`.
-        """  # noqa: DOC502
+        """
         x = self._access(keys)
         if not isinstance(x, as_type):
             msg = f"Value {x} from {keys} is a {type(x)}, not {as_type}"
@@ -447,8 +463,8 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
         return x
 
     def get_list(self, keys: str, /, default: Array | None = None) -> Array:
-        """
-        Returns a list, or `default` if not found.
+        """Returns a list, or `default` if not found.
+
         `default=None` is equivalent to `default=[]`.
 
         Raises:
@@ -466,8 +482,8 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
     def get_list_as[T: Primitive](
         self, keys: str, /, as_type: type[T], default: list[T] | None = None
     ) -> list[T]:
-        """
-        Returns a list, or `default` if not found, checking the types of the list elements.
+        """Returns a list, or `default` if not found, checking the types of the list elements.
+
         `default=None` is equivalent to `default=[]`.
 
         Raises:
@@ -486,13 +502,12 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
         return x
 
     def access_list_as[T: Primitive](self, keys: str, /, as_type: type[T]) -> list[T]:
-        """
-        Returns a list after checking the types of its elements, or raises a `KeyError`.
+        """Returns a list after checking the types of its elements, or raises a `KeyError`.
 
         Raises:
             KeyError: If `keys` is not found.
             TypeError: If not `isinstance(value, as_type)` for all values in the list.
-        """  # noqa: DOC502
+        """
         x = self._access(keys)
         if not isinstance(x, list):
             msg = f"Value {x} is not a list for key {keys}"
@@ -506,12 +521,11 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
     def get_primitive[T: Primitive](self, keys: str, /, default: T) -> T: ...
 
     def get_primitive[T: Primitive](self, keys: str, /, default: T | None = None) -> T | None:
-        """
-        Returns a primitive value, or `default` if not found.
+        """Returns a primitive value, or `default` if not found.
 
         Raises:
             TypeError: If the value is not a primitive.
-        """  # noqa: DOC502
+        """
         try:
             v = self._access(keys)
         except KeyError:
@@ -519,13 +533,12 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
         return Checker.check_primitive(v)
 
     def access_primitive(self, keys: str) -> Primitive:
-        """
-        Returns a primitive value, or raises a `KeyError`.
+        """Returns a primitive value, or raises a `KeyError`.
 
         Raises:
             KeyError: If the key is not found.
             TypeError: If the value is not a primitive.
-        """  # noqa: DOC502
+        """
         return Checker.check_primitive(self._access(keys))
 
     def get(self, keys: str) -> Toml | None:
@@ -536,12 +549,11 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
             return None
 
     def access(self, keys: str) -> Toml:
-        """
-        Returns a value from the `.`-delimited `keys`, or raises a `KeyError`.
+        """Returns a value from the `.`-delimited `keys`, or raises a `KeyError`.
 
         Raises:
             KeyError: If the key is not found.
-        """  # noqa: DOC502
+        """
         return self._access(keys)
 
     def _access(self, keys: str) -> Toml:
@@ -566,7 +578,7 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
 
     def print(self) -> str:
         """Pretty-prints the leaves of this dict using `json.dumps`."""
-        return json.dumps(self, ensure_ascii=True, indent=2)
+        return json.dumps(self, ensure_ascii=False, indent=2)
 
 
 class DotTrees:
@@ -576,8 +588,7 @@ class DotTrees:
     def merge_leaves(
         cls, *trees: DotTree, replace: Literal["always", "same_value", "never"] = "same_value"
     ) -> DotTree:
-        """
-        Builds a tree containing the union of the leaves of `trees`.
+        """Builds a tree containing the union of the leaves of `trees`.
 
         Empty branches are removed, and arrays are **not** merged.
 
@@ -611,9 +622,7 @@ class DotTrees:
 
     @classmethod
     def leaf_intersection(cls, *limbs: Limb) -> dict[str, list[Leaf]]:
-        """
-        Returns a dict mapping each leaf key to its values in `limbs`,
-        for keys that at least 2 limbs share.
+        """Returns a mapping of each leaf key to its values in `limbs` for keys that 2+ limbs share.
 
         The length of each list is equal to the number of limbs sharing that key.
         Values are not checked and are not deduplicated.
@@ -626,11 +635,9 @@ class DotTrees:
 
     @classmethod
     def leaf_intersection_size(cls, *limbs: Limb) -> dict[str, int]:
-        """
-        Returns a dict mapping each leaf key to the number of limbs containing it,
-        for keys that at least 2 limbs share.
+        """Equivalent to `{k: len(v) for k, v in leaf_intersection(limbs).items()}`.
 
-        This is simply faster than [leaf_intersection][].
+        This is simply faster than using [leaf_intersection][].
         """
         counts: Counter[str] = Counter()
         for limb in limbs:
@@ -640,20 +647,20 @@ class DotTrees:
     @classmethod
     def from_json(cls, data: str, /) -> DotTree:
         """Builds a tree from a JSON string."""
-        import json
+        import json  # noqa: PLC0415
 
         return DotTree.from_nested(json.loads(data))
 
     @classmethod
     def from_toml(cls, data: str, /) -> DotTree:
         """Builds a tree from a TOML string, parsed with `tomllib`."""
-        import tomllib
+        import tomllib  # noqa: PLC0415
 
         return DotTree.from_nested(tomllib.loads(data))
 
     @classmethod
     def to_json(cls, tree: DotTree) -> str:
         """Converts to JSON, raising `ValueError` for `NaN`, `Inf`, and `-Inf` values."""
-        import json
+        import json  # noqa: PLC0415
 
         return json.dumps(tree, ensure_ascii=False, allow_nan=False)

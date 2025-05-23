@@ -2,8 +2,7 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Project metadata.
+"""Project metadata.
 
 This is a separate module so that it's easy to import.
 For example, `mypkg/app.py` may want to write `"{__about__.name} (version v{__about__.version})"`,
@@ -50,8 +49,8 @@ class _FrozenList[T](Sequence[T]):
 
 
 class UrlDict(TypedDict):
-    """
-    URLs for this project, [per PyPi](https://docs.pypi.org/project_metadata/).
+    """URLs for this project, [per PyPi](https://docs.pypi.org/project_metadata/).
+
     Names are from the `name` column, lowercased.
     `homepage`, `changelog`, and `source` are required.
     """
@@ -66,8 +65,7 @@ class UrlDict(TypedDict):
 
 
 class About(TypedDict):
-    """
-    Metadata about this package.
+    """Metadata about this package.
 
     Attributes:
         namespace: name of the directory containing this module.

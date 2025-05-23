@@ -2,9 +2,7 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Utilities for tests.
-"""
+"""Utilities for tests."""
 
 import contextlib
 import io
@@ -61,8 +59,7 @@ class Capture(contextlib.ExitStack):
 
 @dataclass(frozen=True, slots=True)
 class TestHelper:
-    """
-    A set of utilities for tests classes.
+    """A set of utilities for tests classes.
     Use [resource][] to get a file under `tests/resources/`.
     """
 
@@ -72,8 +69,7 @@ class TestHelper:
     @classmethod
     @contextlib.contextmanager
     def capture(cls) -> Generator[Capture]:
-        """
-        Context manager that captures stdout and stderr in a `Capture` object that contains both.
+        """Context manager that captures stdout and stderr in a `Capture` object that contains both.
         Useful for testing code that prints to stdout and/or stderr.
 
         Yields:
@@ -84,8 +80,7 @@ class TestHelper:
 
     @classmethod
     def resource(cls, *nodes: PathLike | str) -> Path:
-        """
-        Gets a path of a test resource file under `resources/`.
+        """Gets a path of a test resource file under `resources/`.
 
         Arguments:
             nodes: Path nodes under the `resources/` dir

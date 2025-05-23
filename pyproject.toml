@@ -202,8 +202,8 @@ select = [
   "B",        # flake8-bugbear
   "BLE",      # flake8-blind-exception: `Exception`, `RuntimeException`, or no type (don't use E722)
   "C4",       # flake8-comprehensions
-  #"C90",     # mmcabe //DISABLED: useful but thin-lined and time-intensive//
-  #"COM",     # flake8-commas //DISABLED: handled by formatter//
+  "C90",      # mmcabe
+  "COM",      # flake8-commas (only a few rules used)
   #"CPY",     # flake8-copyright //DISABLED: handle carefully instead//
   #"D",       # pydocstyle //DISABLED: most rules handled by formatter//
   "D100",     # undocumented public module (could be just 1 line)
@@ -212,18 +212,21 @@ select = [
   "D205",     # missing blank line after summary in multiline docstring
   "D209",     # `...final text."""` in multiline docstring
   "D210",     # whitespace around text (almost all auto-fixable)
-  "D213",     # `"""Summary...` in multiline docstring
+  "D212",     # summary on second line in multiline docstring
   "D214",     # over-indented section
   "D3",       # docstring ''', \, etc. (almost all auto-fixable)
   "D4",       # blank docstring sections, etc. (almost all auto-fixable)
   "DJ",       # flake8-django (does nothing if not used)
   #"DOC",     # pydoclint //DISABLED: encourages writing sections out of habit//
+  "DOC202",   # `Returns` section without `return`
+  "DOC403",   # `Yields` section without `yield`
+  #"DOC502",  # `Raises` lists exeption not raised directly //DISABLED: often ok//
   "DTZ",      # flake8-datetimez
   #"E",       # pycodestyle ERRORs //DISABLED: almost all handled by formatter//
   "E7",       # == True, bare except, lambda assignment, 'l' in names, etc.
   "E9",       # can't lint -- syntax error, etc.
   "EM",       # flake8-errmsg
-  #"ERA",      # eradicate (commented-out code) //DISABLED: error-prone//
+  #"ERA",     # eradicate (commented-out code) //DISABLED: error-prone//
   #"EXE",     # flake8-executable //DISABLED: pre-commit shebang rules instead//
   "F",        # pyflakes
   "FA",       # flake8-future-annotations
@@ -260,7 +263,7 @@ select = [
   "SLOT",     # flake8-slots
   "T10",      # flake8-debugger (bans debugger)
   "T20",      # flake8-print (bands print and pprint)
-  "TC",      # flake8-type-checking (TYPE_CHECKING blocks)
+  "TC",       # flake8-type-checking (TYPE_CHECKING blocks)
   "TC004",    # move imports that can't be in TYPE_CHECKING blocks
   "TC005",    # remove empty TYPE_CHECKING blocks
   "TC008",    # remove quotes from type aliases
@@ -275,6 +278,8 @@ select = [
 ]
 
 ignore = [
+  "COM812",   # no trailing comma; use formatter instead
+  "COM819",   # trailing comma; use formatter instead
   "E722",     # "bare-except"; use "blind-except" (BLE001) instead
   "PLR6301",  # 'self' not used (correct for overrides; more OOP)
   "RUF001",   # confusable characters
@@ -312,6 +317,9 @@ max-nested-blocks = 4 # default is 5
 allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 
 [tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = [
+  "F401",    # unused import
+]
 "tests/**/*" = [
   "INP001",  # missing __init__
   "PLR2004", # magic value
