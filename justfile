@@ -228,9 +228,9 @@ check-simple:
 [group('check'), no-exit-message]
 check-ruff *args: (_check_ruff args)
 
-# Check ALL Ruff rules, ignoring the configuration.
+# Show the number of violations per Ruff rule.
 [group('check'), no-exit-message]
-check-ruff-all *args: (_check_ruff "--select" "ALL" "--ignore" "" "--per-file-ignores" "" args)
+check-ruff-stats *args: (ruff "check" "--no-fix" "--statistics" args)
 
 # Check Ruff Bandit-derived 'S' rules.
 [group('check'), no-exit-message]
@@ -321,10 +321,6 @@ run +args:
 [group('alias'), no-exit-message]
 python *args: (run "python" args)
 
-# `uv run --locked pre-commit`
-[group('alias'), no-exit-message]
-pre-commit *args: (run "pre-commit" args)
-
 # `uv run --locked pre-commit run {hook}`
 [group('alias'), no-exit-message]
 hook name *args: (run "pre-commit" "run" name args)
@@ -337,7 +333,7 @@ ruff *args: (run "ruff" args)
 [group('alias'), no-exit-message]
 pytest *args: (run "pytest" args)
 
-# `gh pr create --fill-verbose --web --draft`
+# `gh pr create --fill-verbose --draft`
 [group('alias'), no-exit-message]
-pr *args:
-  gh pr create --fill-verbose --web --draft {{args}}
+pr *args="--web":
+  gh pr create --fill-verbose --draft {{args}}
