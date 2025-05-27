@@ -50,7 +50,7 @@ jobs:
           echo "nullary=$nullary" >> "$GITHUB_OUTPUT"
           unary=$( \
             grep --only-matching --perl-regexp "$UNARY_CMD" <<< "$TEXT" \
-            | sed -r 's/-/ /g' | sed -r 's/plz ++//g' | sed -r 's/ ++(in|on) ++/ \//g' \
+            | sed -E 's/-/ /g' | sed -E 's/plz ++//g' | sed -E 's/ ++(in|on) ++/ \//g' \
           )
           echo "unary=$unary" >> "$GITHUB_OUTPUT"
 
