@@ -59,7 +59,7 @@ dependencies = [
   "platformdirs>=4.3.2",
   "pathspec>=0.12",
   "semver>=3.0",
-  "typer-slim>=0.15",
+  "typer-slim>=0.16",
   # /usr/share/zoneinfo uses IANA zones; Windows does not
   "tzdata>=2025.1; platform_system == 'Windows'",
 ]
@@ -67,7 +67,6 @@ dependencies = [
 # -------------------------- optional dependencies ----------------------------
 [project.optional-dependencies]
 cli = [
-  "rich>=14.0",
   "shellingham>=1.5",
 ]
 server = [
@@ -307,12 +306,15 @@ pydocstyle.convention = "google"
 flake8-tidy-imports.ban-relative-imports = "all"
 isort.detect-same-package = false # Use `tool.ruff.src` instead.
 isort.split-on-trailing-comma = false
+pycodestyle.max-doc-length = 100 # match tool.ruff.line-length
+mccabe.max-complexity = 12 # default is 10
 
 # Delegated options for pylint
 [tool.ruff.lint.pylint]
 max-args = 10 # default is 5 (leave `max_positional_args` at 5)
 max-bool-expr = 10 # default is 5
 max-public-methods = 30 # default is 20
+max-locals = 12 # default is 15
 max-nested-blocks = 4 # default is 5
 allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 

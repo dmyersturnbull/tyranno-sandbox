@@ -18,7 +18,9 @@
 
 # Note: Patterns are relative, unlike `.dockerignore` and `.prettierignore`.
 
-# Dotted files and directories
+### Temporary paths ###
+
+# Dotted paths (many whitelisted later)
 .*
 
 # Paths starting or ending in `~`, `$`, or `#`; or starting in `.~`.
@@ -36,6 +38,8 @@
 *.log
 *.pid
 Thumbs.db
+
+### Large binary files ###
 
 # Databases
 *.sqlite3
@@ -64,21 +68,40 @@ Thumbs.db
 *.pkg
 *.so
 
-# IDEs
-*.iml
-pch.h
+### Cross-language directories ###
 
-# Python
+# Build directories
+/bin/
 /build/
 /dist/
+/obj/
+/out/
 /sdist/
+/target/
+
+# Prebuilt libraries
+/lib/
+/vendor/
+
+# Auto-generated docs
+/docs/html/
+/docs/_build/
+/docs/autoapi/
+/site/
+
+### Language-specific paths ###
+
+# Coverage
+/coverage/
+/htmlcov/
+
+# Python
 __pycache__/
 __pypackages__/
 cython_debug/
 *.py[cod]
 
 # Java
-/target/
 /pom.xml.*
 *.class
 
@@ -90,6 +113,8 @@ cython_debug/
 *.lib
 *.lo
 *.o
+
+### Temporary files for tools ###
 
 # Make, CMake, automake, autoconf, pkg-config, etc.
 _deps
@@ -109,15 +134,9 @@ tsconfig.tsbuildinfo
 *.jl.mem
 deps/deps.jl
 
-# Documentation (`.site/` is preferred)
-/docs/html/
-/docs/_build/
-/docs/autoapi/
-
-# Coverage
-/coverage.*
-/coverage/
-/htmlcov/
+# IDEs
+*.iml
+pch.h
 
 # IPython
 profile_default/
@@ -135,9 +154,7 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-#                             whitelist                             #
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+### Whitelist dotted files ###
 
 # Git
 !/.git-blame-ignore-revs
@@ -151,6 +168,7 @@ override.tf.json
 !/.*ignore
 
 # GitHub
+!/.devcontainer
 !/.github/
 !/.nojekyll
 
@@ -159,10 +177,10 @@ override.tf.json
 !/.prettierrc*
 
 # External service config
+!/.*.toml
 !/.*.yaml
 !/.*.yml
-!/.*.toml
+!/.*/[a-z0-9_-]*.toml
 !/.*/[a-z0-9_-]*.yaml
 !/.*/[a-z0-9_-]*.yml
-!/.*/[a-z0-9_-]*.toml
 !/.circleci/
