@@ -264,9 +264,6 @@ select = [
   "T10",      # flake8-debugger (bans debugger)
   "T20",      # flake8-print (bands print and pprint)
   "TC",       # flake8-type-checking (TYPE_CHECKING blocks)
-  "TC004",    # move imports that can't be in TYPE_CHECKING blocks
-  "TC005",    # remove empty TYPE_CHECKING blocks
-  "TC008",    # remove quotes from type aliases
   #"TD",      # flake8-to*do //DISABLED: requires a specific format//
   "TID",      # flake8-tidy-imports (bans relative imports)
   "TRY",      # tryceratops (try-except-raise)
