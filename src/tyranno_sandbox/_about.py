@@ -11,9 +11,9 @@ while your `mypkg/__init__.py` includes lines like `from mypkg.app import Entry`
 """
 
 from collections.abc import Sequence
-from typing import Final, NotRequired, ReadOnly, TypedDict, overload
+from typing import Final, NamedTuple, NotRequired, ReadOnly, TypedDict, overload
 
-__all__ = ["About", "UrlDict", "__about__"]
+__all__ = ["About", "UrlDict", "VersionParts", "__about__"]
 
 
 class _FrozenList[T](Sequence[T]):
@@ -64,6 +64,27 @@ class UrlDict(TypedDict):
     funding: NotRequired[ReadOnly[str]]
 
 
+class VersionParts(NamedTuple):
+    """Major, minor, patch, and pre per semver.
+
+    This project's versions conform to both PyPa (i.e. PEP 440) and SemVer rules.
+    `pre` will normally be empty or `('alpha'|'beta'|'rc', nonnegative-int)`.
+    """
+
+    major: int
+    minor: int
+    patch: int
+    pre: tuple[str | int, ...]
+
+    @property
+    def minor_version(self) -> str:
+        return f"{self.major}.{self.minor}"
+
+    @property
+    def patch_version(self) -> str:
+        return f"{self.major}.{self.minor}.{self.patch}"
+
+
 class About(TypedDict):
     """Metadata about this package.
 
@@ -71,6 +92,7 @@ class About(TypedDict):
         namespace: name of the directory containing this module.
         name: pyproject `project.name`                   / importlib `Name`    .
         version: pyproject `project.version`             / importlib `version`.
+        version_parts: (parsed `version`)
         summary: pyproject `project.description`         / importlib `Summary`.
         license: pyproject `project.license.text`        / importlib `License`;
           an SPDX ID such as `Apache-2.0`.
@@ -89,6 +111,7 @@ class About(TypedDict):
     namespace: ReadOnly[str]
     vendor: ReadOnly[str]
     version: ReadOnly[str]
+    version_parts: ReadOnly[VersionParts]
     summary: ReadOnly[str]
     license: ReadOnly[str]
     authors: ReadOnly[Sequence[str]]
@@ -106,6 +129,8 @@ __about__: Final[About] = About(
     name="tyranno-sandbox",
     # ::tyranno:: version="$<<project.version>>",
     version="0.0.1-alpha.0",
+    # ::tyranno:: version="$<<project.version.semver(@).py_tuple(@)>>",
+    version_parts=VersionParts(0, 0, 1, ("alpha", 0)),
     # ::tyranno:: summary="$<<project.summary>>",
     summary="Sandbox to test CI/CD in Tyrannosaurus",
     # ::tyranno:: authors=$<<project.authors[*].name>>,

@@ -11,101 +11,89 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, Final
 
+import typer
 from loguru import logger
-from typer import Argument, Option, Typer, echo, style
+from typer import Argument, Option, Typer, style
 
 from tyranno_sandbox._about import __about__
 from tyranno_sandbox._global_vars import EnvGlobalVarsFactory, GlobalVars
-from tyranno_sandbox.context import ContextFactory, DefaultContextFactory
+from tyranno_sandbox.context import Context, ContextFactory, DefaultContextFactory
 
-try:
-    # noinspection PyUnresolvedReferences
-    from rich.console import Console
-
-    console = Console(stderr=sys.stdout.isatty())
-except ImportError:
-    console = None
-
-_ENV: GlobalVars = EnvGlobalVarsFactory()()
+ENV: GlobalVars = EnvGlobalVarsFactory()()
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
-class Messenger:
+@dataclass(slots=True, kw_only=True)
+class State:
     """Utility to write messages in typer."""
 
+    context_factory: ContextFactory
     success_color: str
     failure_color: str
+    is_dry_run: bool = False
+    log_level: int = -1
 
-    def success(self, msg: str) -> None:
-        echo(style(msg, fg=self.success_color, bold=True))
+    def create_context(self) -> Context:
+        return self.context_factory(Path.cwd(), ENV, dry_run=self.is_dry_run)
 
-    def info(self, msg: str) -> None:
-        echo(msg)
-
-    def failure(self, msg: str) -> None:
-        echo(style(msg, fg=self.failure_color, bold=True))
+    def set_log_level(self, *, quiet: int, verbose: int) -> None:
+        levels = ["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "FATAL"]
+        self.log_level = levels[max(6, min(0, 3 + quiet - verbose))]
+        logger.remove()
+        logger.add(sys.stderr, level=self.log_level)
 
     def show_project_info(self) -> None:
         self.info(f"{__about__['name']} v{__about__['version']}")
 
+    def success(self, msg: str) -> None:
+        typer.echo(style(msg, fg=self.success_color, bold=True))
 
-def set_cli_state(verbose: int, quiet: int) -> None:
-    levels = ["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "FATAL"]
-    level = levels[max(6, min(0, 3 + quiet - verbose))]
-    logger.remove()
-    logger.add(sys.stderr, level=level)
+    def failure(self, msg: str) -> None:
+        typer.echo(style(msg, fg=self.failure_color, bold=True))
+
+    def info(self, msg: str) -> None:
+        typer.echo(msg)
 
 
-class _Opts:
-    dry_run: Annotated[bool, Option("--dry-run", help="Just log; don't make any changes")] = False
+state: Final[State] = State(
+    context_factory=DefaultContextFactory(),
+    success_color=ENV.success_color,
+    failure_color=ENV.failure_color,
+)
+cli: Final[Typer] = Typer(name="tyranno", no_args_is_help=True)
+
+
+@cli.callback()
+def meta(
+    *,
+    dry_run: Annotated[bool, Option("--dry-run", help="Just log; don't make any changes")] = False,
     verbose: Annotated[
         int, Option("--verbose", "-v", count=True, help="Log INFO (repeat for DEBUG, TRACE)")
-    ] = 0
+    ] = 0,
     quiet: Annotated[
         int, Option("--quiet", "-q", count=True, help="Hide SUCCESS (repeat for WARNING, ERROR)")
-    ] = 0
+    ] = 0,
+) -> None:
+    state.set_log_level(quiet=quiet, verbose=verbose)
+    state.is_dry_run = dry_run
 
 
-messenger: Final[Messenger] = Messenger(
-    success_color=_ENV.success_color, failure_color=_ENV.failure_color
-)
-cli: Final[Typer] = Typer(name="tyranno")
-context_factory: Final[ContextFactory] = DefaultContextFactory()
+@cli.command()
+def new(
+    path: Annotated[Path, Argument(help="name", exists=False, default_factory=Path.cwd)],
+    *,
+    name: Annotated[str, Option(help="Full project name")] = "my-project",
+    license_id: Annotated[str, Option("--license", help="SPDX ID")] = "Apache-2.0",
+) -> None:
+    state.success(f"Done! Created a new repository under {name}")
+    state.success("See https://dmyersturnbull.github.io/tyranno/guide.html")
 
 
-class CliCommands:
-    """Commands for Tyranno."""
-
-    @staticmethod
-    @cli.command()
-    def new(
-        path: Annotated[Path, Argument(help="name", exists=False, default_factory=Path.cwd)],
-        *,
-        name: Annotated[str, Option(help="Full project name")] = "my-project",
-        license_id: Annotated[str, Option("--license", help="SPDX ID")] = "Apache-2.0",
-        dry_run: _Opts.dry_run = False,
-        verbose: _Opts.verbose = False,
-        quiet: _Opts.quiet = False,
-    ) -> None:
-        set_cli_state(verbose=verbose, quiet=quiet)
-        context = context_factory(Path.cwd(), _ENV, dry_run=dry_run)
-        messenger.info(f"Done! Created a new repository under {name}")
-        messenger.success("See https://dmyersturnbull.github.io/tyranno/guide.html")
-
-    @staticmethod
-    @cli.command()
-    def sync(
-        *,
-        dry_run: _Opts.dry_run = False,
-        verbose: _Opts.verbose = False,
-        quiet: _Opts.quiet = False,
-    ) -> None:
-        """Syncs project metadata between configured files."""
-        set_cli_state(verbose=verbose, quiet=quiet)
-        context = context_factory(Path.cwd(), _ENV, dry_run=dry_run)
-        messenger.info("Syncing metadata...")
-        # targets = Sync(context).sync()
-        # Msg.success(f"Done. Synced to {len(targets)} targets: {targets}")
+@cli.command()
+def sync() -> None:
+    """Syncs project metadata between configured files."""
+    state.info("Syncing metadata...")
+    # targets = Sync(context).sync()
+    # Msg.success(f"Done. Synced to {len(targets)} targets: {targets}")
 
 
 if __name__ == "__main__":

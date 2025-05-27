@@ -5,10 +5,12 @@
 """Utility to create custom JMESPath functions."""
 
 import inspect
+import types
 from collections.abc import Callable
 from typing import Any, Final, get_type_hints
 
-from jmespath.functions import Functions, signature
+from jmespath.functions import Functions
+from jmespath.functions import signature as jmespath_signature
 
 # Mapping of Python -> JMESPath types.
 TYPE_MAP: Final[dict[type, str]] = {
@@ -33,13 +35,15 @@ class JmesFunctionsFactory:
         """
         members = inspect.getmembers(class_, predicate=inspect.isfunction)
         methods = {name: method for name, method in members if not name.startswith("_")}
+        # Dynamically create a subclass of jmespath.functions.Functions.
         namespace = {}
         for name, method in methods.items():
             jmes_name = f"_func_{name}"
             namespace[jmes_name] = self._register_method(method, name)
-        # Dynamically create a subclass of jmespath.functions.Functions.
+        fns_type = types.new_class(f"{class_.__name__}JmesFunctions", (Functions,), namespace)
+        fns_type()  # test creating
         # noinspection PyTypeChecker
-        return type(f"{class_.__name__}JmesFunctions", (Functions,), namespace)
+        return fns_type  # ty: ignore[invalid-return-type]
 
     def _register_method[**P, V](self, method: Callable[P, V], name: str) -> Callable[P, V]:
         sig = inspect.signature(method)
@@ -50,5 +54,5 @@ class JmesFunctionsFactory:
             return lambda _self, *args: m(*args)
 
         wrapped = make_wrapped(method)
-        wrapped.__name__ = f"_func_{name}"
-        return signature(*param_specs)(wrapped)
+        wrapped.__name__ = f"_func_{name}"  # ty: ignore[unresolved-attribute]
+        return jmespath_signature(*param_specs)(wrapped)

@@ -5,6 +5,7 @@
 """Environment variables and internal utils."""
 
 import os
+import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -17,7 +18,15 @@ import platformdirs
 
 from tyranno_sandbox._about import __about__
 
-__all__ = ["STARTUP", "EnvGlobalVarsFactory", "GlobalVars", "GlobalVarsFactory", "Startup"]
+__all__ = [
+    "ERR_IS_TTY",
+    "OUT_IS_TTY",
+    "STARTUP",
+    "EnvGlobalVarsFactory",
+    "GlobalVars",
+    "GlobalVarsFactory",
+    "Startup",
+]
 
 TRUE: Final[frozenset[str]] = frozenset({"true", "yes", "on"})
 FALSE: Final[frozenset[str]] = frozenset({"false", "no", "off"})
@@ -52,6 +61,7 @@ class GlobalVars:
     cache_dir: Path
     config_dir: Path
     data_dir: Path
+    log_dir: Path
     tyranno_dir: str
     colorize: bool
     success_color: str
@@ -74,9 +84,10 @@ class XdgHelper[**P]:
     """Helper that gets directories from XDG config or tyranno environment variables."""
 
     def dir(self, xdg_fn: Callable[P, str]) -> Path:
-        var_name = self._var_name(xdg_fn.__name__)
+        fn_name: str = xdg_fn.__name__  # ty: ignore[unresolved-attribute]
+        var_name = self._var_name(fn_name)
         value = os.environ.get(var_name, xdg_fn(**self._args()))
-        title = "$" + var_name if var_name in os.environ else f"platform config {xdg_fn.__name__}"
+        title = "$" + var_name if var_name in os.environ else f"platform config {fn_name}"
         path = Path(value).expanduser()
         if not path.is_absolute():
             raise GlobalConfigError(title, value, "is not an absolute path")
@@ -85,18 +96,20 @@ class XdgHelper[**P]:
         return path
 
     def _var_name(self, fn_name: str) -> str:
-        return "TYRANNO_" + fn_name.__name__.removeprefix("user_", "").upper()
+        return "TYRANNO_" + fn_name.removeprefix("user_").upper()
 
     def _args[**P](self) -> P.kwargs:
         return {
             "appname": __about__["name"],
             "appauthor": __about__["vendor"],
-            "version": __about__["version"],
+            "version": str(__about__["version_parts"].major),
             "roaming": False,
             "ensure_exists": False,
         }
 
 
+OUT_IS_TTY: Final[bool] = sys.stdout.isatty()
+ERR_IS_TTY: Final[bool] = sys.stdout.isatty()
 GlobalVarsFactory = Callable[[], GlobalVars]
 
 
@@ -104,7 +117,7 @@ GlobalVarsFactory = Callable[[], GlobalVars]
 class EnvGlobalVarsFactory(GlobalVarsFactory):
     """Factory that reads from environment variables and platform config."""
 
-    env_var_prefix: ClassVar[str] = "TYRANNO_"
+    var_prefix: ClassVar[str] = "TYRANNO_"
 
     def __call__(self) -> GlobalVars:
         xdg = XdgHelper()
@@ -112,18 +125,19 @@ class EnvGlobalVarsFactory(GlobalVarsFactory):
             cache_dir=xdg.dir(platformdirs.user_cache_dir),
             config_dir=xdg.dir(platformdirs.user_config_dir),
             data_dir=xdg.dir(platformdirs.user_data_dir),
+            log_dir=xdg.dir(platformdirs.user_log_dir),
             tyranno_dir=str(self._get_rel_dir("dir", ".tyranno")),
-            success_color=self._get_str("success_color", "green"),
+            success_color=self._get_str("success_color", "blue"),
             failure_color=self._get_str("failure_color", "red"),
-            colorize=self._get_bool("colorize"),
+            colorize=self._get_bool("colorize", lambda: OUT_IS_TTY),
         )
 
-    def _get_str(self, env_var: str, default: str) -> str:
-        return os.environ.get(self.env_var_prefix + env_var, default)
+    def _get_str(self, var: str, default: str) -> str:
+        return os.environ.get(self.var_prefix + var, default)
 
-    def _get_bool(self, name: str) -> bool:
-        env_var = self.env_var_prefix + name.upper()
-        value = os.environ.get(env_var, "false")
+    def _get_bool(self, name: str, default: Callable[[], bool] = lambda: False) -> bool:
+        var = self.var_prefix + name.upper()
+        value = default() if os.environ.get(var, "auto") == "auto" else os.environ[var]
         return self._parse_bool(name, value)
 
     def _parse_bool(self, env_var: str, value: str) -> bool:
@@ -135,7 +149,7 @@ class EnvGlobalVarsFactory(GlobalVarsFactory):
         raise GlobalConfigError("$" + env_var, value, f"is not ({'|'.join(TRUE | FALSE)})")
 
     def _get_rel_dir(self, name: str, default: str) -> str:
-        var_name = self.env_var_prefix + name.upper()
+        var_name = self.var_prefix + name.upper()
         if value := os.environ.get(var_name):
             if Path(value).is_absolute() or len(Path(value).parts) > 1:
                 raise GlobalConfigError("$" + var_name, value, "is not a relative path")
