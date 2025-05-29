@@ -10,11 +10,20 @@ on:
     inputs:
       ref:
         type: string
-        required: true
-        description: The ref of a branch, tag, or hash.
+        default: ""
+        description: A branch or tag ref; defaults to github.head_ref then to github.ref.
       markers:
         type: string
         default: not (ux or e2e)
+      os-list:
+        type: string
+        default: '["ubuntu-latest", "windows-latest", "macos-latest"]'
+        description: A JSON array of runner names.
+      python-list:
+        type: string
+        # ::tyranno:: default: '$<<~.python.test-versions|json(@)>>
+        default: '["3.13"]'
+        description: A JSON array of Python minor or patch versions (as strings).
       retention-days:
         type: number
         default: 0
@@ -41,31 +50,24 @@ on:
           This is important if 'ref' is an "abbreviated ref" rather than a hash.
 
 concurrency:
-  group: _run-pytest / ${{ inputs.ref }}
+  group: _run-pytest / ${{ inputs.ref || github.head_ref || github.ref }}
   cancel-in-progress: ${{ inputs.cancel-in-progress }}
 
-defaults:
-  run:
-    shell: bash
+env:
+  REF: ${{ inputs.ref || github.head_ref || github.ref }}
 
 jobs:
   run-tests:
-    name: Test ${{ inputs.ref }}
+    name: Test ${{ env.REF }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }} # Doesn't affect the status of the `run-tests` job.
       max-parallel: ${{ inputs.max-parallel }}
       matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macos-latest
-        python:
-          # ::tyranno start:: $<<~.python."test-versions">>
-          - "3.13"
-          # :tyranno end
-    uses: ./.github/workflows/_run-pytest-single.yaml
+        os: ${{ fromJSON(inputs.os-list) }}
+        python: ${{ fromJSON(inputs.python-list) }}
+    uses: ./.github/workflows/_test-pytest-single.yaml
     with:
-      ref: ${{ inputs.ref }}
+      ref: ${{ env.REF }}
       os: ${{ matrix.os }}
       python: ${{ matrix.python }}
       retention-days: ${{ inputs.retention-days }}

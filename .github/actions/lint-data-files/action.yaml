@@ -7,8 +7,8 @@ description: Lints YAML and other data files, ignoring formatting.
 
 inputs:
   ref:
-    required: true
-    description: The ref of a branch, tag, or hash.
+    default: ""
+    description: A branch or tag ref; defaults to github.head_ref then to github.ref.
   glob:
     default: .
     description: Glob of files to lint. Unrecognized file types are ignored.
@@ -23,7 +23,7 @@ runs:
   steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ inputs.ref }}
+        ref: ${{ inputs.ref || github.head_ref || github.ref }}
     - name: Lint for serious issues in YAML files.
       id: yamllint
       uses: ibiqlik/action-yamllint@v3

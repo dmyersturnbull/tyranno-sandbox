@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Syncs metadata and labels on GitHub to `.github/project.yaml`.
-name: Sync-repo
+name: sync-repo
 run-name: Sync repo metadata for ${{ github.ref_name }}
 
 on:
@@ -18,13 +18,9 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
 
-permissions:
-  contents: write
-
 jobs:
-  sync-metadata:
-    uses: ./.github/workflows/_sync-repo-metadata.yaml
-  sync-labels:
+  sync:
     permissions:
+      contents: write
       issues: write
-    uses: ./.github/workflows/_sync-repo-labels.yaml
+    uses: ./.github/actions/sync-repo-info/action.yaml

@@ -10,7 +10,7 @@ run-name: CodeQL ${{ github.event.pull_request.number }}
 on:
   pull_request:
     types:
-      - ready_for_review
+      - review_requested
     branches:
       - main
       - master
@@ -33,10 +33,6 @@ concurrency:
 permissions:
   contents: read
   security-events: write
-
-defaults:
-  run:
-    shell: bash
 
 jobs:
   run-codeql:

@@ -7,15 +7,15 @@ description: Lints a Dockerfile named 'Dockerfile'.
 
 inputs:
   ref:
-    required: true
-    description: The ref of a branch, tag, or hash.
+    default: ""
+    description: A branch or tag ref; defaults to github.head_ref then to github.ref.
 
 runs:
   using: composite
   steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ inputs.ref }}
+        ref: ${{ inputs.ref || github.head_ref || github.ref }}
     # hadolint's last release was in 2022.
     # However, it's decidedly not abandoned: https://github.com/hadolint/hadolint/issues/1041
     # It's also so widely used that it will find a new maintainer if needed.

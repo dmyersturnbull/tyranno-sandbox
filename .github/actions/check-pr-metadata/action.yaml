@@ -60,4 +60,4 @@ runs:
           dev-infra
           docs-infra
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # See: https://github.com/github/docs/issues/21930

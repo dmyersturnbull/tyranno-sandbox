@@ -9,8 +9,8 @@ description: >-
 
 inputs:
   ref:
-    required: true
-    description: The ref of a branch, tag, or hash.
+    default: ""
+    description: A branch or tag ref; defaults to github.head_ref then to github.ref.
   retention-days:
     default: "1"
     description: >-
@@ -47,14 +47,16 @@ runs:
     - id: define
       shell: bash
       run: |
-        ref_name='${{ inputs.ref }}'
+        ref='${{ inputs.ref || github.head_ref || github.ref }}'
+        ref_name="$ref"
         ref_name="${ref_name#refs/heads/}"
         ref_name="${ref_name#refs/tags/}"
+        echo "ref=$ref" >> "$GITHUB_OUTPUT"
         echo "ref_name=$ref_name" >> "$GITHUB_OUTPUT"
         echo "artifact_name=dist-$ref_name" >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v4
       with:
-        ref: ${{ inputs.ref }}
+        ref: ${{ steps.define.outputs.ref }}
     - uses: astral-sh/setup-uv@v6
     - name: Build sources and wheels
       shell: bash

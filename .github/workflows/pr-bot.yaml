@@ -18,8 +18,6 @@ permissions:
 env:
   NULLARY_CMD: >-
     ^\/plz ++(?<cmd>[a-z0-9 -]++) *+$
-  UNARY_CMD: >-
-    ^\/plz ++(?<cmd>(?:(?:[a-z0-9-]++) *)+?)(?: ++(?:in|on)?+ ++(?<ref>head|merge)(?: ref)?+)?+ *+$
 
 jobs:
   # Parse the body and find lines matching `/plz <cmd> [<ref>]`.
@@ -36,7 +34,6 @@ jobs:
       TEXT: ${{ github.event.comment.body }}
     outputs:
       nullary: ${{ steps.extract.outputs.nullary }}
-      unary: ${{ steps.extract.outputs.unary }}
     steps:
       - name: Extract commands using regex
         id: extract
@@ -44,73 +41,45 @@ jobs:
         run: |
           nullary=$( \
             grep --only-matching --perl-regexp "$NULLARY_CMD" <<< "$TEXT" \
-              | sed -E 's/-/ /g' | sed -E 's/plz ++//g' \
-              | sed -E 's/reformat/format/g'
+              | sed -E 's/-/ /g' \
+              | sed -E 's/plz ++//g' \
           )
           echo "nullary=$nullary" >> "$GITHUB_OUTPUT"
-          unary=$( \
-            grep --only-matching --perl-regexp "$UNARY_CMD" <<< "$TEXT" \
-            | sed -E 's/-/ /g' | sed -E 's/plz ++//g' | sed -E 's/ ++(in|on) ++/ \//g' \
-          )
-          echo "unary=$unary" >> "$GITHUB_OUTPUT"
-
-  audit:
-    if: ${{ contains(needs.cmd.outputs.unary, 'audit') }}
-    needs: cmd
-    uses: ./.github/actions/lint-python/action.yaml
-    with:
-      ruff-rules: S
-      # Run on HEAD, unless "on merge" is specifically requested.
-      ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'audit /merge') && github.ref || github.head_ref }}
 
   lint:
-    if: ${{ contains(needs.cmd.outputs.unary, 'lint') }}
+    if: ${{ contains(needs.cmd.outputs.nullary, 'lint') }}
     needs: cmd
     runs-on: ubuntu-latest
-    env:
-      # Run on HEAD, unless "on merge" is specifically requested.
-      R: ${{ contains(needs.cmd.outputs.unary, 'lint /merge') && github.ref || github.head_ref }}
     steps:
       - uses: ./.github/actions/lint-python/action.yaml
         with:
-          ref: ${{ env.R }}
+          ref: ${{ github.head_ref }}
       - uses: ./.github/actions/lint-dockerfile/action.yaml
         with:
-          ref: ${{ env.R }}
+          ref: ${{ github.head_ref }}
       - uses: ./.github/actions/lint-data-files/action.yaml
         with:
-          ref: ${{ env.R }}
+          ref: ${{ github.head_ref }}
       - uses: ./.github/actions/lint-helm-charts/action.yaml
         with:
-          ref: ${{ env.R }}
+          ref: ${{ github.head_ref }}
 
   check-image:
-    if: ${{ contains(needs.cmd.outputs.unary, 'check image') }}
+    if: ${{ contains(needs.cmd.outputs.nullary, 'check image') }}
     needs: cmd
     uses: ./.github/workflows/_test-docker.yaml
     with:
-      # Run on HEAD, unless "on merge" is specifically requested.
-      ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'check image /merge') && github.ref || github.head_ref }}
+      ref: ${{ github.head_ref }}
 
   check-docs:
-    if: ${{ contains(needs.cmd.outputs.unary, 'check docs') }}
+    if: ${{ contains(needs.cmd.outputs.nullary, 'check docs') }}
     needs: cmd
     uses: ./.github/actions/check-mkdocs/action.yaml
-    with:
-      # Run on HEAD, unless "on merge" is specifically requested.
-      ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'check docs /merge') && github.ref || github.head_ref }}
 
   test:
-    if: ${{ contains(needs.cmd.outputs.unary, 'test') }}
+    if: ${{ contains(needs.cmd.outputs.nullary, 'test') }}
     needs: cmd
     uses: ./.github/workflows/_test-pytest-matrix.yaml
-    with:
-      # Run on MERGE, unless "on head" is specifically requested.
-      ref: >-
-        ${{ contains(needs.cmd.outputs.unary, 'test /head') && github.head_ref || github.ref }}
 
   upgrade:
     if: ${{ contains(needs.cmd.outputs.nullary, 'upgrade') }}
@@ -119,7 +88,6 @@ jobs:
       contents: write
     uses: ./.github/actions/do-bump-dependencies/action.yaml
     with:
-      # Always run on HEAD (doesn't make sense on merge).
       ref: ${{ github.head_ref }}
 
   format:
@@ -129,7 +97,6 @@ jobs:
       contents: write
     uses: ./.github/actions/do-auto-format/action.yaml
     with:
-      # Always run on HEAD (doesn't make sense on merge).
       ref: ${{ github.head_ref }}
       compare-to-ref: ${{ github.base_ref }}
       push: true

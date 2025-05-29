@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: get-paths
+description: Summarize paths that changed with respect to a base
+
+inputs:
+  ref:
+    default: ""
+    description: A branch or tag ref; defaults to github.head_ref then to github.ref.
+  base:
+    default: ""
+    description: The ref to compare against; defaults to github.base_ref
+
+outputs:
+  src:
+    description: >-
+      'true' if 'src/' was modified; otherwise ''
+    value: ${{ steps.paths.outputs.src == 'true' && 'true' || '' }}
+  tests:
+    description: >-
+      'true' if 'tests/' was modified; otherwise ''
+    value: ${{ steps.paths.outputs.tests == 'true' && 'true' || '' }}
+  docs:
+    description: >-
+      'true' if 'docs/', 'mkdocs.yaml', etc. was modified; otherwise ''
+    value: ${{ steps.paths.outputs.docs == 'true' && 'true' || '' }}
+  docker:
+    description: >-
+      'true' if 'Dockerfile', '.dockerignore', etc. was modified; otherwise ''
+    value: ${{ steps.paths.outputs.docker == 'true' && 'true' || '' }}
+  setup:
+    description: >-
+      'true' if 'pyproject.toml' was modified; otherwise ''
+    value: ${{ steps.paths.outputs.setup == 'true' && 'true' || '' }}
+runs:
+  using: composite
+  steps:
+    - name: Identify modified paths
+      id: paths
+      uses: dorny/paths-filter@v3
+      with:
+        ref: ${{ inputs.ref || github.head_ref || github.ref }}
+        base: ${{ inputs.ref || github.base_ref || '' }}
+        filters: |
+          src:
+            - src/**
+          tests:
+            - tests/**
+          docs:
+            - docs/**
+            - mkdocs.yaml
+          docker:
+            - Dockerfile
+            - .dockerignore
+          setup:
+            - pyproject.toml

@@ -4,23 +4,22 @@
 
 # Reusable workflow that sends code coverage reports to Coveralls.
 # Requires `dist-` artifacts and the secret `COVERALLS_TOKEN`.
-run-name: Send ${{ inputs.ref_name }} Coveralls report
+run-name: Send ${{ inputs.ref_name || github.ref_name }} Coveralls report
 
 on:
   workflow_call:
     inputs:
       ref_name:
         type: string
-        required: true
-        description: The name of the branch or tag.
+        default: ""
+        description: The name of the branch or tag; defaults to github.ref_name.
+
+env:
+  REF_NAME: ${{ inputs.ref_name || github.ref_name }}
 
 concurrency:
-  group: _update-coveralls / ${{ inputs.ref }}
+  group: _update-coveralls / ${{ inputs.ref_name || github.ref_name }}
   cancel-in-progress: true
-
-defaults:
-  run:
-    shell: bash
 
 jobs:
   send:
@@ -29,6 +28,7 @@ jobs:
     strategy:
       # Use a matrix to send OS-specific and Python-version-specific coverage data.
       matrix:
+        # TODO
         os:
           - ubuntu-latest
         python:
@@ -38,7 +38,7 @@ jobs:
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python }}
-      ARTIFACT_NAME: coverage-${{ inputs.ref_name }}-${{ matrix.os }}-${{ matrix.python }}
+      ARTIFACT_NAME: coverage-${{ env.REF_NAME }}-${{ matrix.os }}-${{ matrix.python }}
     steps:
       - name: Download workflow artifact ${{ env.ARTIFACT_NAME }}
         uses: actions/download-artifact@v4

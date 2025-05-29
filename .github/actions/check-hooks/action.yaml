@@ -6,15 +6,15 @@ name: check-hooks
 description: Runs basic pre-commit hooks.
 inputs:
   ref:
-    required: true
-    description: The ref of a branch, tag, or hash.
+    default: ""
+    description: A branch or tag ref; defaults to github.head_ref then to github.ref.
 
 runs:
   using: composite
   steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ inputs.ref }}
+        ref: ${{ inputs.ref || github.head_ref || github.ref }}
     - uses: astral-sh/setup-uv@v6
     - name: Sync and confirm lock file is up-to-date
       shell: bash

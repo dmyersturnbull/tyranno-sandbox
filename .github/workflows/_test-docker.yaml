@@ -10,8 +10,14 @@ on:
     inputs:
       ref:
         type: string
-        required: true
-        description: The ref of a branch, tag, or hash.
+        default: ""
+        description: A branch or tag ref; defaults to github.head_ref then to github.ref.
+      os-list:
+        type: string
+        default: '["ubuntu-latest", "windows-latest]"'
+        description: >-
+          A JSON array of runner names.
+          macOS is excluded from the default because it needs
 
 jobs:
   build-images:
@@ -20,13 +26,12 @@ jobs:
     strategy:
       matrix:
         os:
-          # Don't test macOS because we'd need to set up Docker.
           - ubuntu-latest
           - windows-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ inputs.ref || github.head_ref || github.ref }}
       - uses: astral-sh/setup-uv@v6
       - run: |
           shell: bash

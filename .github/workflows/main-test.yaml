@@ -30,18 +30,15 @@ env:
   COVERALLS_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
+  #
   test:
     uses: ./.github/workflows/_test-pytest-matrix.yaml
     with:
-      ref: ${{ github.ref }}
       retention-days: 1 # Only to upload coverage reports.
+
   create-issue:
-    if: ${{ failure() }}
+    if: ${{ needs.test.result == 'success' }}
     needs: test
     permissions:
       issues: write
@@ -50,25 +47,22 @@ jobs:
     steps:
       - name: Create GitHub issue
         env:
-          # For historical reasons, the GH CLI uses GH_TOKEN instead of GITHUB_TOKEN
-          # https://github.com/github/docs/issues/21930
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # See: https://github.com/github/docs/issues/21930
+        shell: bash
         run: |
           gh issue create \
             --title "Test failure(s) on $GITHUB_REF_NAME" \
             --body "See: [run #$GITHUB_RUN_ID]($RUN_URL)" \
             --label "type: bug"
+
   update-codecov:
-    if: ${{ success() && env.CODECOV_TOKEN }}
+    if: ${{ env.CODECOV_TOKEN }}
     needs: test
     uses: ./.github/workflows/_update-codecov.yaml
-    with:
-      ref_name: ${{ github.ref_name }}
     secrets: inherit
+
   update-coveralls:
-    if: ${{ success() && env.COVERALLS_TOKEN }}
+    if: ${{ env.COVERALLS_TOKEN }}
     needs: test
     uses: ./.github/workflows/_update-coveralls.yaml
-    with:
-      ref_name: ${{ github.ref_name }}
     secrets: inherit

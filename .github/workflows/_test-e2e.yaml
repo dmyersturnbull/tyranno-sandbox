@@ -12,7 +12,7 @@ on:
       ref:
         type: string
         required: true
-        description: The ref of a branch, tag, or hash.
+        description: A branch or tag ref; defaults to github.head_ref then to github.ref.
       fail-fast:
         type: boolean
         default: true
@@ -36,10 +36,6 @@ env:
   SERVICE_NAME: app # Named in `compose.yaml` (the key under the top-level `services`).
   PYTEST_OPTIONS: ${{ inputs.fast-fail && '--exitfirst' || '' }}
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   end-to-end:
     name: End-to-end test ${{ inputs.ref }} on ${{ inputs.os }}
@@ -57,21 +53,26 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
       - name: Set up Docker Compose
+        shell: bash
         run: docker compose up -d --build
       - name: Wait for services to be healthy
+        shell: bash
         run: |
           docker compose ps
           sleep 20  # OR write a smarter healthcheck wait
       - name: Run E2E tests
+        shell: bash
         run: |
           # shellcheck disable=SC2086 # Intentionally word-split into an array.
           read -r -a pytest_options <<< "$PYTEST_OPTIONS"
           docker compose exec "$SERVICE_NAME" pytest -m e2e "${pytest_options[@]}"
       - name: Show logs if failed
         if: failure()
+        shell: bash
         run: |
           docker compose logs
       - name: Tear down
         if: always()
+        shell: bash
         run: |
           docker compose down -v

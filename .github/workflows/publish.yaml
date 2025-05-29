@@ -22,10 +22,8 @@ concurrency:
   group: ${{ github.workflow }}
   # DO NOT cancel this workflow if it's already running; it's VERY NON-ATOMIC.
 
-permissions:
-  contents: read
-
 jobs:
+  #
   accept:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Determine whether this is a full release or preview
@@ -41,6 +39,7 @@ jobs:
           if [[ "$GITHUB_REF" =~ $regex_1 ]]; then
              echo "is_real=true" >> $GITHUB_OUTPUT
           fi
+
   publish-docs:
     needs: accept
     permissions:
@@ -48,23 +47,29 @@ jobs:
       pages: write
     uses: ./.github/actions/publish-mkdocs-to-pages/action.yaml
     secrets: inherit
+
   publish-github:
     needs: accept
     permissions:
       contents: write
     uses: ./.github/actions/publish-to-github-releases/action.yaml
     secrets: inherit
+
   publish-pypi:
     needs: accept
+    permissions:
+      contents: read
     uses: ./.github/actions/publish-to-pypi/action.yaml
     with:
       upload-to: ${{ needs.accept.outputs.is-real-release && 'pypi' || 'testpypi' }}
     secrets: inherit
+
   publish-docker:
     needs: accept
     permissions:
       packages: write
       id-token: write
+      contents: read
     uses: ./.github/actions/publish-to-container-registries/action.yaml
     with:
       push: ${{ needs.accept.outputs.is-real-release }}

@@ -7,13 +7,13 @@ description: Lints Helm charts.
 
 inputs:
   ref:
-    required: true
-    description: The ref of a branch, tag, or hash.
+    default: ""
+    description: A branch or tag ref; defaults to github.head_ref then to github.ref.
   compare-to-ref:
     description: >-
       Only check Helm charts that differ from this ref.
-      If empty, runs on all charts.
-      For a PR, this is probably the base commit.
+      If '*', runs on all charts.
+      Defaults to github.base_ref then to '*'.
   chart-dirs:
     default: charts/,helm/,helm/charts/
     description: Comma-separated list of directories containing charts.
@@ -21,9 +21,16 @@ inputs:
 runs:
   using: composite
   steps:
+    - id: define
+      shell: bash
+      run: |
+        ref='${{ inputs.ref || github.head_ref || github.ref }}'
+        base='${{ inputs.compare-to-ref || github.base_ref || '' }}'
+        echo "ref=$ref" >> "$GITHUB_OUTPUT"
+        echo "base=$base" >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v4
       with:
-        ref: ${{ inputs.ref }}
+        ref: ${{ steps.define.outputs.ref }}
     - uses: astral-sh/setup-uv@v6 # Some subsequent tools expect Python.
       with:
         activate-environment: true
@@ -32,16 +39,16 @@ runs:
         version: v3.17.0
     - name: Set up chart-testing
       uses: helm/chart-testing-action@v2.7.0
-    - if: ${{ inputs.compare-to-ref }}
+    - if: ${{ steps.define.outputs.base }}
       name: Run chart-testing (ct lint) on changed charts
       shell: bash
       run: |
         ct lint \
-          --since '${{ inputs.compare-to-ref }}' \
+          --since '${{ steps.define.outputs.base }}' \
           --chart-dirs '${{ inputs.chart-dirs }}' \
           --use-helmignore \
           --github-groups
-    - if: ${{ ! inputs.compare-to-ref }}
+    - if: ${{ ! steps.define.outputs.base }}
       name: Run chart-testing (ct lint) on all charts
       shell: bash
       run: |

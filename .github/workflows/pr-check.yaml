@@ -1,0 +1,52 @@
+# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+# Runs tests on PRs with relevant changes.
+
+name: pr-test
+run-name: Test PR ${{ github.event.pull_request.number }}
+
+on:
+  pull_request:
+    types:
+      - review_requested
+
+concurrency:
+  group: ${{ github.workflow }} / ${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  #
+  filter:
+    permissions:
+      pull-requests: read
+    uses: "./.github/actions/get-paths/action.yaml"
+
+  check-hooks:
+    uses: ./.github/actions/check-hooks/action.yaml
+
+  check-security:
+    needs: filter
+    if: ${{ needs.filter.outputs.src || needs.filter.outputs.tests || needs.filter.outputs.setup }}
+    uses: ./.github/actions/lint-python/action.yaml
+    with:
+      ruff-rules: S
+
+  run-tests:
+    needs: filter
+    if: ${{ needs.filter.outputs.src || needs.filter.outputs.tests || needs.filter.outputs.setup }}
+    uses: ./.github/workflows/_test-pytest-matrix.yaml
+
+  check-images:
+    needs: filter
+    if: ${{ needs.filter.paths.docker }}
+    uses: ./.github/workflows/_test-docker.yaml
+
+  check-docs:
+    needs: filter
+    if: ${{ needs.filter.outputs.src || needs.filter.outputs.docs }}
+    uses: ./.github/actions/check-mkdocs/action.yaml

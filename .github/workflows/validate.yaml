@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Verifies that we can start the release process when a tag `v<major>.<minor>.<build>` is pushed.
-name: Validate-release
+name: validate-release
 run-name: >-
   Validate release of ${{ github.ref_name }} (triggered by ${{ github.triggering_actor }})
 
@@ -24,6 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  #
   check-tag:
     runs-on: ubuntu-latest
     outputs:
@@ -43,6 +44,7 @@ jobs:
             printf "Accepting %s for preview/test release only.\n" "$GITHUB_REF_NAME"
             echo "match=true" >> $GITHUB_OUTPUT
           fi
+
   guard:
     if: ${{ needs.check-tag.outputs.is-match }}
     needs: check-tag
@@ -51,27 +53,25 @@ jobs:
       - shell: bash
         run: |
           printf "Proceeding.\n"
+
   check-hooks:
     needs: guard
     uses: ./.github/actions/check-hooks/action.yaml
-    with:
-      ref: ${{ github.ref }}
+
   run-tests:
     needs: guard
     uses: ./.github/workflows/_test-pytest-matrix.yaml
-    with:
-      ref: ${{ github.ref }}
+
   check-security:
     needs: guard
     uses: ./.github/actions/lint-python/action.yaml
     with:
-      ref: ${{ github.ref }}
       ruff-rules: S
+
   check-docker:
     needs: guard
     uses: ./.github/workflows/_test-docker.yaml
-    with:
-      ref: ${{ github.ref }}
+
   build-and-upload-dist:
     needs:
       - check-hooks
@@ -81,5 +81,3 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/actions/build-and-upload-dist/action.yaml
-    with:
-      ref: ${{ github.ref }}

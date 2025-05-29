@@ -42,10 +42,6 @@ env:
   MARKERS: ${{ inputs.markers || 'not (ux or e2e)' }}
   PYTEST_OPTIONS: ${{ inputs.fast-fail && '--exitfirst' || '' }}
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   run-tests:
     name: Test ${{ inputs.ref }} on ${{ inputs.os }}, Python ${{ inputs.python }}
@@ -60,6 +56,7 @@ jobs:
         with:
           python-version: "${{ inputs.python }}"
       - name: Install dependencies and run tests
+        shell: bash
         run: |
           uv sync --locked --exact --no-dev --group test
           # shellcheck disable=SC2086 # Intentionally word-split into an array.
