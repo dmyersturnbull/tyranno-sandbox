@@ -50,7 +50,7 @@ class JobManager:
     """A list of saved results."""
 
     _jobs: set[str] = field(default_factory=set)
-    _data: dict[str, str] = field(default_factory=list)
+    _data: dict[str, str] = field(default_factory=dict)
     WAIT_SEC: ClassVar[float] = 2.5
 
     async def get(self, job_id: str) -> str:

@@ -29,7 +29,7 @@ __all__ = ["TyrannoJmesFunctions"]
 if TYPE_CHECKING:
     from types import FrameType, TracebackType
 
-    from tyranno_sandbox._core import Json
+    from tyranno_sandbox._core import Json, JsonBranch
 
 
 class CallerInfo(NamedTuple):
@@ -260,12 +260,12 @@ class _Utils(AbstractContextManager):
         )
 
     def format_dt(self, dt: datetime, *, sep: str = "T", ts: str = "microseconds") -> str:
-        if dt.tzname() is None:
+        if not (tz := dt.tzname()):
             msg = f"Datetime instance {dt} is not zoned."
             raise JmesFunctionError.from_call(msg, depth=2)
         stamp = dt.isoformat(sep, ts)
         # Don't replace +00:00 with Z for Europe/London (canonical), Europe/Jersey, etc.
-        if dt.tzname().removeprefix("Etc/") in _Utils.UTC_NAMES:
+        if tz.removeprefix("Etc/") in _Utils.UTC_NAMES:
             # I couldn't confirm that Python never uses -00:00, which RFC 3339 supports.
             # ISO 8601 inexplicably supports ±, but let's not check that.
             stamp = stamp.replace("+00:00", "Z").replace("-00:00", "Z")
@@ -322,28 +322,30 @@ class _Utils(AbstractContextManager):
             text=data["licenseText"],
         )
 
-    def _dl_license(self, spdx_id: str) -> dict[str, Any]:
+    def _dl_license(self, spdx_id: str) -> Json:
         dir_ = "https://raw.githubusercontent.com/spdx/license-list-data/main/json/details"
         url = f"{dir_}/{spdx_id}.json"
-        return self.__session.get(url).raise_for_status().json()
+        response = self.__session.get(url).raise_for_status()
+        return response.json()
 
-    def _get_license_uris(self, data: Json) -> list[str]:
+    def _get_license_uris(self, data: JsonBranch) -> list[str]:
         urls = (u for u in data["crossRef"] if u.get("isValid") and u.get("isLive"))
         urls = sorted(urls, key=itemgetter("order"))
         # noinspection HttpUrlsUsage
         return [u["url"].replace("http://", "https://") for u in urls]
 
-    def extract_pypi_versions(self, pypi_data: Json) -> set[str]:
-        versions = set()
+    def extract_pypi_versions(self, pypi_data: JsonBranch) -> set[str]:
+        versions: set[str] = set()
         for vr, files in pypi_data.get("releases", {}).items():
             if any(not f.get("yanked", False) for f in files):
                 versions.add(vr)
         return versions
 
-    def dl_pypi_metadata(self, name: str) -> Json:
+    def dl_pypi_metadata(self, name: str) -> JsonBranch:
         url = f"https://pypi.org/pypi/{name}/json"
         # niquests `.json()` uses orjson if it's installed.
-        return self.__session.get(url).raise_for_status().json()
+        response = self.__session.get(url).raise_for_status()
+        return response.json()
 
     def split_pep440_spec(self, spec: str) -> tuple[str, str]:
         if m := self.PEP440_SPEC_RE.fullmatch(spec):
@@ -407,8 +409,7 @@ class TyrannoJmesFunctions:
         return [U.sanitize_pep440(p) for p in sorted((Pep440(v) for v in versions), reverse=True)]
 
     def pep440_max_per(self, versions: list[str], per: str) -> str:
-        # vrs = [Pep440(v) for v in versions]
-        # TODO
+        # TODO: `vrs = [Pep440(v) for v in versions]`
         valid = {"major", "minor", "micro"}
         if per not in valid:
             msg = f"Argument '{per}' is not one of {valid}."

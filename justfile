@@ -279,9 +279,9 @@ test-ux *args: (pytest "-m ux" args)
 [group('test'), no-exit-message]
 test-fast *args: (pytest "-m 'not (ux or e2e or slow or net)'" args)
 
-# Run tests marked 'property' with extra Hypothesis options.
+# Run tests marked 'hypothesis' with Hypothesis's explanation phase.
 [group('test'), no-exit-message]
-test-property *args: (pytest "-m property --hypothesis-explain --hypothesis-show-statistics" args)
+test-hypothesis *args: (pytest "-m hypothesis --hypothesis-explain" args)
 
 # Run doctest tests via PyTest.
 [group('test'), no-exit-message]

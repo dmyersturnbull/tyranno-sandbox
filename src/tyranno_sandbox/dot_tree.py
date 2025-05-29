@@ -411,7 +411,7 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
         Warning:
             A `DotTree` can contain empty branches (`{}`), which this method ignores.
         """
-        dct = {}
+        dct: Limb = {}
         for key, value in self.items():
             if isinstance(value, dict):
                 dct.update({key + "." + k: v for k, v in self.__class__(value).leaves().items()})
@@ -492,7 +492,7 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
             raise TypeError(msg)
         return v
 
-    def get_list_as[T: Primitive](
+    def get_list_as[T: Toml](
         self, keys: str, /, as_type: type[T], default: list[T] | None = None
     ) -> list[T]:
         """Returns a list, or `default` if not found, checking the types of the list elements.
@@ -514,7 +514,7 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
             raise TypeError(msg)
         return x
 
-    def access_list_as[T: Primitive](self, keys: str, /, as_type: type[T]) -> list[T]:
+    def access_list_as[T: Toml](self, keys: str, /, as_type: type[T]) -> list[T]:
         """Returns a list after checking the types of its elements, or raises a `KeyError`.
 
         Raises:
@@ -570,7 +570,7 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
         return self._access(keys)
 
     def _access(self, keys: str) -> Toml:
-        x = self
+        x: Toml = self
         split = keys.split(".")
         for i, k in enumerate(split):
             if not isinstance(x, dict):

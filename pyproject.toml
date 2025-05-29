@@ -118,9 +118,6 @@ Download = "https://pypi.org/project/tyranno-sandbox/"
 # The other groups are solely intended for use in CI.
 dev = [
   "coverage[toml]>=7.8",
-  # "deal>=4.24",
-  # "hypofuzz>=25.4",
-  # "hypothesis[cli,codemods]>=6.130",
   "hypothesis>=6.130",
   "mkdocs>=1.6",
   "mkdocs-material>=9.6",
@@ -139,7 +136,7 @@ dev = [
 ]
 test = [
   "coverage[toml]>=7.8", # Required for coverage.
-  "hypothesis>=6.130", # Required.
+  "hypothesis>=6.130", # Property tests.
   "pytest>=8.3", # Required.
   "pytest-cov>=6.1", # Required for coverage.
   "pytest-datadir>=1.6", # Optional. To read test resources in the same dir.
@@ -197,14 +194,14 @@ select = [
   "A",        # flake8-builtins
   "AIR",      # Airflow (does nothing if not used)
   "ANN",      # flake8-annotations
-  "ARG",     # flake8-unused-args (use dummy name in private/lambda, or noqa in public)
+  "ARG",      # flake8-unused-args (use dummy name in private/lambda, or noqa in public)
   "ASYNC",    # flake8-async
   "B",        # flake8-bugbear
   "BLE",      # flake8-blind-exception: `Exception`, `RuntimeException`, or no type (don't use E722)
   "C4",       # flake8-comprehensions
-  "C90",      # mmcabe
+  "C90",      # mmcabe (complexity analysis; surprisingly fast)
   "COM",      # flake8-commas (only a few rules used)
-  #"CPY",     # flake8-copyright //DISABLED: handle carefully instead//
+  "CPY",      # flake8-copyright
   #"D",       # pydocstyle //DISABLED: most rules handled by formatter//
   "D100",     # undocumented public module (could be just 1 line)
   "D101",     # undocumented public class (could be just 1 line)
@@ -222,24 +219,27 @@ select = [
   "DOC403",   # `Yields` section without `yield`
   #"DOC502",  # `Raises` lists exeption not raised directly //DISABLED: often ok//
   "DTZ",      # flake8-datetimez
-  #"E",       # pycodestyle ERRORs //DISABLED: almost all handled by formatter//
+  #"E",       # pycodestyle errors //DISABLED: almost all handled by formatter//
   "E7",       # == True, bare except, lambda assignment, 'l' in names, etc.
   "E9",       # can't lint -- syntax error, etc.
   "EM",       # flake8-errmsg
-  #"ERA",     # eradicate (commented-out code) //DISABLED: error-prone//
+  "ERA",      # eradicate -- commented-out code (NOTE: false positives are common)
   #"EXE",     # flake8-executable //DISABLED: pre-commit shebang rules instead//
   "F",        # pyflakes
   "FA",       # flake8-future-annotations
   "FAST",     # fastapi (does nothing if unused)
   "FBT",      # flake8-boolean-trap (e.g. position boolean args)
-  "FIX",      # flake8-fix*me
+  "FIX001",   # flake8-fix*me -- `F*I*X*M*E`
+  #"FIX002",  # flake8-fix*me -- `T*O*D*O` //DISABLED: consider these non-critical//
+  "FIX003",   # flake8-fix*me -- `X*X*X`
+  "FIX004",   # flake8-fix*me -- `H*A*C*K`
   "FLY",      # flynt (https://pypi.org/project/flynt/; updates .format)
   "FURB",     # refurb (misc., mostly fixable)
   #"E",       # flake8 errors //DISABLED: handled by formatter or nitpicky//
   "G",        # flake8-logging-format
   "I",        # isort
   "ICN",      # flake8-import-conventionals
-  #"INP",     # flake8-no-pep420 (require __init__.py to import) //DISABLED: false positives//
+  "INP",      # flake8-no-pep420 -- require __init__.py to import
   "INT",      # flake8-gettext (i18n)
   "ISC",      # flake8-implicit-str-concat
   "LOG",      # flake8-logging
@@ -248,7 +248,7 @@ select = [
   "PD",       # pandas-vet (does nothing if not used)
   "PERF",     # perflint
   "PGH",      # pygrep-hooks
-  "PIE",      # flake8-pie (misc. lint rules)
+  "PIE",      # flake8-pie -- misc. lint rules
   "PL",       # pylint (PLC, PLE, PLR, and PLW)
   "PT",       # flake8-pytest-style
   "PTH",      # flake8-use-pathlib
@@ -268,7 +268,7 @@ select = [
   "TID",      # flake8-tidy-imports (bans relative imports)
   "TRY",      # tryceratops (try-except-raise)
   "UP",       # pyupgrade
-  #"W",       # warnings //DISABLED: most fixed by formatter//
+  #"W",       # pycodestyle warnings //DISABLED: most fixed by formatter//
   "W60",      # E605 invalid escape character
   "YTT",      # flake8-2020 (incorrect Python version checks)
   "RUF",      # Ruff-specific rules
@@ -300,6 +300,7 @@ unfixable = [
 
 # Delegated options
 flake8-bandit.check-typed-exception = true
+flake8-copyright.notice-rgx = "(?m)^# SPDX-License-Identifier: "
 flake8-tidy-imports.ban-relative-imports = "all"
 isort.detect-same-package = false # Use `tool.ruff.src` instead.
 isort.split-on-trailing-comma = false
@@ -322,12 +323,14 @@ allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
   "F401",    # unused import
 ]
 "tests/**/*" = [
+  "D10",     # missing docstrings
   "INP001",  # missing __init__
+  "PLC2701", # import of private module
   "PLR2004", # magic value
   "S101",    # assert
   "S105",    # possible password in string
-  "S106",    # in function arg
-  "S107",    # in function default
+  "S106",    # ...in function arg
+  "S107",    # ...in function default
   "S108",    # harcoded temp file
   "TID252",  # relative import
 ]
@@ -371,7 +374,7 @@ faulthandler_timeout = 1200
 # In `tests/**/*.py`, append `-TEST` to logger names to distinguish them.
 log_level = "WARNING"
 log_cli = true
-log_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s (%(filename)s:%(lineno)s)"
+log_format = "%(asctime)s %(levelname)-7s %(name)s %(filename)s:%(lineno)s | %(message)s "
 log_date_format = "%Y-%m-%d %H:%M:%S"
 
 # -------------------------- Doctest options ----------------------------------
@@ -383,10 +386,10 @@ doctest_optionflags = [
 
 # -------------------------- Test markers -------------------------------------
 # Define markers that are useful to include/exclude sets of tests.
+# Note that the `hypothesis` marker is auto-added.
 # - Simple tests only: `-m 'not (slow or net or ux or e2e)'`
-# - Simple property tests: `-m 'property and not (slow or net or ux or e2e)'`
+# - Simple property tests: `-m 'hypothesis and not (slow or net or ux or e2e)'`
 markers = [
-  "property: property tests using Hypothesis",
   "slow: tests that need a long time to run",
   "net: tests that need network access",
   "ux: tests that need user interaction or manual verification",

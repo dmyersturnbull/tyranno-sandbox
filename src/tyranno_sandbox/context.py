@@ -30,7 +30,7 @@ EXPR_REGEX: Final[Pattern[str]] = re.compile(
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Data:
     """A data source for `::tyranno::` comments."""
 
@@ -40,10 +40,6 @@ class Data:
     @cached_property
     def _jmespath_options(self) -> jmespath.Options:
         return jmespath.Options(custom_functions=self.tyranno_functions)
-
-    @cached_property
-    def raw_tree(self) -> dict[str, Toml]:
-        return dict(self.tree)
 
     def get(self, key: str) -> Toml | None:
         return self.tree.get(key)
@@ -64,8 +60,8 @@ class Data:
         if in_key and expression.startswith("."):
             expression = in_key + expression
         if SIMPLE_KEY_REGEX.fullmatch(expression):
-            return self.access(expression)
-        return jmespath.compile(expression).search(self.raw_tree, self._jmespath_options)
+            return self.tree.access(expression)
+        return jmespath.compile(expression).search(self.tree, self._jmespath_options)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

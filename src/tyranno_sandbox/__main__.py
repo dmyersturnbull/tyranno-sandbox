@@ -30,7 +30,7 @@ class State:
     success_color: str
     failure_color: str
     is_dry_run: bool = False
-    log_level: int = -1
+    log_level: str = "WARNING"
 
     def create_context(self) -> Context:
         return self.context_factory(Path.cwd(), ENV, dry_run=self.is_dry_run)
@@ -94,8 +94,6 @@ def new(
 def sync() -> None:
     """Syncs project metadata between configured files."""
     state.info("Syncing metadata...")
-    # targets = Sync(context).sync()
-    # Msg.success(f"Done. Synced to {len(targets)} targets: {targets}")
 
 
 if __name__ == "__main__":

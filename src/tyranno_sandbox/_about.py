@@ -11,7 +11,7 @@ while your `mypkg/__init__.py` includes lines like `from mypkg.app import Entry`
 """
 
 from collections.abc import Sequence
-from typing import Final, NamedTuple, NotRequired, ReadOnly, TypedDict, overload
+from typing import Final, NamedTuple, NotRequired, ReadOnly, Self, TypedDict, overload
 
 __all__ = ["About", "UrlDict", "VersionParts", "__about__"]
 
@@ -25,10 +25,11 @@ class _FrozenList[T](Sequence[T]):
     def __getitem__(self, index: int) -> T: ...
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[T]: ...
+    def __getitem__(self, index: slice) -> Self: ...
 
-    def __getitem__(self, index: int | slice) -> T | Sequence[T]:
-        return self.__items[index]
+    def __getitem__(self, index: int | slice) -> T | Self:
+        result = self.__items[index]
+        return type(self)(result) if isinstance(index, slice) else result
 
     def __len__(self) -> int:
         return len(self.__items)
@@ -40,9 +41,6 @@ class _FrozenList[T](Sequence[T]):
         if isinstance(other, _FrozenList):
             return self.__items == other.__items
         return NotImplemented
-
-    def __repr__(self) -> str:
-        return repr(self.__items)
 
     def __str__(self) -> str:
         return str(self.__items)

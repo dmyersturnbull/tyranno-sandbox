@@ -17,14 +17,34 @@ from types import TracebackType
 from typing import Final, Self, override
 from zoneinfo import ZoneInfo
 
+from hypothesis import settings as hyp
+
 __all__ = ["Helper", "logger"]
 
 ETC_UTC: Final[ZoneInfo] = ZoneInfo("Etc/UTC")
-TESTS_ROOT: Final[Path] = Path(__file__).parent.resolve().relative_to(Path.cwd())
-PROJECT_ROOT: Final[Path] = TESTS_ROOT.parent.resolve().relative_to(Path.cwd())
+TESTS_ROOT: Final[Path] = Path(__file__).parent.resolve()  # .relative_to(Path.cwd())
+PROJECT_ROOT: Final[Path] = TESTS_ROOT.parent.resolve()  # .relative_to(Path.cwd())
 # Separate logging in the main package vs. inside test functions.
-logger = logging.getLogger(f"{PROJECT_ROOT}::test")
+logger = logging.getLogger(f"{PROJECT_ROOT.name}::test")
+
+# Configure Hypothesis.
+# Only passing args that differ from the original (or parent).
+# `ci` is predefined (and used in CI), but we'll override it.
+# `more` uses 10x the examples and 2x the deadline; even more uses 100x/4x.
+# Note: omitting `parent=` would derive from the **current** profile.
+hyp.register_profile("ci", parent=hyp.get_profile("ci"), derandomize=False, print_blob=False)
+hyp.register_profile("more", parent=hyp.get_profile("default"), max_examples=1_000, deadline=400)
+hyp.register_profile(
+    "even-more", parent=hyp.get_profile("default"), max_examples=10_000, deadline=800
+)
+
+# Print some info.
 logger.debug("Tests root: %s", TESTS_ROOT)
+logger.debug("Hypothesis max_examples = %i", hyp().max_examples)
+logger.debug("Hypothesis deadline = %f s", hyp().deadline.total_seconds())
+logger.debug("Hypothesis derandomize = %s", hyp().derandomize)
+logger.debug("Hypothesis suppress_health_check = %s", hyp().suppress_health_check)
+logger.debug("Hypothesis phases = %s", ",".join(p.name for p in hyp().phases))
 
 
 class Capture(ExitStack):
