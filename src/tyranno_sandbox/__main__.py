@@ -84,7 +84,9 @@ def new(
     name: Annotated[str, Option(help="Full project name")] = "my-project",
     license_id: Annotated[str, Option("--license", help="SPDX ID")] = "Apache-2.0",
 ) -> None:
-    state.success(f"Done! Created a new repository under {name}")
+    state.info(f"Creating project {name} at {path}.")
+    state.info(f"Using license {license_id}.")
+    state.success(f"Done! Created a new repository under {name}.")
     state.success("See https://dmyersturnbull.github.io/tyranno/guide.html")
 
 

@@ -7,4 +7,4 @@
 import os
 from typing import Final
 
-MONGO_URI: Final[str] = os.environ["MONGO_URI"]
+MONGO_URI: Final[str | None] = os.environ.get("MONGO_URI")

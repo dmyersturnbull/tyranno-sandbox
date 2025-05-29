@@ -11,10 +11,10 @@ import json
 import re
 from collections import Counter, defaultdict
 from collections.abc import Callable, Generator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from re import Pattern
-from typing import Any, ClassVar, Literal, Self, TypeGuard, overload
+from typing import Final, Literal, Self, TypeGuard, overload
 
 type Primitive = str | int | float | bool | date | datetime | time
 type Array = list[Toml]
@@ -41,6 +41,16 @@ __all__ = [
 
 
 @dataclass(frozen=True, slots=True)
+class DuplicateKeyError(Exception):
+    """A key was defined more than once."""
+
+    key: str
+
+    def __str__(self) -> str:
+        return f"Key '{self.key}' was defined more than once."
+
+
+@dataclass(frozen=True, slots=True)
 class LeavesInCommonError(Exception):
     """Two or more trees have leaves in common."""
 
@@ -50,17 +60,22 @@ class LeafIntersectionError(LeavesInCommonError):
     """There are leaves in common between two or more trees."""
 
     intersection: dict[str, list[Leaf]]
+    msg: str = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        msg = "??"
+        if j := self.intersection:
+            n_intersect = str(len(j)) + " leaves are" if len(j) > 1 else " leaf is"
+            intersect = "{ " + ", ".join(j.keys()) + " }"
+            msg = f"{n_intersect} present in multiple trees: {intersect}."
+            if conflicts := {k: v for k, v in j.items() if len(set(v)) > 1}:
+                conflict_str = ", ".join(f"{k}: {'/'.join(v)}" for k, v in conflicts.items())
+                n_conflict = str(len(conflicts)) + ("have" if len(conflicts) > 1 else "has")
+                msg += f" {n_conflict} conflicting values: {conflict_str}."
+        object.__setattr__(self, "msg", msg)
 
     def __str__(self) -> str:
-        j = self.intersection
-        n_intersect = str(len(j)) + " leaves are" if len(j) > 1 else " leaf is"
-        intersect = "{ " + ", ".join(j.keys()) + " }"
-        msg = f"{n_intersect} present in multiple trees: {intersect}."
-        if conflicts := {k: v for k, v in j.items() if len(set(v)) > 1}:
-            conflict_str = ", ".join(f"{k}: {'/'.join(v)}" for k, v in conflicts.items())
-            n_conflict = str(len(conflicts)) + ("have" if len(conflicts) > 1 else "has")
-            msg += f" {n_conflict} conflicting values: {conflict_str}."
-        return msg
+        return self.msg
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,182 +83,180 @@ class LeafConflictError(LeavesInCommonError):
     """There are leaves with different values in common between two or more trees."""
 
     intersection: dict[str, list[Leaf]]
+    msg: str = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        msg = "??"
+        if self.intersection:
+            clashes = {k: v for k, v in self.intersection.items() if len(set(v)) > 1}
+            n_clash = str(len(clashes)) + (" leaves are" if len(clashes) > 1 else " leaf is")
+            clash_list = ", ".join(f"{k}: {'/'.join(v)}" for k, v in clashes.items())
+            msg = f"{n_clash} are present with clashing values in multiple trees: {clash_list}"
+        object.__setattr__(self, "msg", msg)
 
     def __str__(self) -> str:
-        clashes = {k: v for k, v in self.intersection.items() if len(set(v)) > 1}
-        n_clash = str(len(clashes)) + (" leaves are" if len(clashes) > 1 else " leaf is")
-        clash_list = ", ".join(f"{k}: {'/'.join(v)}" for k, v in clashes.items())
-        return f"{n_clash} are present with clashing values in multiple trees: {clash_list}"
+        return self.msg
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, kw_only=True)
 class Checker:
     """Utilities to validate."""
 
-    key_pattern: ClassVar[Pattern[str]] = re.compile(r"[\w~&|,;<>+-]+")
+    key_pattern: Pattern[str] = re.compile(r"[\w~&|,;<>+-]+")
 
-    @classmethod
     @overload
-    def check(cls, node: Branch, /) -> Branch: ...
+    def check(self, node: Branch, /) -> Branch: ...
 
-    @classmethod
     @overload
-    def check(cls, node: Array, /) -> Array: ...
+    def check(self, node: Array, /) -> Array: ...
 
-    @classmethod
     @overload
-    def check(cls, node: Primitive, /) -> Primitive: ...
+    def check(self, node: Primitive, /) -> Primitive: ...
 
-    @classmethod
-    def check(cls, node: Toml, /) -> Toml:
+    def check(self, node: Toml, /) -> Toml:
         if isinstance(node, dict | list):
-            cls.check_keys(node)
-            cls.check_values(node)
+            self.check_keys(node)
+            self.check_values(node)
         else:
-            cls.check_primitive(node)
+            self.check_primitive(node)
         return node
 
-    @classmethod
     @overload
-    def check_keys(cls, node: Branch, /) -> Branch: ...
+    def check_keys(self, node: Branch, /) -> Branch: ...
 
-    @classmethod
     @overload
-    def check_keys(cls, node: Array, /) -> Array: ...
+    def check_keys(self, node: Array, /) -> Array: ...
 
-    @classmethod
-    def check_keys(cls, node: Branch | Array, /) -> Branch | Array:
-        """Recursively, verifies that keys are `str` that don't contain `.`."""
+    def check_keys(self, node: Branch | Array, /) -> Branch | Array:
+        """Recursively verifies that keys are `str`, don't contain `.`, and match `key_pattern`."""
         if isinstance(node, list):
             for v in node:
                 if isinstance(v, list | dict):
-                    cls.check_keys(v)
+                    self.check_keys(v)
         elif isinstance(node, dict):
             if bad := [k for k in node if not isinstance(k, str)]:
-                msg = f"Key(s) {bad} are not strings"
+                msg = f"Key(s) {bad} are not strings."
                 raise ValueError(msg)
             if bad := [k for k in node if "." in k]:
-                msg = f"Key(s) {bad} contain '.'"
+                msg = f"Key(s) {bad} contain '.'."
                 raise ValueError(msg)
             for v in node.values():
                 if isinstance(v, dict):
-                    cls.check_keys(v)
+                    self.check_keys(v)
+            if bad := [k for k in node if not self.key_pattern.fullmatch(k)]:
+                msg = f"Key(s) {bad} do not match pattern '{self.key_pattern}'."
+                raise ValueError(msg)
         return node
 
-    @classmethod
     @overload
-    def check_values(cls, node: Branch, /) -> Branch: ...
+    def check_values(self, node: Branch, /) -> Branch: ...
 
-    @classmethod
     @overload
-    def check_values(cls, node: Array, /) -> Array: ...
+    def check_values(self, node: Array, /) -> Array: ...
 
-    @classmethod
-    def check_values(cls, node: Branch | Array, /) -> Branch | Array:
+    def check_values(self, node: Branch | Array, /) -> Branch | Array:
         """Recursively, verifies that values have valid types."""
         if isinstance(node, list):
             for v in node:
                 if isinstance(v, list | dict):
-                    cls.check_values(v)
+                    self.check_values(v)
         elif isinstance(node, dict):
-            if bad := {k: type(v) for k, v in node.items() if not cls.check_primitive(v)}:
+            if bad := {k: type(v) for k, v in node.items() if not self.check_primitive(v)}:
                 msg = f"Key(s) {bad.keys()} have invalid values of type(s) {set(bad.values())}"
                 raise ValueError(msg)
             for v in node.values():
                 if isinstance(v, dict):
-                    cls.check_values(v)
+                    self.check_values(v)
         return node
 
-    @classmethod
-    def check_primitive[T](cls, value: T, /) -> T:
-        if not cls.is_primitive(value):
+    def check_primitive[T](self, value: T, /) -> T:
+        if not self.is_primitive(value):
             msg = f"Invalid type {type(value)}"
             raise TypeError(msg)
         return value
 
-    @classmethod
-    def is_primitive(cls, value: Any, /) -> TypeGuard[Primitive]:  # noqa: ANN401
+    def is_primitive(self, value: Toml, /) -> TypeGuard[Primitive]:
         return isinstance(value, str | int | float | bool | date | datetime | time)
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
 class Utils:
     """Utilities for working with nested dicts."""
 
-    @classmethod
-    def nest(cls, items: Branch, /) -> Branch:
+    merge_lists: bool = False
+
+    def nest(self, items: Branch, /) -> Branch:
         """Converts a dict with dotted keys to a nested dict.
 
         However, won't complain if `items` contains nested items.
 
         Examples:
             >>> from tyranno_sandbox.dot_tree import Utils
-            >>> Utils.nest({"genus.species": "bat"})
-            {"genus": {"species": "bat"}}
+            >>> Utils().nest({"genus.species": "bat"})
+            {'genus': {'species': 'bat'}}
         """
-        dct = {}
-        cls._nest(dct, "", items)
-        return dct
+        out: Branch = {}
+        self._nest(out, "", items)
+        return out
 
-    @classmethod
-    def _nest(cls, to: Branch, at: str, items: Toml) -> None:
-        if "." in at:
-            k0, k1 = at.split(".", 1)
-            if k0 not in to:
-                to[k0] = {}
-            cls._nest(to[k0], k1, items)
-        elif isinstance(items, dict):  # can only happen with mixed input
-            if at not in to:
-                to[at] = {}
-            for k, v in items.items():
-                cls._nest(to[at], k, v)
-        elif isinstance(items, list):
-            if at in to:
-                msg = f"Duplicate key {at}"
-                raise ValueError(msg)
-            to[at] = []
-            for v in items:
-                cls._nest(to, at, v)
-        elif isinstance(to[at], list):
-            to[at].append(items)
-        elif at in to:
-            msg = f"Duplicate key {at}"
-            raise ValueError(msg)
+    def _nest(self, dst: Branch, key: str, item: Toml) -> None:
+        if not key and isinstance(item, dict):
+            for k, v in item.items():
+                self._nest(dst, k, v)
+        elif "." in key:
+            head, tail = key.split(".", 1)
+            if not isinstance(dst.get(head, {}), dict):
+                raise DuplicateKeyError(head)
+            dst.setdefault(head, {})
+            self._nest(dst[head], tail, item)
+        elif isinstance(item, dict):
+            node = dst.setdefault(key, {})
+            if not isinstance(node, dict):
+                msg = f"dst is a {type(dst)}: << {dst} >>"
+                raise AssertionError(msg)
+            for k, v in item.items():
+                self._nest(node, k, v)
+        elif isinstance(item, list) and self.merge_lists:
+            # TODO: merge_lists is broken.
+            node = dst.setdefault(key, [])
+            if not isinstance(node, list):
+                raise DuplicateKeyError(key)
+            for v in item:
+                self._nest(dst, key, v)
         else:
-            to[at] = items
+            if key in dst:
+                raise DuplicateKeyError(key)
+            dst[key] = item
 
-    @classmethod
-    def dotify(cls, items: Branch, /) -> Branch:
+    def dotify(self, items: Branch, /) -> Branch:
         """Converts a nested dict to a dict with dotted keys.
 
         However, won't complain if a key in (or nested in) `items` contains `.`.
 
         Examples:
             >>> from tyranno_sandbox.dot_tree import Utils
-            >>> Utils.dotify({"genus": {"species": "bat"}})
-            {"genus.species": "bat"}
+            >>> Utils().dotify({"genus": {"species": "bat"}})
+            {'genus.species': 'bat'}
         """
-        return dict(cls._dotify("", items))
+        return dict(self._dotify("", items))
 
-    @classmethod
-    @overload
-    def _dotify(cls, at: str, items: Branch) -> Generator[tuple[str, Leaf]]: ...
-
-    @classmethod
-    @overload
-    def _dotify(cls, at: str, items: Leaf) -> Generator[Leaf]: ...
-
-    @classmethod
-    def _dotify(cls, at: str, items: Branch | Array) -> Generator[tuple[str, Leaf] | Leaf]:
-        if isinstance(items, dict):
-            for k, v in items.items():
-                nxt = f"{at}.{k}" if not at else k
-                yield from cls._dotify(nxt, v)
-        elif isinstance(items, list):
-            yield at, [cls._dotify("", v) for v in items]
-        elif not at:
-            yield items
+    def _dotify(self, path: str, item: Toml) -> Generator[tuple[str, Leaf]]:
+        if isinstance(item, dict):
+            for k, v in item.items():
+                new_path = f"{path}.{k}" if path else k
+                yield from self._dotify(new_path, v)
+        elif isinstance(item, list):
+            lst: list[Leaf] = []
+            for v in item:
+                sub = list(self._dotify("", v))
+                lst.append(sub[0] if len(sub) == 1 else dict(sub))
+            yield path, lst
         else:
-            yield at, items
+            yield path, item
+
+
+_UTILS: Final[Utils] = Utils()
+_CHECKER = Checker()
 
 
 class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correctly
@@ -314,9 +327,9 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
         Examples:
             >>> from tyranno_sandbox.dot_tree import DotTree
             >>> DotTree.from_mixed({"books": [{"title": "Bats", "ids.isbn": "123-4-56-123456-0"}]})
-            {"books": [{"title": "Bats", "ids": {"isbn": "123-4-56-123456-0"}}]}
+            {'books': [{'title': 'Bats', 'ids.isbn': '123-4-56-123456-0'}]}
         """
-        return cls(Utils.nest(Utils.dotify(x)))
+        return cls(_UTILS.nest(_UTILS.dotify(x)))
 
     @classmethod
     def from_nested(cls, x: Branch, /) -> Self:
@@ -328,7 +341,7 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
             ValueError: If a key contains `.`.
             TypeError: If or `x` is not a `dict`, a key is not a `str`, or a value is `None`.
         """
-        return cls(Checker.check(x))
+        return cls(_CHECKER.check(x))
 
     @classmethod
     def from_dotted(cls, x: Limb, /) -> Self:
@@ -341,11 +354,11 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
         Examples:
             >>> from tyranno_sandbox.dot_tree import DotTree
             >>> DotTree.from_dotted({"owner.name.first": "John"})
-            {"owner": {"name": {"first": "John"}}}
+            {'owner': {'name': {'first': 'John'}}}
             >>> DotTree.from_dotted({"books": [{"title": "Bats", "ids.isbn": "123-4-56-123456-0"}]})
-            {"books": [{"title": "Bats", "ids": {"isbn": "123-4-56-123456-0"}}]}
+            {'books': [{'title': 'Bats', 'ids.isbn': '123-4-56-123456-0'}]}
         """
-        return cls(Utils.nest(x))
+        return cls(_UTILS.nest(x))
 
     def transform_leaves(self, fn: Callable[[str, Leaf], Leaf | None], /) -> Self:
         """Applies a function to each leaf, returning a new tree.
@@ -530,7 +543,7 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
             v = self._access(keys)
         except KeyError:
             return default
-        return Checker.check_primitive(v)
+        return _CHECKER.check_primitive(v)
 
     def access_primitive(self, keys: str) -> Primitive:
         """Returns a primitive value, or raises a `KeyError`.
@@ -539,7 +552,7 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
             KeyError: If the key is not found.
             TypeError: If the value is not a primitive.
         """
-        return Checker.check_primitive(self._access(keys))
+        return _CHECKER.check_primitive(self._access(keys))
 
     def get(self, keys: str) -> Toml | None:
         """Returns a value from the `.`-delimited `keys`, falling back to `None`."""

@@ -6,6 +6,15 @@
 # https://just.systems/man/en/
 # https://cheatography.com/linux-china/cheat-sheets/justfile/
 
+# CAUTION – Quotes aren't quotes.
+# This doesn't do what you'd expect:
+# ```
+# git +args:
+#   git {{args}}
+# commit-reformat: (git "-m" "style: reformat code")
+# ```
+# This results in `git -m style: reformat code` !
+
 set ignore-comments	:= true
 
 git_sha := `git rev-parse --short=16 HEAD`
@@ -44,19 +53,21 @@ init:
 
 ###################################################################################################
 
-# `update && fix-changes && format-changes && clean`
+# `just update fix-changes format-changes clean`
 [group('project')]
 spruce: update fix-changes format-changes clean
 
-# `update-lock && update-hooks`
+# `just update-lock update-hooks`
 [group('project')]
 update: update-lock update-hooks
+[private]
 alias upgrade := update
 
 # Update the lock file and sync the venv.
 [group('project')]
 update-lock: sync
   uv run pre-commit gc
+[private]
 alias upgrade-lock := update-lock
 
 # Auto-update commit hooks.
@@ -64,6 +75,7 @@ alias upgrade-lock := update-lock
 update-hooks:
   uv run --locked pre-commit autoupdate
   uv run --no-sync pre-commit gc
+[private]
 alias upgrade-hooks := update-hooks
 
 # Lock and sync the venv (uses all extras).
@@ -161,12 +173,12 @@ minify-repo: clean delete-probable-temp
 
 ###################################################################################################
 
-# Format modified files (via pre-commit).
+# Format *modified* files (via pre-commit).
 [group('format')]
 format-changes: _format
 alias format := format-changes
 
-# Format ALL files (via pre-commit).
+# Format *all* files (via pre-commit).
 [group('format')]
 format-all: (_format "--all-files")
 
@@ -180,26 +192,26 @@ _format *args:
 
 ###################################################################################################
 
-# Ruff auto-fix modified files (via pre-commit).
+# Ruff auto-fix *modified* files (via pre-commit).
 [group('fix'), no-exit-message]
 fix-changes: _stage_precommit (hook "ruff-check")
 alias fix := fix-changes
 
-# Ruff auto-fix ALL files (via pre-commit).
+# Ruff auto-fix *all* files (via pre-commit).
 [group('fix'), no-exit-message]
-fix-all: _stage_precommit (hook "ruff-check" "--all-files")
+fix-all: _stage_precommit (hook "ruff-check --all-files")
 
-# Ruff auto-fix rule violations.
+# Ruff auto-fix *all* files (via ruff directly, passing args).
 [group('fix'), no-exit-message]
 fix-ruff *args: (_fix_ruff args)
 
 # Ruff auto-fix, including unsafe fixes. [CAUTION]
-[group('fix'), no-exit-message]
+[group('fix'), no-exit-message, private]
 fix-ruff-unsafe *args: (_fix_ruff "--unsafe-fixes" args)
 
-# <Internal.>
+# <Internal.> (FYI: Use `--config` so users can still pass `--output-format`.)
 [no-exit-message]
-_fix_ruff *args: (ruff "check" "--fix-only" "--output-format" "grouped" args)
+_fix_ruff *args: (ruff "check --fix-only --config 'output-format=\"grouped\"'" args)
 
 # <Internal.>
 [no-exit-message]
@@ -208,9 +220,13 @@ _stage_precommit:
 
 ###################################################################################################
 
+# `just check-simple check-ruff check-ty check-links`
+[group('check'), private]
+check: check-core check-ruff check-ty check-links
+
 # Check basic rules (via pre-commit).
 [group('check')]
-check-simple:
+check-core:
   # Keep slower hooks lower in the list.
   uv run --no-sync pre-commit run check-filenames
   uv run --no-sync pre-commit run check-symlinks
@@ -230,85 +246,84 @@ check-ruff *args: (_check_ruff args)
 
 # Show the number of violations per Ruff rule.
 [group('check'), no-exit-message]
-check-ruff-stats *args: (ruff "check" "--no-fix" "--statistics" args)
+check-ruff-stats *args: (ruff "check --no-fix --statistics" args)
 
 # Check Ruff Bandit-derived 'S' rules.
 [group('check'), no-exit-message]
-check-bandit *args: (_check_ruff "--select" "S" args)
+check-bandit *args: (_check_ruff "--select S" args)
 
 # Check Astral's ty typing rules.
 [group('check'), no-exit-message]
-check-ty *args: (run "ty" "check" args)
+check-ty *args: (run "ty check" args)
 
 # Detect broken hyperlinks (via pre-commit).
 [group('check'), no-exit-message]
-check-links: (hook "markdown-link-check" "--hook-stage" "manual" "--all-files")
+check-links: (hook "markdown-link-check --hook-stage manual --all-files")
 
-# <Internal.>
+# <Internal.> (FYI: Use `--config` so users can still pass `--output-format`.)
 [no-exit-message]
-_check_ruff *args: (ruff "check" "--no-fix" "--output-format" "grouped" args)
+_check_ruff *args: (ruff "check --no-fix --config 'output-format=\"grouped\"'" args)
 
 ###################################################################################################
 
-# Run tests NOT marked 'ux' (--cov).
+# Run tests not marked 'ux'.
 [group('test'), no-exit-message]
-test-non-ux *args: (_with_cov "-m" "not ux" args)
+test-non-ux *args: (pytest "-m 'not ux'" args)
 alias test := test-non-ux
 
-# Run tests marked 'ux' for manual interaction or verification (--no-cov).
+# Run tests marked 'ux' for manual interaction or verification.
 [group('test'), no-exit-message]
-test-ux *args: (_no_cov "-m" "ux" args)
+test-ux *args: (pytest "-m ux" args)
 
-# Run tests NOT marked 'ux', 'e2e', 'slow', or 'net' (--cov).
+# Run tests not marked 'ux', 'e2e', 'slow', or 'net'.
 [group('test'), no-exit-message]
-test-fast *args: (_with_cov "-m" "not (ux or e2e or slow or net)" args)
+test-fast *args: (pytest "-m 'not (ux or e2e or slow or net)'" args)
 
-# Run tests marked 'property' with Hypothesis options (--no-cov).
+# Run tests marked 'property' with extra Hypothesis options.
 [group('test'), no-exit-message]
-test-property *args: (_no_cov "-m" "property" "--hypothesis-explain" "--hypothesis-show-statistics" args)
+test-property *args: (pytest "-m property --hypothesis-explain --hypothesis-show-statistics" args)
 
-# Run all PyTest tests stepwise, starting at last failure (--cov).
+# Run doctest tests via PyTest.
 [group('test'), no-exit-message]
-test-stepwise *args: (_no_cov "--stepwise" args)
+test-doctest *args: (pytest "--doctest-modules src/" args)
+alias doctest := test-doctest
+[private]
+alias test-doctests := test-doctest
 
-# Run all PyTest tests, highlighting test durations (--cov).
+# Run tests not marked 'ux', reporting coverage.
 [group('test'), no-exit-message]
-test-durations *args: (_with_cov "--durations=0" "--durations-min=0" args)
+test-with-cov *args: (pytest "-m 'not ux' --cov" args)
+alias test-cov := test-with-cov
 
-# Run doctest tests via PyTest (--no-cov).
+# Run PyTest tests, highlighting test durations.
 [group('test'), no-exit-message]
-doctest *args: (_no_cov "--doctest-modules" "src/" args)
+test-durations *args: (pytest "--durations=0 --durations-min=0" args)
 
-# Run all PyTest tests, showing minimal output (--cov).
-[group('test'), no-exit-message]
-test-quietly *args: (_with_cov "--capture=no" "--tb=line" args)
+# Run PyTest tests stepwise, starting at last failure.
+[group('test'), no-exit-message, private]
+test-stepwise *args: (pytest "--stepwise" args)
 
-# Run all PyTest tests, showing tracebacks, locals, and INFO (--cov).
-[group('test'), no-exit-message]
-test-loudly *args: (_with_cov "--showlocals" "--full-trace" "--log-level=INFO" args)
+# Run PyTest tests, showing minimal output.
+[group('test'), no-exit-message, private]
+test-quietly *args: (pytest "--capture=no --tb=line --quiet" args)
 
-# Run all PyTest tests with pdb debugger (--no-cov).
-[group('test'), no-exit-message]
-test-with-pdb *args: (_no_cov "--pdb" args)
+# Run PyTest tests, showing tracebacks, locals, and INFO.
+[group('test'), no-exit-message, private]
+test-loudly *args: (pytest "--showlocals --full-trace --log-level=INFO --verbose" args)
 
-# <Internal.>
-[no-exit-message]
-_no_cov *args:
-  uv run --locked pytest --no-cov {{args}}
-
-# <Internal.>
-[no-exit-message]
-_with_cov *args: (pytest args)
+# Run PyTest tests with pdb debugger.
+[group('test'), no-exit-message, private]
+test-with-pdb *args: (pytest "--pdb" args)
 
 ###################################################################################################
 
 # Build mkdocs docs from scratch, failing for warnings.
 [group('docs'), no-exit-message]
-build-docs *args: (run "mkdocs" "build" "--clean" "--strict" args)
+build-docs *args: (run "mkdocs build --clean --strict" args)
 
 # Locally serve the mkdocs docs.
 [group('docs'), no-exit-message]
-serve-docs *args: (run "mkdocs" "serve" args)
+serve-docs *args: (run "mkdocs serve" args)
 
 ###################################################################################################
 
@@ -323,7 +338,7 @@ python *args: (run "python" args)
 
 # `uv run --locked pre-commit run {hook}`
 [group('alias'), no-exit-message]
-hook name *args: (run "pre-commit" "run" name args)
+hook name *args: (run "pre-commit run" name args)
 
 # `uv run --locked ruff`
 [group('alias'), no-exit-message]
@@ -333,7 +348,7 @@ ruff *args: (run "ruff" args)
 [group('alias'), no-exit-message]
 pytest *args: (run "pytest" args)
 
-# `gh pr create --fill-verbose --draft`
+# `gh pr create --fill-verbose`
 [group('alias'), no-exit-message]
 pr *args="--web":
-  gh pr create --fill-verbose --draft {{args}}
+  gh pr create --fill-verbose {{args}}

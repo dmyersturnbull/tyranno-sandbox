@@ -170,7 +170,7 @@ class DurationDict(TypedDict):
     microsecond_part: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, kw_only=True)
 class JmesFunctionError(Exception):
     """An error in fetching data from e.g. PyPi."""
 
@@ -180,7 +180,8 @@ class JmesFunctionError(Exception):
 
     @classmethod
     def from_call(cls, message: str, *, depth: int) -> JmesFunctionError:
-        return JmesFunctionError(*get_caller_info(depth), message)
+        name, args = get_caller_info(depth)
+        return JmesFunctionError(function=name, args=args, message=message)
 
     def __str__(self) -> str:
         return f"Error in {self.function} with args {self.args}: {self.message}"

@@ -17,13 +17,14 @@ from types import TracebackType
 from typing import Final, Self, override
 from zoneinfo import ZoneInfo
 
-__all__ = ["TestHelper", "logger"]
+__all__ = ["Helper", "logger"]
 
 ETC_UTC: Final[ZoneInfo] = ZoneInfo("Etc/UTC")
-TESTS_ROOT: Final[Path] = Path(__file__).parent.relative_to(Path.cwd())
-PROJECT_ROOT: Final[Path] = TESTS_ROOT.parent.relative_to(Path.cwd())
+TESTS_ROOT: Final[Path] = Path(__file__).parent.resolve().relative_to(Path.cwd())
+PROJECT_ROOT: Final[Path] = TESTS_ROOT.parent.resolve().relative_to(Path.cwd())
 # Separate logging in the main package vs. inside test functions.
 logger = logging.getLogger(f"{PROJECT_ROOT}::test")
+logger.debug("Tests root: %s", TESTS_ROOT)
 
 
 class Capture(ExitStack):
@@ -89,11 +90,15 @@ class Start:
     - local `YYYY-MM-DD'T'hhmmss.µµµµµµ[+-]hhmm[ss]`.
     """
 
-    mono_seconds: float = field(default_factory=time.monotonic, init=False)
-    local: datetime = field(default_factory=datetime.now().astimezone(), init=False)
+    mono_ns: int
+    local: datetime
     utc: datetime = field(init=False, repr=False, hash=False)
     local_str: str = field(init=False, repr=False, hash=False)
     utc_str: str = field(init=False, repr=False, hash=False)
+
+    @classmethod
+    def new(cls) -> Self:
+        return cls(mono_ns=time.monotonic_ns(), local=datetime.now().astimezone())
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "utc", self.local.astimezone(ETC_UTC))
@@ -101,25 +106,35 @@ class Start:
         object.__setattr__(self, "utc_str", self.local.strftime("%Y-%m-%dT%H%M%S.%fZ"))
 
     @property
+    def ns_elapsed(self) -> int:
+        return time.monotonic_ns() - self.mono_ns
+
+    @property
     def time_elapsed(self) -> timedelta:
-        return timedelta(seconds=time.monotonic() - self.mono_seconds)
+        return timedelta(microseconds=self.ns_elapsed / 1000)
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}(monotonic={self.mono_seconds}s, local={self.local_str}"
+        return f"{self.__class__.__name__}@{self.local_str}"
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class TestHelper:
+class Helper:
     """A set of utilities for tests classes.
 
     Use [resource][] to get a file under `tests/resources/`.
     """
 
-    start: Start = field(default_factory=Start, init=False)
+    start: Start
 
     @classmethod
+    def new(cls) -> Self:
+        return cls(start=Start.new())
+
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}(start={self.start})"
+
     @contextmanager
-    def capture(cls) -> Generator[Capture]:
+    def capture(self) -> Generator[Capture]:
         """Context manager that captures stdout and stderr in a `Capture` object that contains both.
 
         Yields:
