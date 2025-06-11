@@ -28,9 +28,20 @@ repos:
     hooks:
       - id: check-filenames
         name: Enforce file and directory naming conventions.
-        entry: Paths may only use 'A-Za-z0-9_.,+=-' and cannot start with '-' or end with '.'.
+        entry: >-
+          Path components may only use 'A-Za-z0-9_.,+=-' and cannot start with '-' or end with '.'.
         language: fail
-        files: '[^/\w.,+=-]|^-|\.$'
+        files: '[^/\w.,+=-]|(^|/)-|\.($|/)'
+        stages:
+          - commit
+      - id: pathvalidate
+        name: Verify that paths are valid cross-platform.
+        entry: pathvalidate --max-len 255 validate --
+        language: python
+        additional_dependencies:
+          - pathvalidate-cli
+        stages:
+          - commit
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.33.0
@@ -41,13 +52,13 @@ repos:
 
   # UV lock and sync
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.7.8
+    rev: 0.7.12
     hooks:
       - id: uv-sync # first locks (without `--upgrade`)
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.11
+    rev: v0.11.13
     hooks:
       - id: ruff-check
         args:
