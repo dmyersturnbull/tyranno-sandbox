@@ -15,6 +15,13 @@
 # ```
 # This results in `git -m style: reformat code` !
 
+# Confusingly, Python has a default warning filter, which is **different** from `-W default`.
+export PYTHONWARNINGS := "default"
+# To enable dev mode (https://docs.python.org/3/library/devmode.html):
+# export PYTHONDEVMODE := "1"
+# To complain when `encoding=` is omitted (in addition to Ruff rule):
+# export PYTHONWARNDEFAULTENCODING := "1"
+
 set ignore-comments	:= true
 
 git_sha := `git rev-parse --short=16 HEAD`

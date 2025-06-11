@@ -176,6 +176,10 @@ override.tf.json
 !/.editorconfig
 !/.prettierrc*
 
+# mkdocs
+!.meta.yaml
+!.meta.yml
+
 # External service config
 !/.*.toml
 !/.*.yaml
