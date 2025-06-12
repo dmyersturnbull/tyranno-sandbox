@@ -57,9 +57,9 @@ trim_trailing_whitespace = false
 indent_size = 5
 max_line_length = 72
 
-# 4-space; misc. interpreted: Python, Lua, Perl, PowerShell, Batch, PHP (8+ only), MATLAB
+# 4-space; misc. interpreted: Python, Lua, Perl, Just, PowerShell, Batch, PHP (8+ only), MATLAB
 # Lua is either 4-space or tab.
-[*.{py,lua,pl,perl,ps1,bat,php,m}]
+[*.{py,lua,pl,perl,just,ps1,bat,php,m}]
 indent_size = 4
 max_line_length = 100
 

@@ -66,6 +66,18 @@ repos:
           - --show-fixes
       - id: ruff-format
 
+  # Format Justfile
+  - repo: local
+    hooks:
+      - id: format-justfile
+        name: Format the justfile using 'just --fmt'.
+        entry: just --fmt --unstable
+        pass_filenames: false
+        language: system
+        files: justfile
+        stages:
+          - pre-commit
+
   # Format various formats with Prettier
   - repo: https://github.com/JoC0de/pre-commit-prettier
     rev: v3.5.3
