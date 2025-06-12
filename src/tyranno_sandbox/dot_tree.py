@@ -255,7 +255,7 @@ class Utils:
             yield path, item
 
 
-_UTILS: Final[Utils] = Utils()
+_UTILS: Final = Utils()
 _CHECKER = Checker()
 
 

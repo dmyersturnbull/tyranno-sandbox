@@ -12,24 +12,13 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from functools import cached_property
 from pathlib import Path
-from typing import ClassVar, Final, Self
+from typing import Final, Self
 
 import platformdirs
 
 from tyranno_sandbox._about import __about__
 
-__all__ = [
-    "ERR_IS_TTY",
-    "OUT_IS_TTY",
-    "STARTUP",
-    "EnvGlobalVarsFactory",
-    "GlobalVars",
-    "GlobalVarsFactory",
-    "Startup",
-]
-
-TRUE: Final[frozenset[str]] = frozenset({"true", "yes", "on"})
-FALSE: Final[frozenset[str]] = frozenset({"false", "no", "off"})
+__all__ = ["STARTUP", "EnvGlobalVarsFactory", "GlobalVars", "GlobalVarsFactory", "Startup"]
 
 
 @dataclass(frozen=True)
@@ -51,7 +40,7 @@ class Startup:
         return time.monotonic() - self.monotonic
 
 
-STARTUP: Final[Startup] = Startup.now()
+STARTUP: Final = Startup.now()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -64,8 +53,13 @@ class GlobalVars:
     log_dir: Path
     tyranno_dir: str
     colorize: bool
+    error_color: str
+    warning_color: str
     success_color: str
-    failure_color: str
+    info_color: str
+    debug_color: str
+    log_format: str
+    debug_mode: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,7 +90,7 @@ class XdgHelper[**P]:
         return path
 
     def _var_name(self, fn_name: str) -> str:
-        return "TYRANNO_" + fn_name.removeprefix("user_").upper()
+        return "TYRANNO_" + fn_name.removeprefix("user_")
 
     def _args[**P](self) -> P.kwargs:
         return {
@@ -108,16 +102,14 @@ class XdgHelper[**P]:
         }
 
 
-OUT_IS_TTY: Final[bool] = sys.stdout.isatty()
-ERR_IS_TTY: Final[bool] = sys.stdout.isatty()
+OUT_IS_TTY: Final = sys.stdout.isatty()
+ERR_IS_TTY: Final = sys.stdout.isatty()
 GlobalVarsFactory = Callable[[], GlobalVars]
 
 
 @dataclass(frozen=True, slots=True)
 class EnvGlobalVarsFactory(GlobalVarsFactory):
     """Factory that reads from environment variables and platform config."""
-
-    var_prefix: ClassVar[str] = "TYRANNO_"
 
     def __call__(self) -> GlobalVars:
         xdg = XdgHelper()
@@ -126,32 +118,42 @@ class EnvGlobalVarsFactory(GlobalVarsFactory):
             config_dir=xdg.dir(platformdirs.user_config_dir),
             data_dir=xdg.dir(platformdirs.user_data_dir),
             log_dir=xdg.dir(platformdirs.user_log_dir),
-            tyranno_dir=str(self._get_rel_dir("dir", ".tyranno")),
-            success_color=self._get_str("success_color", "blue"),
-            failure_color=self._get_str("failure_color", "red"),
-            colorize=self._get_bool("colorize", lambda: OUT_IS_TTY),
+            tyranno_dir=str(self._rel_dir("TYRANNO_DIR", ".tyranno")),
+            error_color=self._str("TYRANNO_ERROR_COLOR", "bold red"),
+            warning_color=self._str("TYRANNO_WARNING_COLOR", "red"),
+            success_color=self._str("TYRANNO_SUCCESS_COLOR", "blue"),
+            info_color=self._str("TYRANNO_INFO_COLOR", ""),
+            debug_color=self._str("TYRANNO_DEBUG_COLOR", "dim"),
+            colorize=self._use_color(),
+            log_format=self._str("TYRANNO_LOG_FORMAT", ""),
+            debug_mode=self._bool("TYRANNO_DEBUG_MODE"),
         )
 
-    def _get_str(self, var: str, default: str) -> str:
-        return os.environ.get(self.var_prefix + var, default)
+    def _use_color(self) -> bool:
+        if self._bool("FORCE_COLOR") == "1":
+            return True
+        if self._bool("NO_COLOR") == "1":
+            return False
+        return self._bool("colorize", lambda: OUT_IS_TTY)
 
-    def _get_bool(self, name: str, default: Callable[[], bool] = lambda: False) -> bool:
-        var = self.var_prefix + name.upper()
+    def _str(self, var: str, default: str) -> str:
+        return os.environ.get(var, default)
+
+    def _bool(self, var: str, default: Callable[[], bool] = lambda: False) -> bool:
         value = default() if os.environ.get(var, "auto") == "auto" else os.environ[var]
-        return self._parse_bool(name, value)
+        return self.__parse_bool(var, value)
 
-    def _parse_bool(self, env_var: str, value: str) -> bool:
-        match value.lower():
-            case s if s in TRUE:
+    def __parse_bool(self, var: str, value: str) -> bool:
+        match value:
+            case s if s == "1":
                 return True
-            case s if s in FALSE:
+            case s if s == "0":
                 return False
-        raise GlobalConfigError("$" + env_var, value, f"is not ({'|'.join(TRUE | FALSE)})")
+        raise GlobalConfigError("$" + var, value, "is not 0 or 1")
 
-    def _get_rel_dir(self, name: str, default: str) -> str:
-        var_name = self.var_prefix + name.upper()
-        if value := os.environ.get(var_name):
+    def _rel_dir(self, var: str, default: str) -> str:
+        if value := os.environ.get(var):
             if Path(value).is_absolute() or len(Path(value).parts) > 1:
-                raise GlobalConfigError("$" + var_name, value, "is not a relative path")
+                raise GlobalConfigError("$" + var, value, "is not a relative path")
             return value
         return default

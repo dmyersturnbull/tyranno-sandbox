@@ -15,14 +15,15 @@
 # ```
 # This results in `git -m style: reformat code` !
 
-# Confusingly, Python has a default warning filter, which is **different** from `-W default`.
-export PYTHONWARNINGS := "default"
-# To enable dev mode (https://docs.python.org/3/library/devmode.html):
-# export PYTHONDEVMODE := "1"
-# To complain when `encoding=` is omitted (in addition to Ruff rule):
-# export PYTHONWARNDEFAULTENCODING := "1"
+set dotenv-load
+set ignore-comments
 
-set ignore-comments	:= true
+# Confusingly, Python has a default warning filter, which is **different** from `-W default`.
+export PYTHONWARNINGS := env('PYTHONWARNINGS', 'default')
+# Enable dev mode (https://docs.python.org/3/library/devmode.html):
+export PYTHONDEVMODE := env('PYTHONDEVMODE', '1')
+# To complain when `encoding=` is omitted (in addition to Ruff rule):
+# export PYTHONWARNDEFAULTENCODING := env('PYTHONWARNDEFAULTENCODING', '1')
 
 git_sha := `git rev-parse --short=16 HEAD`
 git_ref := `git rev-parse --abbrev-ref HEAD`
@@ -44,7 +45,9 @@ info:
   @echo "cpu_count: {{num_cpus()}}"
   @echo "shell: {{env('SHELL', '?')}}"
   @echo "lang: {{env('LANG', '?')}}"
-  @echo "repo: {{file_name(justfile_directory())}}"
+  @echo "repo_dir: {{file_name(justfile_directory())}}"
+  @echo "project_name: {{replace_regex(`uv version`, ' .+', '')}}"
+  @echo "project_ver: {{`uv version --short`}}"
   @echo "git_ref: {{git_ref}}"
   @echo "git_sha: {{git_sha}}"
   @echo "git_rev: {{git_rev_date}}"
@@ -236,6 +239,7 @@ check: check-core check-ruff check-ty check-links
 check-core:
   # Keep slower hooks lower in the list.
   uv run --no-sync pre-commit run check-filenames
+  uv run --no-sync pre-commit run pathvalidate
   uv run --no-sync pre-commit run check-symlinks
   uv run --no-sync pre-commit run check-case-conflict
   uv run --no-sync pre-commit run check-illegal-windows-names

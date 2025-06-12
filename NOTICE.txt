@@ -1,4 +1,0 @@
-Copyright 2025, Contributors to tyrannosaurus
-<https://github.com/dmyersturnbull/tyrannosaurus>
-
-This software distribution includes third-party software.

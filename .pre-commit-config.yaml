@@ -33,7 +33,7 @@ repos:
         language: fail
         files: '[^/\w.,+=-]|(^|/)-|\.($|/)'
         stages:
-          - commit
+          - pre-commit
       - id: pathvalidate
         name: Verify that paths are valid cross-platform.
         entry: pathvalidate --max-len 255 validate --
@@ -41,7 +41,7 @@ repos:
         additional_dependencies:
           - pathvalidate-cli
         stages:
-          - commit
+          - pre-commit
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.33.0

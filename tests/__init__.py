@@ -21,9 +21,9 @@ from hypothesis import settings as hyp
 
 __all__ = ["Helper", "logger"]
 
-ETC_UTC: Final[ZoneInfo] = ZoneInfo("Etc/UTC")
-TESTS_ROOT: Final[Path] = Path(__file__).parent.resolve()  # .relative_to(Path.cwd())
-PROJECT_ROOT: Final[Path] = TESTS_ROOT.parent.resolve()  # .relative_to(Path.cwd())
+ETC_UTC: Final = ZoneInfo("Etc/UTC")
+TESTS_ROOT: Final = Path(__file__).parent.resolve()  # .relative_to(Path.cwd())
+PROJECT_ROOT: Final = TESTS_ROOT.parent.resolve()  # .relative_to(Path.cwd())
 # Separate logging in the main package vs. inside test functions.
 logger = logging.getLogger(f"{PROJECT_ROOT.name}::test")
 
@@ -91,11 +91,11 @@ class Capture(ExitStack):
         self,
         exc_type: type[BaseException] | None,
         exc_value: BaseException | None,
-        traceback: TracebackType | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         logger.debug("Finished capturing stdout and stderr")
         # The ExitStack handles everything
-        super().__exit__(exc_type, exc_value, traceback)
+        super().__exit__(exc_type, exc_value, exc_tb)
 
 
 @dataclass(frozen=True, slots=True)

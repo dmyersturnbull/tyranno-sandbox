@@ -13,7 +13,7 @@ from jmespath.functions import Functions
 from jmespath.functions import signature as jmespath_signature
 
 # Mapping of Python -> JMESPath types.
-TYPE_MAP: Final[dict[type, str]] = {
+TYPE_MAP: Final = {
     str: "string",
     int: "number",  # JMESPath only has `number`.
     float: "number",

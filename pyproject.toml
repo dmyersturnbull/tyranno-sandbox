@@ -52,16 +52,20 @@ classifiers = [
 
 # -------------------------- dependencies -------------------------------------
 dependencies = [
+  "aiofiles>=24",
+  "executing>=2.2",
   "jmespath-community>=1.1.3",
   "loguru>=0.7.2",
   "niquests>=3.14",
   "packaging>=24.0",
   "platformdirs>=4.3.2",
   "pathspec>=0.12",
+  "pathvalidate>=3.2",
   "semver>=3.0",
   "typer-slim>=0.16",
-  # /usr/share/zoneinfo uses IANA zones; Windows does not
-  "tzdata>=2025.1; platform_system == 'Windows'",
+  "tzdata>=2025.2", # /usr/share/zoneinfo uses IANA zones; Windows does not
+  # OR `"tzdata>=2025.2; platform_system == 'Windows'",`
+  "varname>=0.14",
 ]
 
 # -------------------------- optional dependencies ----------------------------
@@ -72,15 +76,14 @@ cli = [
 server = [
   "fastapi>=0.115",
   "fastapi-problem>=0.11.2",
-  "hypercorn>=0.17",
+  "hypercorn[h3,uvloop]>=0.17",
   "pydantic>=2.11",
   "rfc9457>=0.3",
   "zstandard>=0.23",
   "starlette-compress>=1.5",
 ]
 etl = [
-  "dramatiq[rabbitmq,redis] >=1.17",
-  "hypercorn[h3,uvloop]>=0.17",
+  "dramatiq[rabbitmq] >=1.17",
   "pymongo>=4.12",
 ]
 
@@ -131,8 +134,8 @@ dev = [
   "pytest-datadir>=1.6",
   "pytest-randomly>=3.16",
   "pytest-xdist>=3.6",
-  "ruff>=0.11.11",
-  "ty>=0.0.1a7",
+  "ruff>=0.11.13",
+  "ty>=0.0.1a9",
 ]
 test = [
   "coverage[toml]>=7.8", # Required for coverage.
@@ -152,8 +155,8 @@ docs = [
   "mkdocstrings[python]>=0.29", # Required for API docs.
 ]
 lint = [
-  "ruff>=0.11.11",
-  "ty>=0.0.1a7", # Astral's fledgling type checker.
+  "ruff>=0.11.13",
+  "ty>=0.0.1a9", # Astral's fledgling type checker.
 ]
 precommit = ["pre-commit>=4.2"]
 
@@ -275,6 +278,7 @@ select = [
 ]
 
 ignore = [
+  "ASYNC109", # non-async def has `timeout` parameter
   "COM812",   # no trailing comma; use formatter instead
   "COM819",   # trailing comma; use formatter instead
   "E722",     # "bare-except"; use "blind-except" (BLE001) instead
@@ -283,6 +287,8 @@ ignore = [
   "RUF002",   # confusable characters
   "RUF003",   # confusable characters
   "RUF021",   # demands parentheses in `or (x and y)`
+  "S403",     # import of pickle (S301 on pickle calls is sufficient)
+  "S404",     # import of subprocess (S602/S603 on subprocess calls is sufficient)
 ]
 
 unfixable = [
@@ -300,6 +306,7 @@ unfixable = [
 
 # Delegated options
 flake8-bandit.check-typed-exception = true
+flake8-copyright.min-file-size = 2048
 flake8-copyright.notice-rgx = "(?m)^# SPDX-License-Identifier: "
 flake8-tidy-imports.ban-relative-imports = "all"
 isort.detect-same-package = false # Use `tool.ruff.src` instead.

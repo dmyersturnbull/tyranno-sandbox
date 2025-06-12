@@ -27,18 +27,18 @@ class _JsonUtil:
         return "JSON"
 
     def encode(self, data: Json) -> str:
-        import json  # noqa: PLC0415  # fmt: skip
+        import json  # noqa: PLC0415
 
-        return json.dumps(data, ensure_ascii=False, allow_nan=False, indent=2)
+        return json.dumps(data, ensure_ascii=False, allow_nan=False, indent=2)  # fmt: skip
 
     def decode(self, data: str) -> Json:
-        import json  # noqa: PLC0415  # fmt: skip
+        import json  # noqa: PLC0415
 
-        return json.loads(data, parse_constant=self._parse_const)
+        return json.loads(data, parse_constant=self._parse_const)  # fmt: skip
 
     def _parse_const(self, s: str) -> NoReturn:
         msg = f"Invalid JSON value: '{s}'"
         raise ValueError(msg)
 
 
-JSON: Final[_JsonUtil] = _JsonUtil()
+JSON: Final = _JsonUtil()

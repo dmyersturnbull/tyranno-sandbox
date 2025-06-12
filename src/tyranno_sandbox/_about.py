@@ -118,7 +118,7 @@ class About(TypedDict):
     urls: ReadOnly[UrlDict]
 
 
-__about__: Final[About] = About(
+__about__: Final = About(
     # ::tyranno:: name="$<<~.namespace>>",
     namespace="tyranno_sandbox",
     # ::tyranno:: name="$<<~.vendor>>",

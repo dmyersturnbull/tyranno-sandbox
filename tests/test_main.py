@@ -6,7 +6,6 @@
 
 import pytest
 
-# noinspection PyUnresolvedReferences
 from tyranno_sandbox._about import __about__ as about
 
 

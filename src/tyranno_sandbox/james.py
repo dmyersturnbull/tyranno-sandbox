@@ -51,7 +51,7 @@ def get_caller_info(depth: int) -> CallerInfo:
             msg = f"Caller of frame {frame} (depth {i} from {this_frame}) is unavailable."
             raise AssertionError(msg)
         frame = frame.f_back
-    return CallerInfo(frame.f_code.co_name, {**frame.f_locals})
+    return CallerInfo(frame.f_code.co_name, dict(frame.f_locals))
 
 
 class DateTuple(NamedTuple):
@@ -218,7 +218,7 @@ class _Utils(AbstractContextManager):
         "pre": "rc",
         "preview": "rc",
     }
-    PEP440_SPEC_RE: Final[re.Pattern] = re.compile(r"""([A-Za-z0-9_-]++)(.++)""")
+    PEP440_SPEC_RE: Final = re.compile(r"""([A-Za-z0-9_-]++)(.++)""")
 
     def pep440_info(self, v: Pep440) -> Pep440Dict:
         major_vr = f"{v.epoch}!{v.major}" if v.epoch else str(v.major)
@@ -386,9 +386,9 @@ class _Utils(AbstractContextManager):
         return epoch + main + pre + dev + post
 
 
-U: Final[_Utils] = _Utils()
-_UTC_TIME_DICT: Final[DatetimeDict] = U.datetime_to_dict(STARTUP.utc)
-_LOCAL_TIME_DICT: Final[DatetimeDict] = U.datetime_to_dict(STARTUP.local)
+U: Final = _Utils()
+_UTC_TIME_DICT: Final = U.datetime_to_dict(STARTUP.utc)
+_LOCAL_TIME_DICT: Final = U.datetime_to_dict(STARTUP.local)
 
 
 class TyrannoJmesFunctions:

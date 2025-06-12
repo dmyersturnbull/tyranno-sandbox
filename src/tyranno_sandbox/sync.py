@@ -69,7 +69,7 @@ class Markers:
         return pattern
 
 
-MARKERS: Final[Markers] = Markers.create()
+MARKERS: Final = Markers.create()
 
 
 def get_comment_markers() -> dict[str, tuple[str, str]]:
