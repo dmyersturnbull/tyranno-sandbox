@@ -23,7 +23,7 @@ from semver import VersionInfo as Semver
 
 from tyranno_sandbox._global_vars import STARTUP
 
-__all__ = ["TyrannoJmesFunctions"]
+__all__ = ["JmesFunctionError", "TyrannoJmesFunctions"]
 
 
 if TYPE_CHECKING:
@@ -208,27 +208,19 @@ class _Utils(AbstractContextManager):
         self.__session.__exit__(exc_type, exc_val, exc_tb)
 
     # IANA timezones that are aliases for Etc/UTC.
-    UTC_NAMES: Final[frozenset[str]] = frozenset(
-        {"Etc/UTC", "Etc/Universal", "Etc/UCT", "Etc/Zulu"}
-    )
-    PEP440_PRE_STRS: Final[dict[str, str]] = {
-        "alpha": "a",
-        "beta": "b",
-        "c": "rc",
-        "pre": "rc",
-        "preview": "rc",
-    }
+    UTC_NAMES: Final = frozenset({"Etc/UTC", "Etc/Universal", "Etc/UCT", "Etc/Zulu"})
+    PEP440_PRE_STRS: Final = {"alpha": "a", "beta": "b", "c": "rc", "pre": "rc", "preview": "rc"}
     PEP440_SPEC_RE: Final = re.compile(r"""([A-Za-z0-9_-]++)(.++)""")
 
     def pep440_info(self, v: Pep440) -> Pep440Dict:
-        major_vr = f"{v.epoch}!{v.major}" if v.epoch else str(v.major)
-        minor_vr = f"{major_vr}.{v.minor}"
+        major_ver = f"{v.epoch}!{v.major}" if v.epoch else str(v.major)
+        minor_ver = f"{major_ver}.{v.minor}"
         return Pep440Dict(
             full_version=self.sanitize_pep440(v),
             normalized_version=self.normalize_pep440(v),
             public_version=v.public,
-            major_version=major_vr,
-            minor_version=minor_vr,
+            major_version=major_ver,
+            minor_version=minor_ver,
             micro_version=v.base_version,
             epoch=v.epoch,
             major=v.major,
@@ -336,9 +328,9 @@ class _Utils(AbstractContextManager):
 
     def extract_pypi_versions(self, pypi_data: JsonBranch) -> set[str]:
         versions: set[str] = set()
-        for vr, files in pypi_data.get("releases", {}).items():
+        for ver, files in pypi_data.get("releases", {}).items():
             if any(not f.get("yanked", False) for f in files):
-                versions.add(vr)
+                versions.add(ver)
         return versions
 
     def dl_pypi_metadata(self, name: str) -> JsonBranch:
@@ -409,7 +401,7 @@ class TyrannoJmesFunctions:
         return [U.sanitize_pep440(p) for p in sorted((Pep440(v) for v in versions), reverse=True)]
 
     def pep440_max_per(self, versions: list[str], per: str) -> str:
-        # TODO: `vrs = [Pep440(v) for v in versions]`
+        # TODO: `vers = [Pep440(v) for v in versions]`
         valid = {"major", "minor", "micro"}
         if per not in valid:
             msg = f"Argument '{per}' is not one of {valid}."

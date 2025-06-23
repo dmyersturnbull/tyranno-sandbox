@@ -29,12 +29,12 @@ class _JsonUtil:
     def encode(self, data: Json) -> str:
         import json  # noqa: PLC0415
 
-        return json.dumps(data, ensure_ascii=False, allow_nan=False, indent=2)  # fmt: skip
+        return json.dumps(data, ensure_ascii=False, allow_nan=False, indent=2)
 
     def decode(self, data: str) -> Json:
         import json  # noqa: PLC0415
 
-        return json.loads(data, parse_constant=self._parse_const)  # fmt: skip
+        return json.loads(data, parse_constant=self._parse_const)
 
     def _parse_const(self, s: str) -> NoReturn:
         msg = f"Invalid JSON value: '{s}'"

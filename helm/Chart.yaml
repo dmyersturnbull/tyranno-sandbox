@@ -22,9 +22,9 @@ keywords:
   - pyproject
   - python-template
   # ::tyranno end::
-# ::tyranno:: appVersion: "$<<project.version>>"
+# ::tyranno:: appVersion: "$<<project.version.pypa_ver(@).to_semver(@)>>"
 appVersion: "0.0.1-alpha.0"
-# ::tyranno:: version: "$<<project.version>>"
+# ::tyranno:: version: "$<<project.version.pypa_ver(@).to_semver(@)>>"
 version: "0.0.1-alpha.0"
 annotations:
   # ::tyranno:: license: $<<project.license.text>>

@@ -33,9 +33,7 @@ jobs:
       - id: match
         shell: bash
         run: |
-          # ::tyranno:: regex_1='^refs/tags/$<<~.cicd.tag.release-trigger>>$'
           regex_1='^v[0-9]+\.[0-9]+\.[0-9]+$'
-          # ::tyranno:: regex_2='^refs/tags/$<<~.cicd.tag.prerelease-trigger>>$'
           regex_2='^v[0-9]+\.[0-9]+\.[0-9]+-((alpha|beta|rc)\.)?\d+$'
           if [[ "$GITHUB_REF" =~ $regex_1 ]]; then
             printf "Accepting %s for real release.\n" "$GITHUB_REF_NAME"

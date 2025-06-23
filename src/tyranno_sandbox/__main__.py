@@ -15,7 +15,7 @@ from typing import Annotated, Final, Self, TextIO
 
 import click
 import typer
-from click import Parameter, ParamType
+from click import Parameter
 from loguru import logger
 from typer import Argument, Option, Typer
 
@@ -24,21 +24,15 @@ from tyranno_sandbox._global_vars import EnvGlobalVarsFactory, GlobalVars
 from tyranno_sandbox.context import Context, ContextFactory, DefaultContextFactory
 
 ENV: GlobalVars = EnvGlobalVarsFactory()()
-SPDX_LICENSE_IDS: Final = frozenset(
-    {
-        "Apache-2.0",
-        "MIT",
-        "BSD-3-Clause",
-        "MPL-2.0",
-        "EUPL-1.2",
-        "GPL-2.0-only",
-        "GPL-3.0-only",
-        "LGPL-2.1-only",
-        "LGPL-3.0-only",
-        "Unlicense",
-        "UPL-1.0",
-    }
-)
+
+
+class SpdxLicense(Enum):
+    """SPDX license id for most commonly used licenses."""
+
+    APACHE_2_0 = "Apache-2.0"
+    MIT = "MIT"
+    BSD_3_CLAUSE = "BSD-3-Clause"
+    MPL = "MPL-2.0"
 
 
 class LogLevel(Enum):
@@ -122,7 +116,7 @@ class Inode(click.Path):
     """
 
     def __init__(self) -> None:
-        # Override to prevent passing arguments.
+        #   Override to prevent passing arguments.
         super().__init__()
 
     def convert(self, value: str, param: Parameter, ctx: Context) -> Path:
@@ -176,20 +170,6 @@ class NonexistentFile(Inode):
         if not mode:
             return None
         return f"Path '{path}' already exists. Specify a nonexistent file path."
-
-
-class SpdxId(ParamType):
-    """An SPDX license identifier as a click type."""
-
-    def convert(self, value: str, param: Parameter, ctx: Context) -> str:
-        if value not in SPDX_LICENSE_IDS:
-            self.fail(
-                f"Value '{value}' is not an accepted SPDX license id."
-                f" Must be one of: {'|'.join(SPDX_LICENSE_IDS)}.",
-                param,
-                ctx,
-            )
-        return value
 
 
 @dataclass(slots=True, kw_only=True)
@@ -247,8 +227,8 @@ def new(
         str, Option("-n", "--name", help="Project name [default: path].", show_default=False)
     ] = "",
     license_id: Annotated[
-        str, Option("--license", click_type=SpdxId(), help="SPDX license ID")
-    ] = "Apache-2.0",
+        SpdxLicense, Option("--license", help="SPDX license ID")
+    ] = SpdxLicense.APACHE_2_0,
 ) -> None:
     logger.info(f"Creating project {name} at {path}.")
     logger.info(f"Using license {license_id}.")

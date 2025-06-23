@@ -18,7 +18,14 @@ import platformdirs
 
 from tyranno_sandbox._about import __about__
 
-__all__ = ["STARTUP", "EnvGlobalVarsFactory", "GlobalVars", "GlobalVarsFactory", "Startup"]
+__all__ = [
+    "STARTUP",
+    "EnvGlobalVarsFactory",
+    "GlobalConfigError",
+    "GlobalVars",
+    "GlobalVarsFactory",
+    "Startup",
+]
 
 
 @dataclass(frozen=True)
@@ -52,12 +59,7 @@ class GlobalVars:
     data_dir: Path
     log_dir: Path
     tyranno_dir: str
-    colorize: bool
-    error_color: str
-    warning_color: str
-    success_color: str
-    info_color: str
-    debug_color: str
+    use_color: bool
     log_format: str
     debug_mode: bool
 
@@ -119,12 +121,7 @@ class EnvGlobalVarsFactory(GlobalVarsFactory):
             data_dir=xdg.dir(platformdirs.user_data_dir),
             log_dir=xdg.dir(platformdirs.user_log_dir),
             tyranno_dir=str(self._rel_dir("TYRANNO_DIR", ".tyranno")),
-            error_color=self._str("TYRANNO_ERROR_COLOR", "bold red"),
-            warning_color=self._str("TYRANNO_WARNING_COLOR", "red"),
-            success_color=self._str("TYRANNO_SUCCESS_COLOR", "blue"),
-            info_color=self._str("TYRANNO_INFO_COLOR", ""),
-            debug_color=self._str("TYRANNO_DEBUG_COLOR", "dim"),
-            colorize=self._use_color(),
+            use_color=self._use_color(),
             log_format=self._str("TYRANNO_LOG_FORMAT", ""),
             debug_mode=self._bool("TYRANNO_DEBUG_MODE"),
         )

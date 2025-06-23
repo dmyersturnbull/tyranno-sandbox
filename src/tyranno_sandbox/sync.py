@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from functools import cache, cached_property
 from pathlib import Path
 from re import Pattern
-from typing import Final, Literal, NamedTuple, Self
+from typing import Final, Literal, NamedTuple, NewType, Self
 
 from loguru import logger
 
@@ -19,7 +19,7 @@ from tyranno_sandbox.context import Context
 
 
 @dataclass(frozen=True, kw_only=True)
-class Markers:
+class Tokens:
     """Regex generator and memoizer for Tyranno comments."""
 
     tyranno_inline: str
@@ -45,8 +45,8 @@ class Markers:
         end_seq = f"{re.escape(comment_end)}.*" if comment_end else ""
         return re.compile(rf"^{start_seq}(?P<line>{capture}){end_seq}$")
 
-    def _fast_lazy_pattern(self, end_marker: str, *, lazy: bool = False) -> str:
-        end_tokens: list[str] = [re.escape(t) for t in end_marker]
+    def _fast_lazy_pattern(self, end_token: str, *, lazy: bool = False) -> str:
+        end_tokens: list[str] = [re.escape(t) for t in end_token]
         match len(end_tokens):
             case 0:
                 # language=regexp
@@ -69,33 +69,45 @@ class Markers:
         return pattern
 
 
-MARKERS: Final = Markers.create()
+TOKENS: Final = Tokens.create()
 
 
-def get_comment_markers() -> dict[str, tuple[str, str]]:
-    pound: set[str] = {".toml", ".yaml", ".yml", ".sh", "CITATION.cff", "Dockerfile", "justfile"}
-    ignore: set[str] = {
-        ".gitignore",
-        ".dockerignore",
-        ".helmignore",
-        ".prettierignore",
-        ".editorconfig",
-    }
-    slash: set[str] = {".java", ".scala", ".ks", ".c", ".cpp", ".js", ".ts", ".py"}
-    semicolon: set[str] = {".ini", ".antlr"}
-    html_like: set[str] = {".md", ".html"}
-    css_like: set[str] = {".css", ".less", ".sass", ".scss"}
+Suffix = NewType("Suffix", str)
+
+
+class CommentTokenPair(NamedTuple):
+    """Start and optional end comment tokens (e.g. `("//", "")`).
+
+    - If `end == ""`, the comment is single-line.
+    - If `end != ""`, the comment is multi-line.
+    """
+
+    start: str
+    end: str
+
+    @property
+    def is_multiline(self) -> bool:
+        return bool(self.end)
+
+
+def get_comment_tokens() -> dict[Suffix, CommentTokenPair]:
+    pound = {".toml", ".yaml", ".yml", ".sh", "CITATION.cff", "Dockerfile", "justfile"}
+    ignore = {".gitignore", ".dockerignore", ".helmignore", ".prettierignore", ".editorconfig"}
+    slash = {".java", ".scala", ".ks", ".c", ".cpp", ".js", ".ts", ".py"}
+    semicolon = {".ini", ".antlr"}
+    html_like = {".md", ".html"}
+    css_like = {".css", ".less", ".sass", ".scss"}
     return {
-        **dict.fromkeys(pound, ("#", "")),
-        **dict.fromkeys(ignore, ("#", "")),
-        **dict.fromkeys(slash, ("//", "")),
-        **dict.fromkeys(semicolon, (";", "")),
-        **dict.fromkeys(html_like, ("<!--", "-->")),
-        **dict.fromkeys(css_like, ("/*", "*/")),
+        **dict.fromkeys(map(Suffix, pound), CommentTokenPair("#", "")),
+        **dict.fromkeys(map(Suffix, ignore), CommentTokenPair("#", "")),
+        **dict.fromkeys(map(Suffix, slash), CommentTokenPair("//", "")),
+        **dict.fromkeys(map(Suffix, semicolon), CommentTokenPair(";", "")),
+        **dict.fromkeys(map(Suffix, html_like), CommentTokenPair("<!--", "-->")),
+        **dict.fromkeys(map(Suffix, css_like), CommentTokenPair("/*", "*/")),
     }
 
 
-_COMMENTS: Final[dict[str, tuple[str, str]]] = get_comment_markers()
+_COMMENTS: Final[dict[Suffix, CommentTokenPair]] = get_comment_tokens()
 
 
 class DeltaLine(NamedTuple):
@@ -159,7 +171,7 @@ class SyncHelper:
 
     context: Context
     path: Path
-    # Filled in by `__post_init__`.
+    # Filled in by `__post_init__`:
     _pattern: Pattern[str] = field(init=False)
     _line_number: int = field(default=0, init=False)  # Start at line #0 (let str messages add + 1).
     _old_lines: list[str | None] = field(default_factory=list, init=False)  # don't modify
@@ -177,8 +189,8 @@ class SyncHelper:
         return self._hits
 
     def __post_init__(self) -> None:
-        start, end = _COMMENTS[self.path.suffix or self.path.name]
-        self._pattern = MARKERS.inline_regex(start, end)
+        start, end = _COMMENTS[Suffix(self.path.suffix or self.path.name)]
+        self._pattern = TOKENS.inline_regex(start, end)
         self._old_lines = [*self.path.read_text().splitlines(), ""]
 
     def run(self) -> None:
@@ -191,7 +203,7 @@ class SyncHelper:
         line = self._old_lines[self._line_number]
         if self._template_rewind > 0:  # Skip this line, which will be replaced (eat at the buffer)
             self._template_rewind -= 1
-        elif self._template_rewind == 0:  # We finished the skipped lines (ate the whole buffer)
+        elif self._template_rewind:  # We finished the skipped lines (ate the whole buffer)
             original = self._old_lines[self._line_number - len(self._templates) : self._line_number]
             new = list(self._generate_lines(self._templates))
             self._new_lines += new
@@ -218,7 +230,6 @@ class Syncer:
     """Entry point that syncs files."""
 
     context: Context
-    atomic: bool = False
     backup: bool = False
 
     def run(self) -> None:
@@ -251,12 +262,6 @@ class Syncer:
         )
 
     def _write(self, path: Path, lines: list[str]) -> None:
-        if self.atomic:
-            self._write_atomic(path, lines)
-        else:
-            path.write_text("\n".join(lines), encoding="utf-8")
-
-    def _write_atomic(self, path: Path, lines: list[str]) -> None:
         temp_file = path.with_name(f".~{path.name}.temp")
         try:
             temp_file.write_text("\n".join(lines), encoding="utf-8")

@@ -403,6 +403,11 @@ hook name *args: (run "pre-commit run" name args)
 [no-exit-message]
 ruff *args: (run "ruff" args)
 
+# `uv run --locked ty`
+[group('alias')]
+[no-exit-message]
+ty *args: (run "ty" args)
+
 # `uv run --locked pytest`
 [group('alias')]
 [no-exit-message]

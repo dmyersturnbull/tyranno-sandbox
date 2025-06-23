@@ -10,7 +10,6 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from re import Pattern
 from typing import ClassVar, Final
 
 import jmespath
@@ -21,13 +20,9 @@ from tyranno_sandbox.dot_tree import DotTree, Toml
 from tyranno_sandbox.james import TyrannoJmesFunctions
 
 __all__ = ["Context", "ContextFactory", "Data", "DefaultContextFactory"]
-SIMPLE_KEY_REGEX: Final[Pattern[str]] = re.compile(
-    r"([A-Za-z_][A-Za-z0-9_-]*+)(\.([A-Za-z_][A-Za-z0-9_-]*+))*+"
-)
+SIMPLE_KEY_REGEX: Final = re.compile(r"([A-Za-z_][A-Za-z0-9_-]*+)(\.([A-Za-z_][A-Za-z0-9_-]*+))*+")
 # Match `${{group1}}` using a possessive `[^}]++` and `}` with a negative lookahead.
-EXPR_REGEX: Final[Pattern[str]] = re.compile(
-    r"\$\{\{ (?P<expr>(?: [^}]++ | }(?!}) )*) }}", re.VERBOSE
-)
+EXPR_REGEX: Final = re.compile(r"\$\{\{ (?P<expr>(?: [^}]++ | }(?!}) )*) }}", re.VERBOSE)
 
 
 @dataclass(frozen=True, slots=True)

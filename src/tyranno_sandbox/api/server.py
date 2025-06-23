@@ -12,7 +12,6 @@ from typing import Self
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Response, status
 from loguru import logger
-from starlette.background import BackgroundTasks
 from starlette.middleware.errors import ServerErrorMiddleware
 from starlette.middleware.exceptions import ExceptionMiddleware
 
@@ -131,4 +130,4 @@ async def list_finished_tasks() -> dict[str, str]:
 if __name__ == "__main__":  # pragma: no cover
     import uvicorn
 
-    uvicorn.run("main:api", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:api", reload=True)

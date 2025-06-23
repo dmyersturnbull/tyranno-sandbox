@@ -34,7 +34,6 @@ jobs:
       - id: check-ref
         shell: bash
         run: |
-          # ::tyranno:: regex_1='^refs/tags/$<<~.cicd.tag.release-trigger>>$'
           regex_1='^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$'
           if [[ "$GITHUB_REF" =~ $regex_1 ]]; then
              echo "is_real=true" >> $GITHUB_OUTPUT

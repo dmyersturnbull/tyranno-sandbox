@@ -20,7 +20,7 @@ requires = ["hatchling>=1.27"]
 [project]
 
 name = "tyranno-sandbox"
-version = "0.0.1-alpha.0" # See `[tool.tyranno.data.versioning]` for requirements.
+version = "0.0.1-alpha.0" # Omit prerelease specifier for "real" versions.
 requires-python = "~=3.13"
 
 # 'readme' is 'description' in `importlib.metadata`.
@@ -80,7 +80,7 @@ server = [
   "pydantic>=2.11",
   "rfc9457>=0.3",
   "zstandard>=0.23",
-  "starlette-compress>=1.5",
+  "starlette-compress>=1.6",
 ]
 etl = [
   "dramatiq[rabbitmq] >=1.17",
@@ -120,6 +120,7 @@ Download = "https://pypi.org/project/tyranno-sandbox/"
 # uv includes the `dev` group by default (and with `--only-dev`), so include everything in that.
 # The other groups are solely intended for use in CI.
 dev = [
+  "uvicorn>=0.34",
   "coverage[toml]>=7.8",
   "hypothesis>=6.130",
   "mkdocs>=1.6",
@@ -133,9 +134,9 @@ dev = [
   "pytest-cov>=6.1",
   "pytest-datadir>=1.6",
   "pytest-randomly>=3.16",
-  "pytest-xdist>=3.6",
-  "ruff>=0.11.13",
-  "ty>=0.0.1a9",
+  "pytest-xdist>=3.7",
+  "ruff>=0.12.0",
+  "ty>=0.0.1a11",
 ]
 test = [
   "coverage[toml]>=7.8", # Required for coverage.
@@ -155,8 +156,8 @@ docs = [
   "mkdocstrings[python]>=0.29", # Required for API docs.
 ]
 lint = [
-  "ruff>=0.11.13",
-  "ty>=0.0.1a9", # Astral's fledgling type checker.
+  "ruff>=0.12.0",
+  "ty>=0.0.1a11", # Astral's fledgling type checker.
 ]
 precommit = ["pre-commit>=4.2"]
 
@@ -180,7 +181,7 @@ packages = ["src/tyranno_sandbox"]
 [tool.ruff]
 exclude = [] # Rely on https://docs.astral.sh/ruff/settings/#respect-gitignore
 src = ["src"] # Needed for import sorting
-line-length = 100 # See `.editorconfig`.
+line-length = 100 # Keep consistent with `.editorconfig`.
 
 # -------------------------- [tool.ruff.format] -------------------------------
 [tool.ruff.format]
@@ -194,114 +195,48 @@ preview = true
 
 #          >>>#<<< align to col 15 (max possible width)
 select = [
-  "A",        # flake8-builtins
-  "AIR",      # Airflow (does nothing if not used)
-  "ANN",      # flake8-annotations
-  "ARG",      # flake8-unused-args (use dummy name in private/lambda, or noqa in public)
-  "ASYNC",    # flake8-async
-  "B",        # flake8-bugbear
-  "BLE",      # flake8-blind-exception: `Exception`, `RuntimeException`, or no type (don't use E722)
-  "C4",       # flake8-comprehensions
-  "C90",      # mmcabe (complexity analysis; surprisingly fast)
-  "COM",      # flake8-commas (only a few rules used)
-  "CPY",      # flake8-copyright
-  #"D",       # pydocstyle //DISABLED: most rules handled by formatter//
-  "D100",     # undocumented public module (could be just 1 line)
-  "D101",     # undocumented public class (could be just 1 line)
-  "D200",     # unnecessarily multiline docstring
-  "D205",     # missing blank line after summary in multiline docstring
-  "D209",     # `...final text."""` in multiline docstring
-  "D210",     # whitespace around text (almost all auto-fixable)
-  "D212",     # summary on second line in multiline docstring
-  "D214",     # over-indented section
-  "D3",       # docstring ''', \, etc. (almost all auto-fixable)
-  "D4",       # blank docstring sections, etc. (almost all auto-fixable)
-  "DJ",       # flake8-django (does nothing if not used)
-  #"DOC",     # pydoclint //DISABLED: encourages writing sections out of habit//
-  "DOC202",   # `Returns` section without `return`
-  "DOC403",   # `Yields` section without `yield`
-  #"DOC502",  # `Raises` lists exeption not raised directly //DISABLED: often ok//
-  "DTZ",      # flake8-datetimez
-  #"E",       # pycodestyle errors //DISABLED: almost all handled by formatter//
-  "E7",       # == True, bare except, lambda assignment, 'l' in names, etc.
-  "E9",       # can't lint -- syntax error, etc.
-  "EM",       # flake8-errmsg
-  "ERA",      # eradicate -- commented-out code (NOTE: false positives are common)
-  #"EXE",     # flake8-executable //DISABLED: pre-commit shebang rules instead//
-  "F",        # pyflakes
-  "FA",       # flake8-future-annotations
-  "FAST",     # fastapi (does nothing if unused)
-  "FBT",      # flake8-boolean-trap (e.g. position boolean args)
-  "FIX001",   # flake8-fix*me -- `F*I*X*M*E`
-  #"FIX002",  # flake8-fix*me -- `T*O*D*O` //DISABLED: consider these non-critical//
-  "FIX003",   # flake8-fix*me -- `X*X*X`
-  "FIX004",   # flake8-fix*me -- `H*A*C*K`
-  "FLY",      # flynt (https://pypi.org/project/flynt/; updates .format)
-  "FURB",     # refurb (misc., mostly fixable)
-  #"E",       # flake8 errors //DISABLED: handled by formatter or nitpicky//
-  "G",        # flake8-logging-format
-  "I",        # isort
-  "ICN",      # flake8-import-conventionals
-  "INP",      # flake8-no-pep420 -- require __init__.py to import
-  "INT",      # flake8-gettext (i18n)
-  "ISC",      # flake8-implicit-str-concat
-  "LOG",      # flake8-logging
-  "N",        # pep8-naming
-  "NPY",      # Numpy rules (does nothing if not used)
-  "PD",       # pandas-vet (does nothing if not used)
-  "PERF",     # perflint
-  "PGH",      # pygrep-hooks
-  "PIE",      # flake8-pie -- misc. lint rules
-  "PL",       # pylint (PLC, PLE, PLR, and PLW)
-  "PT",       # flake8-pytest-style
-  "PTH",      # flake8-use-pathlib
-  "PYI",      # flake8-pyi (rules for stub files)
-  #"Q",       # flake8-quotes //DISABLED: discouraged by Ruff: formatter covers it//
-  "RSE",      # flake8-raise
-  "RET",      # flake8-return (almost all auto-fixable)
-  "RUF",      # Ruff-specific tests
-  "S",        # bandit
-  "SIM",      # flake8-simplify
-  "SLF",      # flake8-self (private access)
-  "SLOT",     # flake8-slots
-  "T10",      # flake8-debugger (bans debugger)
-  "T20",      # flake8-print (bands print and pprint)
-  "TC",       # flake8-type-checking (TYPE_CHECKING blocks)
-  #"TD",      # flake8-to*do //DISABLED: requires a specific format//
-  "TID",      # flake8-tidy-imports (bans relative imports)
-  "TRY",      # tryceratops (try-except-raise)
-  "UP",       # pyupgrade
-  #"W",       # pycodestyle warnings //DISABLED: most fixed by formatter//
-  "W60",      # E605 invalid escape character
-  "YTT",      # flake8-2020 (incorrect Python version checks)
-  "RUF",      # Ruff-specific rules
+  "ALL"
 ]
 
 ignore = [
+  # Conflicts with the formatter:
+  # (See https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules)
+  "W191",     # indented with tabs
+  "D206",     # docstring indented with tabs
+  "E114",     # indent not multiple of 4
+  "E117",     # over-indented
+  "E501",     # line too long
+  "W505",     # docstring line too long
+  "COM812",   # lacks trailing comma
+  "COM819",   # has trailing comma
+  "D300",     # triple single quotes
+  "ISC002",   # implicit string concatentation
+  "Q",        # quotes (formatter should cover completely)
+  # ---
+  # Other ignored rules:
   "ASYNC109", # non-async def has `timeout` parameter
-  "COM812",   # no trailing comma; use formatter instead
-  "COM819",   # trailing comma; use formatter instead
-  "E722",     # "bare-except"; use "blind-except" (BLE001) instead
-  "PLR6301",  # 'self' not used (correct for overrides; more OOP)
-  "RUF001",   # confusable characters
+  "D1",       # Undocumented public __ (don't write useless comments)
+  "D401",     # Imperative mood
+  "D417",     # Undocumented param (again, don't write useless text)
+  "DOC201",   # Missing `Returns:`
+  "DOC402",   # Missing `Yields:`
+  "DOC501",   # Missing `Raises:` exception
+  "DOC502",   # `Raises` lists exeption not raised directly (often ok)
+  "E722",     # "bare-except" (use "blind-except" BLE001 instead)
+  "FIX002",   # T*O*D*O (consider these to be non-critical)
+  "PLR2004",  # magic value (includes 2, 256, 404, etc.)
+  "PLR6301",  # 'self' not used (correct for overrides)
+  "RUF001",   # confusable characters (would ban en dash, etc.)
   "RUF002",   # confusable characters
   "RUF003",   # confusable characters
-  "RUF021",   # demands parentheses in `or (x and y)`
+  "RUF021",   # `or x and y` without parens (unnecessary)
   "S403",     # import of pickle (S301 on pickle calls is sufficient)
   "S404",     # import of subprocess (S602/S603 on subprocess calls is sufficient)
+  "TD",       # flake8-to*do (requires a specific format)
 ]
 
 unfixable = [
-  "ERA001",   # commented-out code (not autofixable currently, but just in case)
-  "F841",     # unused variable
-  "N804",     # first argument not named `cls`
-  "N805",     # first argument not named `self`
-  "PLE1141",  # unpack tuple from dict without `.items`
-  "RUF027",   # possible f-string -- can make mistakes
   "RUF102",   # invalid noqa
-  "SIM112",   # uncapitalized env var
-  "T201",     # print function
-  "T203",     # pprint function
 ]
 
 # Delegated options
@@ -310,8 +245,7 @@ flake8-copyright.min-file-size = 2048
 flake8-copyright.notice-rgx = "(?m)^# SPDX-License-Identifier: "
 flake8-tidy-imports.ban-relative-imports = "all"
 isort.detect-same-package = false # Use `tool.ruff.src` instead.
-isort.split-on-trailing-comma = false
-mccabe.max-complexity = 12 # default is 10
+isort.split-on-trailing-comma = false # would conflict with formatter
 pycodestyle.max-doc-length = 100 # match tool.ruff.line-length
 pydocstyle.convention = "google"
 
@@ -321,7 +255,6 @@ max-args = 10 # default is 5
 max-positional-args = 5 # default is `max-args`
 max-bool-expr = 10 # default is 5
 max-public-methods = 30 # default is 20
-max-locals = 15 # default is 15
 max-nested-blocks = 4 # default is 5
 allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 
@@ -330,16 +263,15 @@ allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
   "F401",    # unused import
 ]
 "tests/**/*" = [
-  "D10",     # missing docstrings
-  "INP001",  # missing __init__
-  "PLC2701", # import of private module
-  "PLR2004", # magic value
-  "S101",    # assert
-  "S105",    # possible password in string
-  "S106",    # ...in function arg
-  "S107",    # ...in function default
-  "S108",    # harcoded temp file
-  "TID252",  # relative import
+  "D10",      # missing docstrings
+  "INP001",   # missing __init__
+  "PLC2701",  # import of private module
+  "S101",     # assert
+  "S105",     # possible password in string
+  "S106",     # ...in function arg
+  "S107",     # ...in function default
+  "S108",     # harcoded temp file
+  "TID252",   # relative import
 ]
 
 #
@@ -372,9 +304,6 @@ testpaths = ["tests/"]
 
 # Error if a test has an empty parameter set.
 empty_parameter_set_mark = "fail_at_collect"
-
-# Kill threads and dump stack traces if a test takes longer than 20 min.
-faulthandler_timeout = 1200
 
 # -------------------------- Logging config -----------------------------------
 # Configure logging, and send it "live" (in realtime) to stdout with `log_cli`.
@@ -454,31 +383,23 @@ output = ".coverage.json"
 
 [tool.tyranno]
 
-# These are `.gitignore`-type patterns.
-# All `.gitignore`-ed files are automatically excluded.`
-# Target files to sync on `tyranno sync`
+# Target files for `tyranno sync`.
+# Uses gitignore syntax, always excluding `.gitignore`-d files.
 targets = [
   "/.*ignore",
   "/.editorconfig",
   "/CITATION.cff",
   "/justfile",
-  "*.css",
-  "*.ini",
-  "*.js",
   "*.md",
   "*.py",
   "*.toml",
-  "*.ts",
   "*.yaml",
   "Dockerfile",
 ]
 
 # -------------------------- [tool.tyranno.data] ------------------------------
+# Keys only referenced in `::tyranno::` comments.
 [tool.tyranno.data]
-# These keys are used in `::tyranno::` comments; none have special meanings.
-# You can freely add, change, or remove keys.
-# Tyrannosaurus will fail if an undefined key is referenced.
-
 vendor = "dmyersturnbull"
 # ::tyranno:: namespace = "$<< project.name .replace(@, '_', '-') .lower(@) >>"
 namespace = "tyranno_sandbox"
@@ -487,22 +408,11 @@ frag = "dmyersturnbull/tyranno-sandbox"
 # ::tyranno:: copyright = "Copyright $<<now_utc().year>>, Contributors to $<<project.name>>"
 copyright = "Copyright 2025, Contributors to sandbox-tyranno"
 doi = "10.5281/zenodo.4485186" # <<<comment out for new
-# Defines 'id', 'name', (canonical) 'uri', 'links', etc.
-# ::tyranno alias:: license = $<< project.license.text.spdx_license(@) >>
+# ::tyranno alias:: license-data = $<< project.license.text.spdx_license(@) >>
 
-# Project versioning scheme
-[tool.tyranno.data.cicd.tag]
-# Enforce PyPa **and** SemVer compatibility.
-# Prereleases are non-normalized PyPa matching `v<major>.<minor>.<patch>-<alpha|beta|rc>.<pre>`.
-# Real releases are normalized Pya without prerelease numbers: `v<major>.<minor>.<patch>`.
-# Omit `^` and `$` to make these easier to use.
-prerelease-trigger = 'v(0|[1-9]\d*)(\.(0|[1-9]\d*)){2}-(alpha|beta|rc)\.(0|[1-9]\d*)'
-release-trigger = 'v(0|[1-9]\d*)(\.(0|[1-9]\d*)){2}'
-
-# Python versions
-[tool.tyranno.data.python]
+[tool.tyranno.data.python-versions]
 # List compatible Python versions; e.g. ["3.12.0", [...], "3.12.10", "3.13.0", "3.13.1", "3.13.2"]`.
 # Then choose a default (max), and versions to test (max per minor version).
-# ::tyranno alias:: valid = $<< project.requires-python .join('', ['python', @]) .pep440_find(@) >>
-# ::tyranno alias:: minor-version = $<< .valid | pep440_max(@) .minor_version >>
-# ::tyranno alias:: test-versions = $<< .valid | pep440_max_per(@, 'minor') >>
+# ::tyranno alias:: valid = $<< project."requires-python".join('', ['python', @]).pep440_find(@) >>
+# ::tyranno alias:: default = $<< .valid | pep440_max(@).minor_version >>
+# ::tyranno alias:: test = $<< .valid | pep440_max_per(@, 'minor') >>

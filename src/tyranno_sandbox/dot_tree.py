@@ -10,7 +10,7 @@ See [DotTree][].
 import json
 import re
 from collections import Counter, defaultdict
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Mapping
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from re import Pattern
@@ -196,36 +196,44 @@ class Utils:
             {'genus': {'species': 'bat'}}
         """
         out: Branch = {}
-        self._nest(out, "", items)
+        for k, v in items.items():
+            self._nest(out, k, v)
         return out
 
     def _nest(self, dst: Branch, key: str, item: Toml) -> None:
-        if not key and isinstance(item, dict):
-            for k, v in item.items():
-                self._nest(dst, k, v)
-        elif "." in key:
-            head, tail = key.split(".", 1)
-            if not isinstance(dst.get(head, {}), dict):
-                raise DuplicateKeyError(head)
-            dst.setdefault(head, {})
-            self._nest(dst[head], tail, item)
-        elif isinstance(item, dict):
+        self._nest_check(dst, key, item)
+        if "." in key:
+            self._nest_branch(dst, key, item)
+        else:
+            self._nest_leaf(dst, key, item)
+
+    def _nest_check(self, dst: Branch, key: str, item: Toml) -> None:
+        if (found := dst.get(key)) is not None and (
+            type(found) is not type(item)
+            or type(found) not in {dict, list}
+            or (type(found) is list and not self.merge_lists)
+        ):
+            raise DuplicateKeyError(key)
+
+    def _nest_branch(self, dst: Branch, key: str, item: Toml) -> None:
+        head, tail = key.split(".", 1)
+        sub = dst.setdefault(head, {})
+        if not isinstance(sub, dict):
+            raise DuplicateKeyError(head)
+        self._nest(sub, tail, item)
+
+    def _nest_leaf(self, dst: Branch, key: str, item: Toml) -> None:
+        if isinstance(item, dict):
             node = dst.setdefault(key, {})
-            if not isinstance(node, dict):
-                msg = f"dst is a {type(dst)}: << {dst} >>"
-                raise AssertionError(msg)
             for k, v in item.items():
                 self._nest(node, k, v)
         elif isinstance(item, list) and self.merge_lists:
-            # TODO: merge_lists is broken.
-            node = dst.setdefault(key, [])
-            if not isinstance(node, list):
-                raise DuplicateKeyError(key)
+            list_: Array = dst.setdefault(key, [])
+            node: Branch = {}
             for v in item:
-                self._nest(dst, key, v)
+                self._nest(node, key, v)
+            list_ += list(node.values())
         else:
-            if key in dst:
-                raise DuplicateKeyError(key)
             dst[key] = item
 
     def dotify(self, items: Branch, /) -> Branch:
@@ -246,7 +254,7 @@ class Utils:
                 new_path = f"{path}.{k}" if path else k
                 yield from self._dotify(new_path, v)
         elif isinstance(item, list):
-            lst: list[Leaf] = []
+            lst: Leaf = []
             for v in item:
                 sub = list(self._dotify("", v))
                 lst.append(sub[0] if len(sub) == 1 else dict(sub))
@@ -259,7 +267,7 @@ _UTILS: Final = Utils()
 _CHECKER = Checker()
 
 
-class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correctly
+class DotTree(Mapping[str, Toml]):
     """A dict with TOML data types and methods to access nested values via e.g. `pet.name`.
 
     Keys must be strings and cannot contain `.`, which is reserved for nested access.
@@ -310,11 +318,14 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
     """
 
     def __init__(self, /, x: Branch) -> None:
-        """Constructs a tree from a nested dict (approximately identical to `dict(x)`)."""
+        """Constructs a tree from a nested dict (about the same as `dict(x)`)."""
         if not isinstance(x, dict):
             msg = f"Not a dict; actually {type(x)} (value: '{x}')"
             raise TypeError(msg)
-        super().__init__(x)
+        self._raw = x
+
+    def __getitem__(self, key: str, /) -> Toml:
+        return self._raw[key]
 
     @classmethod
     def from_mixed(cls, x: Branch, /) -> Self:
@@ -371,7 +382,7 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
             `None` list elements will not be caught.
 
         Warning:
-            Empty branches (`{}`) after the transormation are dropped.
+            Empty branches (`{}`) after the transformation are dropped.
             `dot_dict.transform_leaves(lambda v: v)` is equivalent to [normalize][].
         """
         x = {k: fn(k, v) for k, v in self.leaves()}
@@ -554,12 +565,15 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
         """
         return _CHECKER.check_primitive(self._access(keys))
 
-    def get(self, keys: str) -> Toml | None:
-        """Returns a value from the `.`-delimited `keys`, falling back to `None`."""
+    @overload
+    def get(self, keys: str, default: Toml) -> Toml: ...
+
+    def get(self, keys: str, default: Toml | None = None) -> Toml | None:
+        """Returns a value from the `.`-delimited `keys`, falling back to `default`."""
         try:
             return self._access(keys)
         except KeyError:
-            return None
+            return default
 
     def access(self, keys: str) -> Toml:
         """Returns a value from the `.`-delimited `keys`, or raises a `KeyError`.
@@ -570,7 +584,7 @@ class DotTree(dict[str, Toml]):  # noqa: FURB189  # UserDict isn't typed correct
         return self._access(keys)
 
     def _access(self, keys: str) -> Toml:
-        x: Toml = self
+        x: Toml = self._raw
         split = keys.split(".")
         for i, k in enumerate(split):
             if not isinstance(x, dict):
