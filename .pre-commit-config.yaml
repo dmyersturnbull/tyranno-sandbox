@@ -44,7 +44,7 @@ repos:
           - pre-commit
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.33.0
+    rev: 0.33.1
     hooks:
       - id: check-github-actions
       - id: check-github-workflows
@@ -52,7 +52,7 @@ repos:
 
   # UV lock and sync
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.7.13
+    rev: 0.7.14
     hooks:
       - id: uv-sync # first locks (without `--upgrade`)
 
@@ -80,7 +80,7 @@ repos:
 
   # Format various formats with Prettier
   - repo: https://github.com/JoC0de/pre-commit-prettier
-    rev: v3.5.3
+    rev: v3.6.0
     hooks:
       - id: prettier
         additional_dependencies:
