@@ -21,7 +21,7 @@ requires = ["hatchling>=1.27"]
 
 name = "tyranno-sandbox"
 version = "0.0.1-alpha.0" # Omit prerelease specifier for "real" versions.
-requires-python = "~=3.13"
+requires-python = "~=3.13.0"
 
 # 'readme' is 'description' in `importlib.metadata`.
 readme = { file = "README.md", content-type = "text/markdown" }
@@ -135,8 +135,8 @@ dev = [
   "pytest-datadir>=1.6",
   "pytest-randomly>=3.16",
   "pytest-xdist>=3.7",
-  "ruff>=0.12.0",
-  "ty>=0.0.1a11",
+  "ruff>=0.12.1",
+  "ty>=0.0.1a13",
 ]
 test = [
   "coverage[toml]>=7.8", # Required for coverage.
@@ -156,8 +156,8 @@ docs = [
   "mkdocstrings[python]>=0.29", # Required for API docs.
 ]
 lint = [
-  "ruff>=0.12.0",
-  "ty>=0.0.1a11", # Astral's fledgling type checker.
+  "ruff>=0.12.1",
+  "ty>=0.0.1a13", # Astral's fledgling type checker.
 ]
 precommit = ["pre-commit>=4.2"]
 
@@ -214,7 +214,6 @@ ignore = [
   "Q",        # quotes (formatter should cover completely)
   # ---
   # Other ignored rules:
-  "ASYNC109", # non-async def has `timeout` parameter
   "D1",       # Undocumented public __ (don't write useless comments)
   "D401",     # Imperative mood
   "D417",     # Undocumented param (again, don't write useless text)
@@ -236,7 +235,15 @@ ignore = [
 ]
 
 unfixable = [
-  "RUF102",   # invalid noqa
+  "TC007",    # Quotes type alias definitions (move needed imports outside `TYPE_CHECKING` instead)
+]
+extend-safe-fixes = [
+  "LOG004",   # Converts `.exception` to `.error` outside `except` blocks
+]
+extend-unsafe-fixes = [
+  "B905",     # Adds `strict=False` to `zip` (normally `strict=True` is wanted)
+  "PLW1510",  # Adds `check=False` to `subprocess.run` (normally `check=True` is wanted)
+  "RUF102",   # Removes invalid `noqa`
 ]
 
 # Delegated options
@@ -414,5 +421,5 @@ doi = "10.5281/zenodo.4485186" # <<<comment out for new
 # List compatible Python versions; e.g. ["3.12.0", [...], "3.12.10", "3.13.0", "3.13.1", "3.13.2"]`.
 # Then choose a default (max), and versions to test (max per minor version).
 # ::tyranno alias:: valid = $<< project."requires-python".join('', ['python', @]).pep440_find(@) >>
-# ::tyranno alias:: default = $<< .valid | pep440_max(@).minor_version >>
-# ::tyranno alias:: test = $<< .valid | pep440_max_per(@, 'minor') >>
+# ::tyranno alias:: default = $<< _.valid | pep440_max(@).minor_version >>
+# ::tyranno alias:: test = $<< _.valid | pep440_max_per(@, 'minor') >>
