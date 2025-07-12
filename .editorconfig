@@ -3,76 +3,61 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # See: https://editorconfig.org
-
-# Don't look in parent directories.
 root = true
 
-# Strategy:
+# About indentation style:
 # We'll use the most prevalent indentation style for each language,
 # using the survey of top-starred GitHub repos at https://ukupat.github.io/tabs-or-spaces/ .
 
-# Line length:
-# We'll generally specify 100 because it's a common choice.
-# (I previously used 120 because it was Hatch's default, but almost no style guides recommend that.)
-# Note that Prettier uses `max_line_length` as `--print-width`, which is a soft limit.
-# That's a sensible approach, given that you can't always break lines.
+# About line length:
+# Soft limits (and breaking in sensible places) are generally superior to hard limits.
+# The editorconfig spec states that `max_line_length` is a hard limit.
+# However, Prettier uses it as `--print-width`, a soft limit.
+# We'll default `max_line_length` to 100.
+# If you must use a formatter that treats it as a hard limit,
+# set `max_line_length = 120` and specify `--print-width 100` in `.pre-commit-config.yaml`.
 
-# JavaScript, CSS, and many others -- as well as "unknown" file types.
-# Use 2 spaces because it's the most common choice in the survey.
-# Omit specifying `max_line_length` here because we'd need to unset it for things like CSV.
+# ================ Default (2 spaces) ============================================================ #
+# JavaScript, CSS, Markdown, and others
+# Default to 2 spaces because it's the most common choice in the survey.
+# Note: This breaks Markdown's 2 trailing spaces behavior, which was bad anyway (use `\` instead).
 [*]
 end_of_line = lf
 charset = utf-8
 indent_style = space
 indent_size = 2
-# Markdown converts 2 trailing spaces to `<br/>`, which this will remove.
-# That's fine: You should use `\` instead.
 trim_trailing_whitespace = true
 insert_final_newline = true
-
-# 4-space; assembly dialects
-[*.{s,asm}]
-indent_size = 4
 max_line_length = 100
 
-# 4-space; C, JVM, or C++-like: C, C++, Java, Kotlin, Groovy, C#, Rust, V, D, Vala
-# C++ is 4-space or 2-space, whereas C is 4-space or tab; use 4-space for consistency.
-# Exclude Scala, which is almost universally 2-space.
-# `.v` is for the V language (https://vlang.io/), not Verilog.
-# Vala is either 4-space or tab.
-[*.{c,cpp,h,java,kt,kts,groovy,gradle,cs,rs,v,d,vala}]
+# ================ Curly-brace languages using 4 spaces ========================================== #
+# C, JVM, or C++-like: C, C++, C#, Rust, V, D, Java, Kotlin, Groovy
+# Notes:
+# - Assume `.v` is for the V language (https://vlang.io/), not Verilog.
+# - Excludes Scala, which is universally 2-space.
+[*.{c,cpp,h,cs,rs,d,v,java,kt,kts,groovy,gradle}]
 indent_size = 4
-max_line_length = 100
 
-# 4-space; misc. compiled: F#, Objective-C, Julia, Fortran, Erlang, Swift
-# Assume modern Fortran uses `.f90`, not (e.g.) `.f03`.
-[*.{fs,fsi,fsx,mm,julia,f90,erl,swift}]
+# ================ Misc. languages using 4 spaces ================================================ #
+# Compiled: Assembly, F#, Objective-C, Julia, Fortran (90+), Erlang, Swift
+# Interpreted: Python, Lua, Perl, PowerShell, Batch, PHP (8+), MATLAB, Just
+# Notes:
+# - Allows `.f90`, `.f`, and`.for` for modern (free-form) Fortran, but not `.f95`/`.f03`/etc.
+# - Options in `[*]` will ruin fixed-form Fortran (a format that's been deprecated for 35 years).
+# - Lua is very mixed, but ~70% use spaces, and 4 spaces is the most common choice among those.
+[*.{s,asm,fs,fsi,fsx,mm,julia,f90,f,for,erl,swift,py,lua,pl,perl,ps1,bat,php,m,just}]
 indent_size = 4
-max_line_length = 100
 
-# Fixed-format Fortran, specified just to avoid totally wrecking files.
-[*.{f,for}]
-charset = unset
-trim_trailing_whitespace = false
-indent_size = 5
-max_line_length = 72
-
-# 4-space; misc. interpreted: Python, Lua, Perl, Just, PowerShell, Batch, PHP (8+ only), MATLAB
-# Lua is either 4-space or tab.
-[*.{py,lua,pl,perl,just,ps1,bat,php,m}]
-indent_size = 4
-max_line_length = 100
-
-# Tabs: Go, Haxe, SAS, AutoIt
-# Verilog mostly uses tabs, but `.v`/`.sv` clashes with the `.v` for the V language.
-[*.{go,hx,sas,au3}]
+# ================ Languages using tabs ========================================================== #
+# Go, SAS, Vala, Haxe (`.hx`), AutoIt (`.au3`), Verilog (`.sv`)
+[*.{go,sas,vala,hx,au3,sv}]
 indent_style = tab
-max_line_length = 100
 
-# Tabular: tab-separated, comma-separated
-# Don't add a newline or trim whitespace.
-# Set `indent_style = tab` only because it feels safer.
+# ================ Tabular formats =============================================================== #
+# Tab-separated, comma-separated, etc.
+# Specifying `indent_style = tab` only because it feels safer.
 [*.{tsv,tab,csv}]
 indent_style = tab
 trim_trailing_whitespace = false
 insert_final_newline = false
+max_line_length = unset
