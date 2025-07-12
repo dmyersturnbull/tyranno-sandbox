@@ -12,7 +12,7 @@
 # - https://git-scm.com/docs/gitattributes
 # - https://github.com/github-linguist/linguist/blob/main/docs/overrides.md#using-gitattributes
 
-*                     text=auto eol=lf
+*                     text=auto eol=lf working-tree-encoding=UTF-8
 *-lock.yaml           -diff
 *-lock.json           -diff
 *.ipynb               -diff
