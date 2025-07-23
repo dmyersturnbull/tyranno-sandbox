@@ -7,14 +7,18 @@
 See [DotTree][].
 """
 
-import json
 import re
 from collections import Counter, defaultdict
-from collections.abc import Callable, Generator, Mapping
+from collections.abc import Callable, Generator, Iterator, Mapping
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from re import Pattern
 from typing import Final, Literal, Self, TypeGuard, overload
+
+try:
+    import orjson as json
+except ImportError:
+    import json
 
 type Primitive = str | int | float | bool | date | datetime | time
 type Array = list[Toml]
@@ -135,6 +139,7 @@ class Checker:
                     self.check_keys(v)
         elif isinstance(node, dict):
             if bad := [k for k in node if not isinstance(k, str)]:
+                # noinspection PyUnboundLocalVariable
                 msg = f"Key(s) {bad} are not strings."
                 raise ValueError(msg)
             if bad := [k for k in node if "." in k]:
@@ -162,6 +167,7 @@ class Checker:
                     self.check_values(v)
         elif isinstance(node, dict):
             if bad := {k: type(v) for k, v in node.items() if not self.check_primitive(v)}:
+                # noinspection PyUnboundLocalVariable
                 msg = f"Key(s) {bad.keys()} have invalid values of type(s) {set(bad.values())}"
                 raise ValueError(msg)
             for v in node.values():
@@ -317,6 +323,9 @@ class DotTree(Mapping[str, Toml]):
           Be aware that any empty branches will be discarded.
     """
 
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._raw)
+
     def __init__(self, /, x: Branch) -> None:
         """Constructs a tree from a nested dict (about the same as `dict(x)`)."""
         if not isinstance(x, dict):
@@ -326,6 +335,9 @@ class DotTree(Mapping[str, Toml]):
 
     def __getitem__(self, key: str, /) -> Toml:
         return self._raw[key]
+
+    def __len__(self) -> int:
+        return len(self._raw)
 
     @classmethod
     def from_mixed(cls, x: Branch, /) -> Self:
@@ -521,6 +533,7 @@ class DotTree(Mapping[str, Toml]):
             msg = f"Value from key {keys} is not a list"
             raise TypeError(msg)
         if bad := [y for y in x if not isinstance(y, as_type)]:
+            # noinspection PyUnboundLocalVariable
             msg = f"Values from key {keys} are not {as_type}: '{bad}'"
             raise TypeError(msg)
         return x
@@ -566,7 +579,7 @@ class DotTree(Mapping[str, Toml]):
         return _CHECKER.check_primitive(self._access(keys))
 
     @overload
-    def get(self, keys: str, default: Toml) -> Toml: ...
+    def get(self, keys: str, default: Toml = None) -> Toml: ...
 
     def get(self, keys: str, default: Toml | None = None) -> Toml | None:
         """Returns a value from the `.`-delimited `keys`, falling back to `default`."""
@@ -589,7 +602,8 @@ class DotTree(Mapping[str, Toml]):
         for i, k in enumerate(split):
             if not isinstance(x, dict):
                 msg = (
-                    f"Value at key '{'.'.join(split[:i])}<<{k}>>{keys[i + 1 :]}' is not an object."
+                    f"Value at key '{'.'.join(split[:i])}<<{k}>>{keys[i + 1 :]}'"
+                    f" is a {type(x)}, not an object."
                 )
                 raise TypeError(msg)
             try:
@@ -605,6 +619,8 @@ class DotTree(Mapping[str, Toml]):
 
     def print(self) -> str:
         """Pretty-prints the leaves of this dict using `json.dumps`."""
+        import json  # noqa: PLC0415
+
         return json.dumps(self, ensure_ascii=False, indent=2)
 
 
@@ -613,7 +629,9 @@ class DotTrees:
 
     @classmethod
     def merge_leaves(
-        cls, *trees: DotTree, replace: Literal["always", "same_value", "never"] = "same_value"
+        cls,
+        *trees: DotTree,
+        replace: Literal["always", "if_values_match", "never"] = "if_values_match",
     ) -> DotTree:
         """Builds a tree containing the union of the leaves of `trees`.
 
@@ -622,10 +640,9 @@ class DotTrees:
         Args:
             trees: Trees to merge.
             replace: How to handle overlapping keys:
-              - `"always"`: Only retain the value from the rightmost tree.
-              - `"same_value"`: Error if two or more trees have identically named leaves
-                 with different values.
-              - `"never"`: Error if two or more trees have identically named leaves.
+              - `"always"`: Only retain the value from the rightmost tree, discarding any others.
+              - `"if_values_match"`: Error if two or more trees have identically named leaves with different values.
+              - `"never"`: Error if two or more trees have identically named leaves, even if they have the same value.
 
         Raises:
             LeafConflictError:
@@ -672,22 +689,20 @@ class DotTrees:
         return dict(counts.most_common())
 
     @classmethod
-    def from_json(cls, data: str, /) -> DotTree:
+    def from_json(cls, data: str | bytes | bytearray, /) -> DotTree:
         """Builds a tree from a JSON string."""
-        import json  # noqa: PLC0415
-
         return DotTree.from_nested(json.loads(data))
 
     @classmethod
-    def from_toml(cls, data: str, /) -> DotTree:
+    def from_toml(cls, data: str | bytes | bytearray, /) -> DotTree:
         """Builds a tree from a TOML string, parsed with `tomllib`."""
         import tomllib  # noqa: PLC0415
 
+        if isinstance(data, (bytes, bytearray)):
+            data = data.decode()
         return DotTree.from_nested(tomllib.loads(data))
 
     @classmethod
-    def to_json(cls, tree: DotTree) -> str:
+    def to_json(cls, tree: DotTree, /, *, sort: bool = False) -> str:
         """Converts to JSON, raising `ValueError` for `NaN`, `Inf`, and `-Inf` values."""
-        import json  # noqa: PLC0415
-
-        return json.dumps(tree, ensure_ascii=False, allow_nan=False)
+        return json.dumps(tree, ensure_ascii=False, allow_nan=False, sort_keys=sort)
