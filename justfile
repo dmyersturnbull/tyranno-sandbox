@@ -43,13 +43,17 @@ alias help := list
 # Print info for a bug report.
 [group('help')]
 info:
+    @echo "just_ver: {{ replace_regex(`just --version`, '^[^ ]+ ([^ ]+)$', '$1') }}"
+    @echo "uv_ver: {{ replace_regex(`uv --version`, '^uv ([^ ]+) .+$', '$1') }}"
+    @echo "git_ver: {{ replace_regex(`git --version`, '^git version ([^ ]+)$', '$1') }}"
     @echo "os: {{ os() }}"
+    -@echo "os_ver: {{ `uname -r` }}"
     @echo "cpu_arch: {{ arch() }}"
     @echo "cpu_count: {{ num_cpus() }}"
     @echo "shell: {{ env('SHELL', '?') }}"
     @echo "lang: {{ env('LANG', '?') }}"
     @echo "repo_dir: {{ file_name(justfile_directory()) }}"
-    @echo "project_name: {{ replace_regex(`uv version`, ' .+', '') }}"
+    @echo "project_name: {{ replace_regex(`uv version`, '^([^ ]+) .+$', '$1') }}"
     @echo "project_ver: {{ `uv version --short` }}"
     @echo "git_ref: {{ git_ref }}"
     @echo "git_sha: {{ git_sha }}"
@@ -60,9 +64,11 @@ info:
 # Sync the venv and install commit hooks.
 [group('setup')]
 init:
+    - rm .git/hooks/*.sample
     uv sync --all-extras --exact
-    uv run pre-commit install --install-hooks --overwrite
-    uv run pre-commit gc
+    uv run --no-sync pre-commit install --install-hooks --overwrite
+    uv run --no-sync pre-commit gc
+    uv run --no-sync pre-commit run
 
 ###################################################################################################
 
@@ -125,48 +131,48 @@ clean-git:
 [private]
 delete-temp:
     # Generated docs:
-    - rm -f -r .site/
+    -rm -f -r .site/
     # Python temp files:
-    - rm -f -r .ruff_cache/
-    - rm -f -r .hypothesis/
-    - rm -f -r **/__pycache__/
-    - rm -f -r **/.pytest_cache/
-    - rm -f -r **/cython_debug/
-    - rm -f -r **/*.egg-info/
-    - rm -f -r **/.node-modules/
-    - rm -f .coverage.json
-    - rm -f **/*.py[codi]
+    -rm -f -r .ruff_cache/
+    -rm -f -r .hypothesis/
+    -rm -f -r **/__pycache__/
+    -rm -f -r **/.pytest_cache/
+    -rm -f -r **/cython_debug/
+    -rm -f -r **/*.egg-info/
+    -rm -f -r **/.node-modules/
+    -rm -f .coverage.json
+    -rm -f **/*.py[codi]
     # OS-specific files:
-    - rm -f **/.directory
-    - rm -f **/.DS_Store
-    - rm -f **/.localized
-    - rm -f **/Thumbs.db
+    -rm -f **/.directory
+    -rm -f **/.DS_Store
+    -rm -f **/.localized
+    -rm -f **/Thumbs.db
 
 # Delete files whose names indicate they're temporary. [CAUTION]
 [group('project')]
 [private]
 @delete-probable-temp:
     # Log files directly in `/`, `src/`, or `tests/`
-    - rm -f *.log
-    - rm -f src/*.log
-    - rm -f tests/*.log
+    -rm -f *.log
+    -rm -f src/*.log
+    -rm -f tests/*.log
     # Directories named exactly `.(bak|junk|temp|tmp|trash)`
-    - rm -f -r **/.bak
-    - rm -f -r **/.junk
-    - rm -f -r **/.temp
-    - rm -f -r **/.tmp
-    - rm -f -r **/.trash
+    -rm -f -r **/.bak
+    -rm -f -r **/.junk
+    -rm -f -r **/.temp
+    -rm -f -r **/.tmp
+    -rm -f -r **/.trash
     # Files with extensions `.(bak|junk|temp|tmp|trash|swp)`
-    - rm -f **/*.bak
-    - rm -f **/*.junk
-    - rm -f **/*.temp
-    - rm -f **/*.tmp
-    - rm -f **/*.trash
-    - rm -f **/*.swp
+    -rm -f **/*.bak
+    -rm -f **/*.junk
+    -rm -f **/*.temp
+    -rm -f **/*.tmp
+    -rm -f **/*.trash
+    -rm -f **/*.swp
     # Files starting or end with `~|#|$` (or starting with `.~`).
-    - rm -f **/[~#\$]*
-    - rm -f **/*[~#\$]
-    - rm -f **/.~*
+    -rm -f **/[~#\$]*
+    -rm -f **/*[~#\$]
+    -rm -f **/.~*
 
 # NOTE: "Advanced" or "optional" recipe, unlisted but invoked directly.
 
@@ -189,9 +195,9 @@ prune-git:
 minify-repo: clean delete-probable-temp
     uv run pre-commit clean
     uv run pre-commit uninstall
-    - rm -f -r .venv
-    - rm -f -r .idea
-    - rm -f uv.lock
+    -rm -f -r .venv
+    -rm -f -r .idea
+    -rm -f uv.lock
 
 ###################################################################################################
 
@@ -207,11 +213,11 @@ format-all: (_format "--all-files")
 
 # <Internal.>
 _format *args:
-    - uv run pre-commit run end-of-file-fixer {{ args }}
-    - uv run pre-commit run fix-byte-order-marker {{ args }}
-    - uv run pre-commit run trailing-whitespace {{ args }}
-    - uv run pre-commit run ruff-format {{ args }}
-    - uv run pre-commit run prettier {{ args }}
+    -uv run pre-commit run end-of-file-fixer {{ args }}
+    -uv run pre-commit run fix-byte-order-marker {{ args }}
+    -uv run pre-commit run trailing-whitespace {{ args }}
+    -uv run pre-commit run ruff-format {{ args }}
+    -uv run pre-commit run prettier {{ args }}
 
 ###################################################################################################
 
@@ -382,31 +388,44 @@ serve-docs *args: (run "mkdocs serve" args)
 
 ###################################################################################################
 
+# `uv`
+[group('alias')]
+[no-exit-message]
+[private]
+@uv *args:
+    uv {{ args }}
+
+# `pre-commit`
+[group('alias')]
+[no-exit-message]
+[private]
+@pre-commit *args: (run "pre-commit" args)
+
 # `uv run --locked`
 [group('alias')]
 [no-exit-message]
-run +args:
+@run +args:
     uv run --locked {{ args }}
 
 # `uv run --locked python`
 [group('alias')]
 [no-exit-message]
-python *args: (run "python" args)
+@python *args: (run "python" args)
 
 # `uv run --locked pre-commit run {hook}`
 [group('alias')]
 [no-exit-message]
-hook name *args: (run "pre-commit run" name args)
+@hook name *args: (run "pre-commit run" name args)
 
 # `uv run --locked ruff`
 [group('alias')]
 [no-exit-message]
-ruff *args: (run "ruff" args)
+@ruff *args: (run "ruff" args)
 
 # `uv run --locked ty`
 [group('alias')]
 [no-exit-message]
-ty *args: (run "ty" args)
+@ty *args: (run "ty" args)
 
 # `uv run --locked pytest`
 [group('alias')]
