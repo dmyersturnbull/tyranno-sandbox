@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import os
 import stat
 import sys
 from dataclasses import dataclass
@@ -23,7 +24,7 @@ from tyranno_sandbox._about import __about__
 from tyranno_sandbox._global_vars import EnvGlobalVarsFactory, GlobalVars
 from tyranno_sandbox.context import Context, ContextFactory, DefaultContextFactory
 
-ENV: GlobalVars = EnvGlobalVarsFactory()()
+ENV: GlobalVars = EnvGlobalVarsFactory(env=os.environ)()
 
 
 class SpdxLicense(Enum):
