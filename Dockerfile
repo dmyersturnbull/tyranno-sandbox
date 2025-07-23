@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
@@ -12,28 +13,23 @@ ARG PYTHON_VERSION="3.13"
 # -------------------------- Base image and uv --------------------------------------------------- #
 
 # Start the stage "builder", and download uv.
+# Install Bash and use it.
 FROM python:$PYTHON_VERSION-alpine$ALPINE_VERSION AS builder
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-#  --no-cache
 RUN apk add bash
 SHELL ["/bin/bash", "-c"]
 
 # Environment variables
+# `/root/.local/bin` is defined by the XDG Base Directory Spec.
+# `/root/.cargo/bin` is the default dir for Cargo-installed tools.
 ENV PATH=/root/.cargo/bin/:/root/.local/bin:$PATH
-# Any non-empty string is taken as true for boolean UV and Python env vars.
+# Any non-empty string ≠ 1 is taken as true for boolean UV and Python env vars.
 # https://docs.python.org/3/using/cmdline.html#envvar-PYTHONFAULTHANDLER
-ENV PYTHONFAULTHANDLER=yes
+ENV PYTHONFAULTHANDLER=1
 # https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUNBUFFERED
-ENV PYTHONUNBUFFERED=yes
+ENV PYTHONUNBUFFERED=1
 # https://docs.astral.sh/uv/guides/integration/docker/#compiling-bytecode
-ENV UV_LINK_MODE=copy
-# https://docs.astral.sh/uv/guides/integration/docker/#caching
-ENV UV_COMPILE_BYTECODE=yes
-# Alternative we're not using:
-# ENV UV_NO_CACHE=yes
 ENV UV_COMPILE_BYTECODE=1
-# Don't sync the venv unless we request it.
-ENV UV_NO_SYNC=true
 
 #
 # -------------------------- Labels -------------------------------------------------------------- #
@@ -87,7 +83,7 @@ RUN \
   --no-editable
 
 # Start a new stage, copying over only the files we need.
-# (Comment out while prototyping so tools are available in the container; uncomment in production.)
+# **IMPORTANT: Comment out while prototyping so tools remain available in the container.**
 # FROM python:$PYTHON_VERSION:alpine$ALPINE_VERSION
 # COPY --from=builder --chown=app:app /var/app/.venv /var/app/.venv
 
@@ -127,10 +123,10 @@ CMD exec /var/app/.venv/bin/hypercorn tyranno_sandbox.api:api \
 # Declare a container healthcheck, which Docker Compose (used in CI) will use.
 # We *could* instead define it in `compose.yaml`, but there's no downside to keeping it here.
 # This is equivalent to our choice for K8s "liveness" probe.
-# Ubuntu's `curl` doesn't support `--http3` yet, but HTTP/2 will be fine.
+# Alpine's `curl` doesn't support `--http3` yet, but HTTP/2 is fine.
 # (`--http2-prior-knowledge` initiates an HTTP/2 request without a prior HTTP/1.1 request.)
-#  --start-interval=2.5s \
 HEALTHCHECK \
   --start-period=5s \
+  --start-interval=2.5s \
   --timeout=10s \
   CMD curl --fail --http2-prior-knowledge http://localhost/ || exit 1
