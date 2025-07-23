@@ -92,8 +92,10 @@ alias upgrade-lock := update-lock
 # Auto-update commit hooks.
 [group('project')]
 update-hooks:
-    uv run --locked pre-commit autoupdate
-    uv run --no-sync pre-commit gc
+    # TODO: Re-enable autoupdate when upstream issues are fixed (see `.pre-commit-config.yaml`).
+    @echo "Update pre-commit hooks manually by editing '.pre-commit-config.yaml'."
+    # uv run --locked pre-commit autoupdate
+    # uv run --no-sync pre-commit gc
 
 alias upgrade-hooks := update-hooks
 
