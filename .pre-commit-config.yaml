@@ -53,14 +53,14 @@ repos:
 
   # UV lock and sync
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.7.21
+    rev: 0.8.3
     hooks:
       - id: uv-sync # first locks (without `--upgrade`)
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # ::tyranno:: rev: v$<< "dependency-groups" .dev .pypa_ver_spec_map(@) .ruff .pypa_ver_spec_max(@) >>
-    rev: v0.12.3
+    rev: v0.12.7
     hooks:
       - id: ruff-check
         args:
@@ -81,18 +81,16 @@ repos:
           - pre-commit
 
   # Format various formats with Prettier
-  # Don't update to 3.6 until this issue is fixed:
-  # https://github.com/JoC0de/pre-commit-prettier/issues/3
   - repo: https://github.com/JoC0de/pre-commit-prettier
-    rev: v3.5.3 # !!! DO NOT UPDATE !!!
+    rev: v3.6.2
     hooks:
       - id: prettier
         additional_dependencies:
           # ::tyranno:: - prettier@$<<_ .up(@, 3) .rev .trim_left(@, 'v') >>
-          - prettier@3.5.3
+          - prettier@3.6.2
           - prettier-plugin-ini@1.3.0 # https://www.npmjs.com/package/prettier-plugin-ini
-          - prettier-plugin-toml@2.0.5 # https://www.npmjs.com/package/prettier-plugin-toml
-          - prettier-plugin-sh@0.17.4
+          - prettier-plugin-sh@0.17.4 # https://www.npmjs.com/package/prettier-plugin-sh
+          - prettier-plugin-toml@2.0.6 # https://www.npmjs.com/package/prettier-plugin-toml
         args:
           - --experimental-ternaries # will be the default soon
           - --experimental-operator-position=start # might be made the default soon
