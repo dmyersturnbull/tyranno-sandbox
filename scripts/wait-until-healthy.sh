@@ -104,7 +104,7 @@ check_until() {
     fi
     wait_for=$((waited - max_wait < poll_interval ? waited - max_wait : poll_interval))
     sleep $wait_for
-    waited+=wait_for
+    waited=$((wait_for + 1))
   done
 }
 

@@ -65,22 +65,22 @@ RUN \
   --mount=type=bind,source=uv.lock,target=uv.lock \
   --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
   uv sync \
-  --frozen \
-  --no-build \
-  --no-dev \
-  --extra server \
-  --no-editable \
-  --no-install-project
+    --frozen \
+    --no-build \
+    --no-dev \
+    --extra server \
+    --no-editable \
+    --no-install-project
 
-# Copy the source and build/install it in another layer.
+# Copy the source, then build and install it in another layer.
 COPY . /var/app/
 RUN \
   --mount=type=cache,target=/root/.cache/uv \
   uv sync \
-  --frozen \
-  --no-dev \
-  --inexact \
-  --no-editable
+    --frozen \
+    --no-dev \
+    --inexact \
+    --no-editable
 
 # Start a new stage, copying over only the files we need.
 # **IMPORTANT: Comment out while prototyping so tools remain available in the container.**
@@ -111,14 +111,15 @@ ENV N_WORKERS=$N_WORKERS
 ENV LOG_LEVEL=$LOG_LEVEL
 ENV BACKLOG_SIZE=$BACKLOG_SIZE
 
-CMD exec /var/app/.venv/bin/hypercorn tyranno_sandbox.api:api \
-  --bind '[::]:80' \
-  --bind '[::]:443' \
-  --quic-bind '[::]:443' \
-  --log-file - \
-  --log-level $LOG_LEVEL \
-  --workers $N_WORKERS \
-  --backlog $BACKLOG_SIZE
+CMD exec \
+  /var/app/.venv/bin/hypercorn tyranno_sandbox.api:api \
+    --bind '[::]:80' \
+    --bind '[::]:443' \
+    --quic-bind '[::]:443' \
+    --log-file - \
+    --log-level $LOG_LEVEL \
+    --workers $N_WORKERS \
+    --backlog $BACKLOG_SIZE
 
 # Declare a container healthcheck, which Docker Compose (used in CI) will use.
 # We *could* instead define it in `compose.yaml`, but there's no downside to keeping it here.
