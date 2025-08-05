@@ -135,8 +135,8 @@ dev = [
   "pytest-datadir>=1.6",
   "pytest-randomly>=3.16",
   "pytest-xdist>=3.7",
-  "ruff>=0.12.1",
-  "ty>=0.0.1a13",
+  "ruff>=0.12.7",
+  "ty>=0.0.1a16",
 ]
 test = [
   "coverage[toml]>=7.8", # Required for coverage.
@@ -156,8 +156,8 @@ docs = [
   "mkdocstrings[python]>=0.29", # Required for API docs.
 ]
 lint = [
-  "ruff>=0.12.1",
-  "ty>=0.0.1a13", # Astral's fledgling type checker.
+  "ruff>=0.12.7",
+  "ty>=0.0.1a16", # Astral's fledgling type checker.
 ]
 precommit = ["pre-commit>=4.2"]
 
