@@ -12,8 +12,7 @@ from collections import Counter, defaultdict
 from collections.abc import Callable, Generator, Iterator, Mapping
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
-from re import Pattern
-from typing import Final, Literal, Self, TypeGuard, overload
+from typing import Literal, Self, TypeGuard, overload
 
 try:
     import orjson as json
@@ -30,18 +29,30 @@ type Toml = Leaf | Branch
 __all__ = [
     "Array",
     "Branch",
-    "Checker",
+    "DotDictChecker",
     "DotTree",
     "DotTrees",
+    "DottedToNested",
     "Leaf",
     "LeafConflictError",
     "LeafIntersectionError",
     "LeavesInCommonError",
     "Limb",
+    "NestedToDotted",
     "Primitive",
     "Toml",
-    "Utils",
 ]
+
+
+@dataclass(frozen=True, slots=True)
+class KeyRegexError(Exception):
+    """One or more keys does not match the required pattern."""
+
+    keys: list[str]
+    pattern: str
+
+    def __str__(self) -> str:
+        return f"Key(s) {self.keys} do not match pattern '{self.pattern}'."
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,7 +72,12 @@ class LeavesInCommonError(Exception):
 
 @dataclass(frozen=True, slots=True)
 class LeafIntersectionError(LeavesInCommonError):
-    """There are leaves in common between two or more trees."""
+    """There are leaves in common between two or more trees.
+
+    Attributes:
+        intersection: A mapping from keys to the duplicate leaves.
+        msg: Returned by `str(error)`.
+    """
 
     intersection: dict[str, list[Leaf]]
     msg: str = field(init=False, repr=False)
@@ -84,7 +100,12 @@ class LeafIntersectionError(LeavesInCommonError):
 
 @dataclass(frozen=True, slots=True)
 class LeafConflictError(LeavesInCommonError):
-    """There are leaves with different values in common between two or more trees."""
+    """There are leaves with different values in common between two or more trees.
+
+    Attributes:
+        intersection: A mapping from keys to the duplicate leaves.
+        msg: Returned by `str(error)`.
+    """
 
     intersection: dict[str, list[Leaf]]
     msg: str = field(init=False, repr=False)
@@ -103,10 +124,17 @@ class LeafConflictError(LeavesInCommonError):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class Checker:
-    """Utilities to validate."""
+class DotDictChecker:
+    """Utilities to check [DotDict][]-related claims.
 
-    key_pattern: Pattern[str] = re.compile(r"[\w~&|,;<>+-]+")
+    Use [check][] to verify that a value is a valid [Branch][], [Array][], or [Primitive][].
+    Use [check_keys][] to
+
+    Attributes:
+        key_pattern: A global regex pattern that key names must match.
+    """
+
+    key_pattern: re.Pattern[str] | None = None
 
     @overload
     def check(self, node: Branch, /) -> Branch: ...
@@ -118,6 +146,16 @@ class Checker:
     def check(self, node: Primitive, /) -> Primitive: ...
 
     def check(self, node: Toml, /) -> Toml:
+        """Verifies that `node` is valid.
+
+         Calls [check_keys][] and [check_values][] if `node` is a branch or array.
+         Calls [check_primitive][] otherwise.
+
+        Raises:
+            TypeError: If a key is not `str` or a value is not [Toml][].
+            ValueError: If a key contains the substring `.`.
+            KeyDoesNotMatchRegexError: If a key does not match [key_pattern][].
+        """
         if isinstance(node, dict | list):
             self.check_keys(node)
             self.check_values(node)
@@ -132,7 +170,13 @@ class Checker:
     def check_keys(self, node: Array, /) -> Array: ...
 
     def check_keys(self, node: Branch | Array, /) -> Branch | Array:
-        """Recursively verifies that keys are `str`, don't contain `.`, and match `key_pattern`."""
+        """Validates the keys in `node` and (if `node` is a `Branch`) its sub-dicts recursively.
+
+        Raises:
+            TypeError: If a key is not an `str`.
+            ValueError: If a key contains the '.'.
+            KeyDoesNotMatchRegexError: If a key does not match [key_pattern][].
+        """
         if isinstance(node, list):
             for v in node:
                 if isinstance(v, list | dict):
@@ -141,16 +185,15 @@ class Checker:
             if bad := [k for k in node if not isinstance(k, str)]:
                 # noinspection PyUnboundLocalVariable
                 msg = f"Key(s) {bad} are not strings."
-                raise ValueError(msg)
+                raise TypeError(msg)
             if bad := [k for k in node if "." in k]:
                 msg = f"Key(s) {bad} contain '.'."
                 raise ValueError(msg)
             for v in node.values():
                 if isinstance(v, dict):
                     self.check_keys(v)
-            if bad := [k for k in node if not self.key_pattern.fullmatch(k)]:
-                msg = f"Key(s) {bad} do not match pattern '{self.key_pattern}'."
-                raise ValueError(msg)
+            if self.key_pattern and (bad := [k for k in node if not self.key_pattern.fullmatch(k)]):
+                raise KeyRegexError(bad, self.key_pattern.pattern)
         return node
 
     @overload
@@ -169,7 +212,7 @@ class Checker:
             if bad := {k: type(v) for k, v in node.items() if not self.check_primitive(v)}:
                 # noinspection PyUnboundLocalVariable
                 msg = f"Key(s) {bad.keys()} have invalid values of type(s) {set(bad.values())}"
-                raise ValueError(msg)
+                raise TypeError(msg)
             for v in node.values():
                 if isinstance(v, dict):
                     self.check_values(v)
@@ -186,21 +229,30 @@ class Checker:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class Utils:
-    """Utilities for working with nested dicts."""
+class DottedToNested(Callable[[Branch], Branch]):
+    """Callable that converts a [Branch][] with dotted keys to a nested `Branch`.
+
+    The input must a valid [Branch][] (not checked).
+    It can contain nested items; i.e. it can be a mixture of dotted and nested.
+    `DottedToNested` and [NestedToDotted][] are **not** inverses:
+    `NestedToDotted(DottedToNested(x)) == x` **iff**
+    `merge_lists == False` **and** `{not isinstance(v, dict) for v in x.values()}`.
+
+    Attributes:
+        merge_lists: Concatenate duplicate lists instead of erroring, when nesting.
+
+    Examples:
+        >>> DottedToNested()({"genus.species": "bat"})
+        {'genus': {'species': 'bat'}}
+
+    See Also:
+        [NestedToDotted][]
+        [DotDictChecker][]
+    """
 
     merge_lists: bool = False
 
-    def nest(self, items: Branch, /) -> Branch:
-        """Converts a dict with dotted keys to a nested dict.
-
-        However, won't complain if `items` contains nested items.
-
-        Examples:
-            >>> from tyranno_sandbox.dot_tree import Utils
-            >>> Utils().nest({"genus.species": "bat"})
-            {'genus': {'species': 'bat'}}
-        """
+    def __call__(self, items: Branch, /) -> Branch:
         out: Branch = {}
         for k, v in items.items():
             self._nest(out, k, v)
@@ -242,16 +294,28 @@ class Utils:
         else:
             dst[key] = item
 
-    def dotify(self, items: Branch, /) -> Branch:
-        """Converts a nested dict to a dict with dotted keys.
 
-        However, won't complain if a key in (or nested in) `items` contains `.`.
+@dataclass(frozen=True, slots=True, kw_only=True)
+class NestedToDotted(Callable[[Branch], Branch]):
+    """Callable that converts a nested [Branch][] to a `Branch` with dotted keys.
 
-        Examples:
-            >>> from tyranno_sandbox.dot_tree import Utils
-            >>> Utils().dotify({"genus": {"species": "bat"}})
-            {'genus.species': 'bat'}
-        """
+    The input can contain dotted keys; i.e. it can be a mixture of nested and dotted.
+    Note that `DottedToNested` and [NestedToDotted][] are **not** inverses;
+    round trips are guaranteed only under some conditions.
+    `DottedToNested(NestedToDotted(x)) == x` **iff**
+    no sub-dict of `x` (including `x` itself) contains any dotted keys
+    **and** no sub-dict of `x` (including `x` itself) contains an empty dict.
+
+    Examples:
+        >>> NestedToDotted()({"genus": {"species": "bat"}})
+        {'genus.species': 'bat'}
+
+    See Also:
+        [DottedToNested][]
+        [DotDictChecker][]
+    """
+
+    def __call__(self, items: Branch, /) -> Branch:
         return dict(self._dotify("", items))
 
     def _dotify(self, path: str, item: Toml) -> Generator[tuple[str, Leaf]]:
@@ -269,8 +333,7 @@ class Utils:
             yield path, item
 
 
-_UTILS: Final = Utils()
-_CHECKER = Checker()
+_CHECKER = DotDictChecker()
 
 
 class DotTree(Mapping[str, Toml]):
@@ -348,11 +411,10 @@ class DotTree(Mapping[str, Toml]):
             ValueError: If a value (nested) is `None`.
 
         Examples:
-            >>> from tyranno_sandbox.dot_tree import DotTree
             >>> DotTree.from_mixed({"books": [{"title": "Bats", "ids.isbn": "123-4-56-123456-0"}]})
             {'books': [{'title': 'Bats', 'ids.isbn': '123-4-56-123456-0'}]}
         """
-        return cls(_UTILS.nest(_UTILS.dotify(x)))
+        return cls(DottedToNested()(NestedToDotted()(x)))
 
     @classmethod
     def from_nested(cls, x: Branch, /) -> Self:
@@ -375,13 +437,12 @@ class DotTree(Mapping[str, Toml]):
             TypeError: If or `x` is not a `dict` or a key is not a `str`.
 
         Examples:
-            >>> from tyranno_sandbox.dot_tree import DotTree
             >>> DotTree.from_dotted({"owner.name.first": "John"})
             {'owner': {'name': {'first': 'John'}}}
             >>> DotTree.from_dotted({"books": [{"title": "Bats", "ids.isbn": "123-4-56-123456-0"}]})
             {'books': [{'title': 'Bats', 'ids.isbn': '123-4-56-123456-0'}]}
         """
-        return cls(_UTILS.nest(x))
+        return cls(DottedToNested()(x))
 
     def transform_leaves(self, fn: Callable[[str, Leaf], Leaf | None], /) -> Self:
         """Applies a function to each leaf, returning a new tree.
