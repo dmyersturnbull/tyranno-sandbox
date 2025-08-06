@@ -23,9 +23,9 @@ name = "tyranno-sandbox"
 version = "0.0.1-alpha.0" # Omit prerelease specifier for "real" versions.
 requires-python = "~=3.13.0"
 
-# 'readme' is 'description' in `importlib.metadata`.
+# `readme` is `description` in `importlib.metadata`.
 readme = { file = "README.md", content-type = "text/markdown" }
-# 'description' is 'summary' in `importlib.metadata`.
+# `description` is `summary` in `importlib.metadata`.
 description = "Sandbox to test CI/CD in Tyrannosaurus"
 keywords = ["python", "ci", "cd"]
 authors = [
@@ -192,12 +192,9 @@ skip-magic-trailing-comma = true
 [tool.ruff.lint]
 
 preview = true
+select = ["ALL"]
 
 #          >>>#<<< align to col 15 (max possible width)
-select = [
-  "ALL"
-]
-
 ignore = [
   # Conflicts with the formatter:
   # (See https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules)

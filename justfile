@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
-# https://github.com/casey/just
+#
 # https://just.systems/man/en/
 # https://cheatography.com/linux-china/cheat-sheets/justfile/
 # CAUTION – Quotes aren't quotes.
@@ -64,7 +64,7 @@ info:
 # Sync the venv and install commit hooks.
 [group('setup')]
 init:
-    - rm .git/hooks/*.sample
+    -rm .git/hooks/*.sample
     uv sync --all-extras --exact
     uv run --no-sync pre-commit install --install-hooks --overwrite
     uv run --no-sync pre-commit gc
@@ -92,10 +92,8 @@ alias upgrade-lock := update-lock
 # Auto-update commit hooks.
 [group('project')]
 update-hooks:
-    # TODO: Re-enable autoupdate when upstream issues are fixed (see `.pre-commit-config.yaml`).
-    @echo "Update pre-commit hooks manually by editing '.pre-commit-config.yaml'."
-    # uv run --locked pre-commit autoupdate
-    # uv run --no-sync pre-commit gc
+    uv run --locked pre-commit autoupdate
+    uv run --no-sync pre-commit gc
 
 alias upgrade-hooks := update-hooks
 
@@ -110,16 +108,15 @@ alias lock := sync
 [group('project')]
 clean: delete-temp clean-main clean-git
 
-# Delete unused uv and pre-commit cache data. (Called by `clean`.)
+# Delete unused uv and pre-commit cache data.
 [group('project')]
-[private]
 clean-main:
     uv run --no-sync pre-commit gc
     uv cache prune
 
-# Start incremental 'git maintenance' tasks. (Called by 'clean'.)
+# Start incremental 'git maintenance' tasks. Called by `clean`.
 [group('project')]
-[private]
+[no-exit-message]
 clean-git:
     git maintenance run \
       --task=commit-graph \
@@ -128,9 +125,8 @@ clean-git:
       --task=incremental-repack \
       --task=pack-refs
 
-# Delete cache and other temporary data.
+# Delete cache and other temporary data. Called by `clean`.
 [group('project')]
-[private]
 delete-temp:
     # Generated docs:
     -rm -f -r .site/
@@ -150,9 +146,18 @@ delete-temp:
     -rm -f **/.localized
     -rm -f **/Thumbs.db
 
-# Delete files whose names indicate they're temporary. [CAUTION]
+# Run 'git remote prune --all' and 'git maintenance run gc'. ❗
 [group('project')]
-[private]
+prune-git:
+    # Needed on macOS.
+    @-chflags -R nouchg .git/*
+    # Prune tracked refs first because it's a foreground task.
+    git remote prune --all
+    # Uses 'gc.pruneExpire'.
+    git maintenance run --task gc
+
+# Delete files that are probably temporary. 🧨
+[group('project')]
 @delete-probable-temp:
     # Log files directly in `/`, `src/`, or `tests/`
     -rm -f *.log
@@ -176,24 +181,9 @@ delete-temp:
     -rm -f **/*[~#\$]
     -rm -f **/.~*
 
-# NOTE: "Advanced" or "optional" recipe, unlisted but invoked directly.
-
-# Run 'git remote prune --all' and start 'git maintenance run gc'. [CAUTION]
+# Minify the repo by deleting nearly all recreatable files. 🧨
 [group('project')]
-[private]
-prune-git:
-    # Needed on macOS.
-    @- chflags -R nouchg .git/*
-    # Prune tracked refs first because it's a foreground task.
-    git remote prune --all
-    # Uses 'gc.pruneExpire'.
-    git maintenance run --task gc
-
-# NOTE: "Advanced" or "optional" recipe, unlisted but invoked directly.
-
-# Minify the repo by deleting nearly all recreatable files. [CAUTION]
-[group('project')]
-[private]
+[metadata('advanced')]
 minify-repo: clean delete-probable-temp
     uv run pre-commit clean
     uv run pre-commit uninstall
@@ -203,13 +193,13 @@ minify-repo: clean delete-probable-temp
 
 ###################################################################################################
 
-# Format *modified* files (via pre-commit).
+# Format STAGED files (via pre-commit).
 [group('format')]
 format-changes: _format
 
 alias format := format-changes
 
-# Format *all* files (via pre-commit).
+# Format ALL files (via pre-commit).
 [group('format')]
 format-all: (_format "--all-files")
 
@@ -223,28 +213,27 @@ _format *args:
 
 ###################################################################################################
 
-# Ruff auto-fix *modified* files (via pre-commit).
+# Run pre-commit auto-fix hooks on STAGED files.
 [group('fix')]
 [no-exit-message]
 fix-changes: _stage_precommit (hook "ruff-check")
 
 alias fix := fix-changes
 
-# Ruff auto-fix *all* files (via pre-commit).
+# Run pre-commit auto-fix hooks on ALL files. ⚠️
 [group('fix')]
 [no-exit-message]
 fix-all: _stage_precommit (hook "ruff-check --all-files")
 
-# Ruff auto-fix *all* files (via ruff directly, passing args).
+# Preview Ruff auto-fixes. Runs on all files by default.
+[group('fix')]
+[no-exit-message]
+diff-ruff *args: (_fix_ruff "--diff" args)
+
+# Apply Ruff auto-fixes. (Runs on all files by default.) ⚠️
 [group('fix')]
 [no-exit-message]
 fix-ruff *args: (_fix_ruff args)
-
-# Ruff auto-fix, including unsafe fixes. [CAUTION]
-[group('fix')]
-[no-exit-message]
-[private]
-fix-ruff-unsafe *args: (_fix_ruff "--unsafe-fixes" args)
 
 # <Internal.> (FYI: Use `--config` so users can still pass `--output-format`.)
 [no-exit-message]
@@ -257,10 +246,9 @@ _stage_precommit:
 
 ###################################################################################################
 
-# `just check-simple check-ruff check-ty check-links`
+# `just check-simple check-ruff check-ty check-links` (slow)
 [group('check')]
-[private]
-check: check-core check-ruff check-ty check-links
+check-all: check-core check-ruff check-ty check-schemas check-links
 
 # Check basic rules (via pre-commit).
 [group('check')]
@@ -279,7 +267,15 @@ check-core:
     uv run --no-sync pre-commit run trailing-whitespace
     uv run --no-sync pre-commit run check-added-large-files
 
-# Check Ruff rules (without auto-fix).
+# Check JSON schemas (via pre-commit).
+[group('check')]
+check-schemas:
+    uv run --no-sync pre-commit run check-github-actions
+    uv run --no-sync pre-commit run check-github-workflows
+    uv run --no-sync pre-commit run check-compose-spec
+    uv run --no-sync pre-commit run check-metaschema
+
+# Check Ruff rules (without auto-fixing).
 [group('check')]
 [no-exit-message]
 check-ruff *args: (_check_ruff args)
@@ -289,17 +285,17 @@ check-ruff *args: (_check_ruff args)
 [no-exit-message]
 check-ruff-stats *args: (ruff "check --no-fix --statistics" args)
 
-# Check Ruff Bandit-derived 'S' rules.
+# Check Ruff security (S) rules derived from Bandit.
 [group('check')]
 [no-exit-message]
 check-bandit *args: (_check_ruff "--select S" args)
 
-# Check Astral's ty typing rules.
+# Check Astral ty typing rules.
 [group('check')]
 [no-exit-message]
 check-ty *args: (run "ty check" args)
 
-# Detect broken hyperlinks (via pre-commit).
+# Detect broken hyperlinks via pre-commit. (slow)
 [group('check')]
 [no-exit-message]
 check-links: (hook "markdown-link-check --hook-stage manual --all-files")
@@ -310,27 +306,22 @@ _check_ruff *args: (ruff "check --no-fix --config 'output-format=\"grouped\"'" a
 
 ###################################################################################################
 
-# Run tests not marked 'ux'.
+# Run tests not marked ux.
 [group('test')]
 [no-exit-message]
 test-non-ux *args: (pytest "-m 'not ux'" args)
 
 alias test := test-non-ux
 
-# Run tests marked 'ux' for manual interaction or verification.
+# Run tests marked ux for manual interaction or verification.
 [group('test')]
 [no-exit-message]
 test-ux *args: (pytest "-m ux" args)
 
-# Run tests not marked 'ux', 'e2e', 'slow', or 'net'.
+# Run tests not marked ux, e2e, slow, or net.
 [group('test')]
 [no-exit-message]
 test-fast *args: (pytest "-m 'not (ux or e2e or slow or net)'" args)
-
-# Run tests marked 'hypothesis' with Hypothesis's explanation phase.
-[group('test')]
-[no-exit-message]
-test-hypothesis *args: (pytest "-m hypothesis --hypothesis-explain" args)
 
 # Run doctest tests via PyTest.
 [group('test')]
@@ -338,42 +329,42 @@ test-hypothesis *args: (pytest "-m hypothesis --hypothesis-explain" args)
 test-doctest *args: (pytest "--doctest-modules src/" args)
 
 alias doctest := test-doctest
-alias test-doctests := test-doctest
 
-# Run tests not marked 'ux', reporting coverage.
+# Run tests not marked ux, reporting coverage.
 [group('test')]
 [no-exit-message]
 test-with-cov *args: (pytest "-m 'not ux' --cov" args)
 
 alias test-cov := test-with-cov
 
-# Run PyTest tests, highlighting test durations.
+# Run PyTest tests, highlighting test durations. ☆
 [group('test')]
 [no-exit-message]
 test-durations *args: (pytest "--durations=0 --durations-min=0" args)
 
-# Run PyTest tests stepwise, starting at last failure.
+# Run tests marked hypothesis with explain phase enabled. ☆
 [group('test')]
 [no-exit-message]
-[private]
+test-hypothesis *args: (pytest "-m hypothesis --hypothesis-explain" args)
+
+# Run PyTest tests stepwise, starting at last failure. ☆
+[group('test')]
+[no-exit-message]
 test-stepwise *args: (pytest "--stepwise" args)
 
-# Run PyTest tests, showing minimal output.
+# Run PyTest tests, showing minimal output. ☆
 [group('test')]
 [no-exit-message]
-[private]
 test-quietly *args: (pytest "--capture=no --tb=line --quiet" args)
 
-# Run PyTest tests, showing tracebacks, locals, and INFO.
+# Run PyTest tests, showing tracebacks, locals, and INFO. ☆
 [group('test')]
 [no-exit-message]
-[private]
 test-loudly *args: (pytest "--showlocals --full-trace --log-level=INFO --verbose" args)
 
-# Run PyTest tests with pdb debugger.
+# Run PyTest tests with pdb debugger. ☆
 [group('test')]
 [no-exit-message]
-[private]
 test-with-pdb *args: (pytest "--pdb" args)
 
 ###################################################################################################

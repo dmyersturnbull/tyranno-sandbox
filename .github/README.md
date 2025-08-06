@@ -46,7 +46,9 @@ For example:
 Otherwise, you'll need `${{ steps.detect-changes && steps.detect-changes != 'false' }}`,
 and it's very easy to make a mistake.
 
-### `shell: bash` vs. implicit Bash shell
+### Shell
+
+**`shell: bash` is different from the default Bash shell.**
 
 GitHub workflows use Bash as the default shell.
 However, specifying `shell: bash` explicitly turns on `pipefail`.

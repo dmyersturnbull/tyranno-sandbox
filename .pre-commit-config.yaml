@@ -50,6 +50,8 @@ repos:
       - id: check-github-actions
       - id: check-github-workflows
       - id: check-compose-spec
+      - id: check-metaschema
+        files: \.schemas/.*\.(yaml|yml|json)$
 
   # UV lock and sync
   - repo: https://github.com/astral-sh/uv-pre-commit
