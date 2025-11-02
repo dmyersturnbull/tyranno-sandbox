@@ -4,6 +4,7 @@
 #
 # https://just.systems/man/en/
 # https://cheatography.com/linux-china/cheat-sheets/justfile/
+# Needs: Just 1.43
 # CAUTION – Quotes aren't quotes.
 # This doesn't do what you'd expect:
 # ```
@@ -35,6 +36,7 @@ git_rev_date := `git --no-pager log -1 --format=%cd`
 
 # List available recipes.
 [group('help')]
+[default]
 list:
     @just --list --unsorted --list-prefix "  "
 

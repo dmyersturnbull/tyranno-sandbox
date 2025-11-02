@@ -3,7 +3,7 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-set -o errexit -o nounset -o pipefail # "strict mode" # "strict mode"
+set -o errexit -o nounset -o pipefail # "strict mode"
 
 script_path="$(realpath -- "${BASH_SOURCE[0]}")" || exit $?
 declare -r script_name="${script_path##*/}"

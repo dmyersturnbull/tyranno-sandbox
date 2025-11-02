@@ -1,0 +1,24 @@
+# https://www.jetbrains.com/help/junie/aiignore.html
+# Slowly becoming a standard.
+
+# Paths starting or ending in `~`, `$`, or `#`; or starting in `.~`.
+# These are normally temp files like `~$doc.docx` or `.profile#`.
+*[~#$]
+[~#$]*
+.~*
+
+# Temp and misc. unwanted files
+*[.~]swp
+*[.~]temp
+*[.~]tmp
+
+# Python
+__pycache__/
+__pypackages__/
+cython_debug/
+*.py[cod]
+.venv/
+
+# Private
+.*.env
+*.pem

@@ -46,7 +46,7 @@ whereas tests (including smoke tests like building images) default to MERGE.
 - `[]` encloses optional arguments.
 
 | Command                          | Runs on   | Action                                        |
-| -------------------------------- | --------- | --------------------------------------------- |
+|----------------------------------|-----------|-----------------------------------------------|
 | `/plz format`                    | HEAD      | Formats all files w/ `style:` commit.         |
 | 🧪 `/plz label`                  | HEAD      | Apply proper labels to PR.                    |
 | `/plz update`                    | HEAD      | Bumps lock file versions w/ `build:` commit.  |
