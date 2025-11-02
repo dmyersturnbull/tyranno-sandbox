@@ -93,10 +93,12 @@ class XdgHelper[**P]:
             raise GlobalConfigError(title, value, "exists and is not a directory")
         return path
 
-    def _var_name(self, fn_name: str) -> str:
+    @staticmethod
+    def _var_name(fn_name: str) -> str:
         return "TYRANNO_" + fn_name.removeprefix("user_")
 
-    def _args[**P](self) -> P.kwargs:
+    @staticmethod
+    def _args[**P]() -> P.kwargs:
         return {
             "appname": __about__["name"],
             "appauthor": __about__["vendor"],

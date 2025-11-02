@@ -36,7 +36,8 @@ class _JsonUtil:
 
         return json.loads(data, parse_constant=self._parse_const)
 
-    def _parse_const(self, s: str) -> NoReturn:
+    @staticmethod
+    def _parse_const(s: str) -> NoReturn:
         msg = f"Invalid JSON value: '{s}'"
         raise ValueError(msg)
 

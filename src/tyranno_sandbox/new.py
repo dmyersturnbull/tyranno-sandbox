@@ -5,8 +5,10 @@
 """`tyranno new` command."""
 
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 DEFAULT_NOTICE_FILE_TEMPLATE: Final = """
 {{project.name}}

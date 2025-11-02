@@ -6,18 +6,21 @@
 
 import re
 import tomllib
-from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import ClassVar, Final
+from typing import TYPE_CHECKING, ClassVar, Final
 
 import jmespath
 from pathspec import GitIgnoreSpec
 
-from tyranno_sandbox._global_vars import GlobalVars
 from tyranno_sandbox.dot_tree import DotTree, Toml
 from tyranno_sandbox.james import TyrannoJmesFunctions
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from tyranno_sandbox._global_vars import GlobalVars
 
 __all__ = ["Context", "ContextFactory", "Data", "DefaultContextFactory"]
 SIMPLE_KEY_REGEX: Final = re.compile(r"([A-Za-z_][A-Za-z0-9_-]*+)(\.([A-Za-z_][A-Za-z0-9_-]*+))*+")

@@ -6,11 +6,13 @@
 
 import inspect
 import types
-from collections.abc import Callable
-from typing import Any, Final, get_type_hints
+from typing import TYPE_CHECKING, Any, Final, get_type_hints
 
 from jmespath.functions import Functions
 from jmespath.functions import signature as jmespath_signature
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # Mapping of Python -> JMESPath types.
 TYPE_MAP: Final = {
@@ -45,7 +47,8 @@ class JmesFunctionsFactory:
         # noinspection PyTypeChecker
         return fns_type  # ty: ignore[invalid-return-type]
 
-    def _register_method[**P, V](self, method: Callable[P, V], name: str) -> Callable[P, V]:
+    @staticmethod
+    def _register_method[**P, V](method: Callable[P, V], name: str) -> Callable[P, V]:
         sig = inspect.signature(method)
         type_hints = get_type_hints(method)
         param_specs = [{"types": TYPE_MAP[type_hints[p.name]]} for p in sig.parameters.values()]

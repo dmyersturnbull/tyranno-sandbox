@@ -529,9 +529,12 @@ class DotTree(Mapping[str, Toml]):
     @overload
     def get_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T], default: T) -> T: ...
 
+    @overload
+    def get_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T], default: None) -> T | None: ...
+
     def get_primitive_as[T: Primitive](
         self, keys: str, /, as_type: type[T], default: T | None = None
-    ) -> T:
+    ) -> T | None:
         """Returns a primitive value after checking its type, or `default` if not found.
 
         Raises:
@@ -618,6 +621,9 @@ class DotTree(Mapping[str, Toml]):
     @overload
     def get_primitive[T: Primitive](self, keys: str, /, default: T) -> T: ...
 
+    @overload
+    def get_primitive[T: Primitive](self, keys: str, /, default: T | None) -> T | None: ...
+
     def get_primitive[T: Primitive](self, keys: str, /, default: T | None = None) -> T | None:
         """Returns a primitive value, or `default` if not found.
 
@@ -641,6 +647,9 @@ class DotTree(Mapping[str, Toml]):
 
     @overload
     def get(self, keys: str, default: Toml = None) -> Toml: ...
+
+    @overload
+    def get(self, keys: str, default: Toml | None = None) -> Toml | None: ...
 
     def get(self, keys: str, default: Toml | None = None) -> Toml | None:
         """Returns a value from the `.`-delimited `keys`, falling back to `default`."""

@@ -5,10 +5,12 @@
 """Metadata for server."""
 
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from tyranno_sandbox._about import __about__ as about
-from tyranno_sandbox._core import JsonBranch
+
+if TYPE_CHECKING:
+    from tyranno_sandbox._core import JsonBranch
 
 __all__ = ["META"]
 

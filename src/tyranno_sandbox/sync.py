@@ -6,16 +6,18 @@
 
 import re
 import shutil
-from collections.abc import Generator
 from dataclasses import dataclass, field
 from functools import cache, cached_property
-from pathlib import Path
 from re import Pattern
-from typing import Final, Literal, NamedTuple, NewType, Self
+from typing import TYPE_CHECKING, Final, Literal, NamedTuple, NewType, Self
 
 from loguru import logger
 
-from tyranno_sandbox.context import Context
+if TYPE_CHECKING:
+    from collections.abc import Generator
+    from pathlib import Path
+
+    from tyranno_sandbox.context import Context
 
 
 @dataclass(frozen=True, kw_only=True)

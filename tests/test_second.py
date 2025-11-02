@@ -21,7 +21,7 @@ class TestSecond:
     def test_name(self) -> None:
         assert about["name"] == "tyranno-sandbox"
 
-    def test_misc(self, helper) -> None:  # noqa: ANN001
+    def test_misc(self, helper: Helper) -> None:
         assert helper.start.mono_ns > 0
 
 

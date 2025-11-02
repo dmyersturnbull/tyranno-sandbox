@@ -6,18 +6,20 @@
 
 import logging
 import time
-from collections.abc import Generator
 from contextlib import ExitStack, contextmanager, redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from io import StringIO
-from os import PathLike
 from pathlib import Path
-from types import TracebackType
-from typing import Final, Self, override
+from typing import TYPE_CHECKING, Final, Self, override
 from zoneinfo import ZoneInfo
 
 from hypothesis import settings as hyp
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+    from os import PathLike
+    from types import TracebackType
 
 __all__ = ["Helper", "logger"]
 
