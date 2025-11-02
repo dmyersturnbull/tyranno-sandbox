@@ -4,11 +4,11 @@
 
 # Check out https://pre-commit.com/ for documentation
 # ::tyranno:: rev: v$<< "dependency-groups" .dev .pypa_ver_spec_map(@) ."pre-commit" .pypa_ver_spec_min(@) >>
-minimum_pre_commit_version: 4.2.0
+minimum_pre_commit_version: 4.3.0
 repos:
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
         args:
@@ -45,7 +45,7 @@ repos:
           - pre-commit
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.33.2
+    rev: 0.34.1
     hooks:
       - id: check-github-actions
       - id: check-github-workflows
@@ -53,16 +53,44 @@ repos:
       - id: check-metaschema
         files: \.schemas/.*\.(yaml|yml|json)$
 
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37
+    hooks:
+      - id: yamllint
+        args:
+          - --strict
+          - --config-data
+          - |
+            rules:
+              anchors:
+                forbid-undeclared-aliases: true
+                forbid-duplicated-anchors: true
+                forbid-unused-anchors: true
+              float-values:
+                require-numeral-before-decimal: true
+                forbid-scientific-notation: true
+                forbid-nan: true
+                forbid-inf: true
+              key-duplicates:
+                forbid-duplicated-merge-keys: true
+              octal-values:
+                forbid-implicit-octal: true
+                forbid-explicit-octal: true
+              truthy:
+                allowed-values:
+                  - true
+                  - false
+
   # UV lock and sync
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.8.3
+    rev: 0.9.5
     hooks:
       - id: uv-sync # first locks (without `--upgrade`)
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # ::tyranno:: rev: v$<< "dependency-groups" .dev .pypa_ver_spec_map(@) .ruff .pypa_ver_spec_max(@) >>
-    rev: v0.12.7
+    rev: v0.14.2
     hooks:
       - id: ruff-check
         args:
@@ -106,7 +134,7 @@ repos:
           (?x) \. (md|mdx|json|graphql|yaml|yml|js|ts|jsx|html|less|css|toml) $
 
   - repo: https://github.com/tcort/markdown-link-check
-    rev: v3.13.7
+    rev: v3.14.1
     hooks:
       - id: markdown-link-check
         args:
