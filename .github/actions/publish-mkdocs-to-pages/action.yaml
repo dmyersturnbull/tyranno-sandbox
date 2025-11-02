@@ -11,12 +11,15 @@ description: >-
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v4
-    - uses: astral-sh/setup-uv@v6
+    - uses: actions/checkout@v5
+    - uses: astral-sh/setup-uv@v7
     - shell: bash
       run: |
         uv sync --locked --only-group docs
         uv run --no-sync mkdocs build --strict
+    # Don't update to v4 until this is fixed:
+    # https://github.com/actions/upload-pages-artifact/pull/102
+    # https://github.com/actions/upload-pages-artifact/issues/129
     - uses: actions/upload-pages-artifact@v3
       with:
         path: .site

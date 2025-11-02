@@ -37,12 +37,12 @@ runs:
           repo=https://test.pypi.org/legacy/
         fi
         echo "repo=$repo" >> "$GITHUB_OUTPUT"
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         ref: ${{ inputs.ref || github.ref }}
-    - uses: astral-sh/setup-uv@v6
+    - uses: astral-sh/setup-uv@v7
     - name: Download artifact ${{ steps.define.outputs.artifact_name }}
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: ${{ steps.define.outputs.artifact_name }}
     - name: Publish to PyPi using uv.

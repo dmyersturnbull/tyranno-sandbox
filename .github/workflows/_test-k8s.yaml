@@ -34,10 +34,10 @@ jobs:
     env:
       ONLY_IF_CHANGED: ${{ inputs.only-if-changed }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref }}
-      - uses: astral-sh/setup-uv@v6 # Some subsequent tools expect Python.
+      - uses: astral-sh/setup-uv@v7 # Some subsequent tools expect Python.
         with:
           activate-environment: true
       - uses: azure/setup-helm@v4.2.0

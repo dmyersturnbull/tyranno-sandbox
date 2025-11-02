@@ -28,15 +28,13 @@ runs:
         base='${{ inputs.compare-to-ref || github.base_ref || '' }}'
         echo "ref=$ref" >> "$GITHUB_OUTPUT"
         echo "base=$base" >> "$GITHUB_OUTPUT"
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         ref: ${{ steps.define.outputs.ref }}
-    - uses: astral-sh/setup-uv@v6 # Some subsequent tools expect Python.
+    - uses: astral-sh/setup-uv@v7 # Some subsequent tools expect Python.
       with:
         activate-environment: true
-    - uses: azure/setup-helm@v4.2.0
-      with:
-        version: v3.17.0
+    - uses: azure/setup-helm@v4.3.0
     - name: Set up chart-testing
       uses: helm/chart-testing-action@v2.7.0
     - if: ${{ steps.define.outputs.base }}

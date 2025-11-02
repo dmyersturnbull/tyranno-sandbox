@@ -27,7 +27,7 @@ runs:
           printf >&2 "'push' must be 'true' or 'false', not '%s'.\n" '${{ inputs.push }}'
           exit 2
         fi
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - uses: docker/setup-buildx-action@v3
     - name: Extract Docker metadata
       id: docker-metadata

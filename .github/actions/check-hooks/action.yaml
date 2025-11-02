@@ -12,10 +12,10 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         ref: ${{ inputs.ref || github.head_ref || github.ref }}
-    - uses: astral-sh/setup-uv@v6
+    - uses: astral-sh/setup-uv@v7
     - name: Sync and confirm lock file is up-to-date
       shell: bash
       run: |

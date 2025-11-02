@@ -54,10 +54,10 @@ runs:
         echo "ref=$ref" >> "$GITHUB_OUTPUT"
         echo "ref_name=$ref_name" >> "$GITHUB_OUTPUT"
         echo "artifact_name=dist-$ref_name" >> "$GITHUB_OUTPUT"
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         ref: ${{ steps.define.outputs.ref }}
-    - uses: astral-sh/setup-uv@v6
+    - uses: astral-sh/setup-uv@v7
     - name: Build sources and wheels
       shell: bash
       run: |
