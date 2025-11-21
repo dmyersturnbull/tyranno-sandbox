@@ -8,7 +8,7 @@ description: Syncs repo info and labels to '.github/project.yaml'.
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install jq and yq
       shell: bash
       run: sudo snap install jq yq

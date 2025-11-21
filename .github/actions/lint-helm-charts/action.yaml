@@ -28,7 +28,7 @@ runs:
         base='${{ inputs.compare-to-ref || github.base_ref || '' }}'
         echo "ref=$ref" >> "$GITHUB_OUTPUT"
         echo "base=$base" >> "$GITHUB_OUTPUT"
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         ref: ${{ steps.define.outputs.ref }}
     - uses: astral-sh/setup-uv@v7 # Some subsequent tools expect Python.

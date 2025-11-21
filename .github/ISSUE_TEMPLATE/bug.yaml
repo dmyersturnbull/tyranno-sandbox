@@ -6,7 +6,6 @@ name: "🐛 Bug"
 description: "Bug report"
 labels:
   - "type: bug"
-  - "state: awaiting triage"
 
 body:
   - type: textarea
@@ -42,9 +41,8 @@ body:
       label: What browser(s) do you see the problem on?
       multiple: true
       options:
-        - Chrome / Chromium
-        - Firefox
-        - Edge
+        - Chromium (Chrome, Edge, …)
+        - Gecko (Firefox)
         - Safari
         - other
   - type: textarea

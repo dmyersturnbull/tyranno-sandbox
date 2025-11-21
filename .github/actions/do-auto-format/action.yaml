@@ -39,7 +39,7 @@ runs:
     # ====================
     # 2. Fetch refs.
     - name: Fetch the HEAD commit
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         ref: ${{ inputs.ref }}
     - if: ${{ inputs.compare-to-ref }}

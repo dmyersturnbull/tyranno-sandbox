@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Reusable workflow that sends code coverage reports to Codecov.
-# Requires `dist-` artifacts and the secret `CODECOV_TOKEN`.
+# Requires `dist-` `artifacts and the secret `CODECOV_TOKEN`.
 run-name: Send ${{ inputs.ref_name }} CodeCov report
 
 on:
@@ -34,7 +34,7 @@ jobs:
           - ubuntu-latest
         python:
           # ::tyranno start:: $<<~."python-versions".test|yaml(@)>>
-          - "3.13"
+          - "3.14"
           # ::tyranno end::
     env:
       OS: ${{ matrix.os }}
@@ -42,7 +42,7 @@ jobs:
       ARTIFACT_NAME: coverage-${{ env.REF_NAME }}-${{ matrix.os }}-${{ matrix.python }}
     steps:
       - name: Download workflow artifact ${{ env.ARTIFACT_NAME }}
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: ${{ env.ARTIFACT_NAME }}
       - name: Upload coverage report ${{ env.ARTIFACT_NAME }} to Codecov

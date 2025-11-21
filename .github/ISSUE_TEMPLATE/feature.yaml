@@ -6,7 +6,6 @@ name: "✨ Feature"
 description: "Feature request"
 labels:
   - "type: feature"
-  - "state: awaiting triage"
 
 body:
   - type: textarea

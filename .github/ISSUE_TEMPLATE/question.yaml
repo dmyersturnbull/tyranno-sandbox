@@ -6,7 +6,6 @@ name: "💬 Question"
 description: "Question"
 labels:
   - "type: question"
-  - "state: awaiting triage"
 
 body:
   - type: textarea

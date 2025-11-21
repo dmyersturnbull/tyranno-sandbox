@@ -4,12 +4,10 @@
 #
 changelog:
   exclude:
+    authors:
+      - "github-actions[bot]"
     labels:
       - "changelog: exclude"
-      - "scope: dev-infra"
-      - "scope: docs-infra"
-      - "type: chore"
-      - "type: style"
   categories:
     - title: 💥 Breaking changes
       labels:
@@ -17,30 +15,56 @@ changelog:
     - title: ❌ Removals
       labels:
         - "type: drop"
+      exclude:
+        - "scope: dev-infra"
+        - "scope: docs-infra"
     - title: 🗑️ Deprecations
       labels:
         - "type: deprecation"
+      exclude:
+        - "scope: dev-infra"
+        - "scope: docs-infra"
     - title: 🔒️ Security
       labels:
         - "type: security"
+      exclude:
+        - "scope: dev-infra"
+        - "scope: docs-infra"
     - title: ✨ Features
       labels:
         - "type: feature"
+      exclude:
+        - "scope: dev-infra"
+        - "scope: docs-infra"
     - title: 🐛 Fixes
       labels:
         - "type: fix"
+      exclude:
+        - "scope: dev-infra"
+        - "scope: docs-infra"
     - title: ⚡️ Performance
       labels:
         - "type: performance"
+      exclude:
+        - "scope: dev-infra"
+        - "scope: docs-infra"
     - title: 📝 Documentation
       labels:
         - "type: docs"
+      exclude:
+        - "scope: dev-infra"
+        - "scope: docs-infra"
     - title: "🔧 Build"
       labels:
         - "type: build"
-    - title: 🍒 Miscellaneous
+      exclude:
+        - "scope: dev-infra"
+        - "scope: docs-infra"
+    - title: "🛠️ Miscellaneous"
       labels:
-        - "changelog: include"
+        - "changelog: include" # E.g. style and chore
         - "type: refactor"
         - "type: test"
         - "type: ci"
+        - "scope: dev-infra"
+        - "scope: docs-infra"

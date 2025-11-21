@@ -6,7 +6,6 @@ name: "📚 Documentation"
 description: "Documentation issue"
 labels:
   - "type: docs"
-  - "state: awaiting triage"
 
 body:
   - type: textarea

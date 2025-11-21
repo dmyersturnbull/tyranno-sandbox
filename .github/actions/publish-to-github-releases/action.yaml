@@ -31,7 +31,7 @@ runs:
           echo "is_latest=true" >> "$GITHUB_OUTPUT"
         fi
     - name: Download workflow artifact ${{ steps.define.outputs.artifact_name }}
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v6
       with:
         name: ${{ steps.define.outputs.artifact_name }}
     - name: Publish to GitHub Releases

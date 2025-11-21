@@ -17,7 +17,7 @@ on:
         default: '["ubuntu-latest", "windows-latest]"'
         description: >-
           A JSON array of runner names.
-          macOS is excluded from the default because it needs
+          Note that macOS is excluded from the default.
 
 jobs:
   build-images:
@@ -29,7 +29,7 @@ jobs:
           - ubuntu-latest
           - windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref || github.head_ref || github.ref }}
       - uses: astral-sh/setup-uv@v7
