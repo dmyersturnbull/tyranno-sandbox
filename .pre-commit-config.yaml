@@ -4,7 +4,7 @@
 
 # Check out https://pre-commit.com/ for documentation
 # ::tyranno:: rev: v$<< "dependency-groups" .dev .pypa_ver_spec_map(@) ."pre-commit" .pypa_ver_spec_min(@) >>
-minimum_pre_commit_version: 4.3.0
+minimum_pre_commit_version: 4.4.0
 repos:
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -45,7 +45,7 @@ repos:
           - pre-commit
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.34.1
+    rev: 0.35.0
     hooks:
       - id: check-github-actions
       - id: check-github-workflows
@@ -54,7 +54,7 @@ repos:
         files: \.schemas/.*\.(yaml|yml|json)$
 
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.37
+    rev: v1.37.1
     hooks:
       - id: yamllint
         args:
@@ -76,21 +76,17 @@ repos:
               octal-values:
                 forbid-implicit-octal: true
                 forbid-explicit-octal: true
-              truthy:
-                allowed-values:
-                  - true
-                  - false
 
   # UV lock and sync
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.9.5
+    rev: 0.9.11
     hooks:
       - id: uv-sync # first locks (without `--upgrade`)
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # ::tyranno:: rev: v$<< "dependency-groups" .dev .pypa_ver_spec_map(@) .ruff .pypa_ver_spec_max(@) >>
-    rev: v0.14.2
+    rev: v0.14.5
     hooks:
       - id: ruff-check
         args:
@@ -110,31 +106,15 @@ repos:
         stages:
           - pre-commit
 
-  # Format various formats with Prettier
-  # IMPORTANT:
-  # Prettier or an enabled plugin must recognize the extension of every received file.
-  # Keep `additional_dependencies`, `args`, and the `files` regex synced.
-  # List only types that are used or are likely to be used.
-  # See official and community plugins: https://prettier.io/docs/plugins
-  # Note that some of the listed community plugins are extremely buggy.
-  # In particular, I recommend against prettier-plugin-sh, which often introduces syntax errors.
-  # All plugins in https://github.com/un-ts/prettier, including for toml, are also problematic.
-  - repo: https://github.com/JoC0de/pre-commit-prettier
-    rev: v3.6.2
+  # Format and auto-fix various files with Biome.
+  # Note that Biome's support for Markdown is pending.
+  - repo: https://github.com/biomejs/pre-commit
+    rev: v2.3.6
     hooks:
-      - id: prettier
-        additional_dependencies:
-          # ::tyranno:: - prettier@$<<_ .up(@, 3) .rev .trim_left(@, 'v') >>
-          - prettier@3.6.2
-        args:
-          - --experimental-ternaries # will be the default soon
-          - --experimental-operator-position=start # might be made the default soon
-        # See: https://prettier.io/docs/en/plugins.html
-        files: >-
-          (?x) \. (md|mdx|json|graphql|yaml|yml|js|ts|jsx|html|less|css|toml) $
+      - id: biome-check
 
   - repo: https://github.com/tcort/markdown-link-check
-    rev: v3.14.1
+    rev: v3.14.2
     hooks:
       - id: markdown-link-check
         args:

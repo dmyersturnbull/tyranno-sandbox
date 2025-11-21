@@ -35,8 +35,8 @@ git_rev_date := `git --no-pager log -1 --format=%cd`
 ###################################################################################################
 
 # List available recipes.
-[group('help')]
 [default]
+[group('help')]
 list:
     @just --list --unsorted --list-prefix "  "
 
@@ -211,7 +211,7 @@ _format *args:
     -uv run pre-commit run fix-byte-order-marker {{ args }}
     -uv run pre-commit run trailing-whitespace {{ args }}
     -uv run pre-commit run ruff-format {{ args }}
-    -uv run pre-commit run prettier {{ args }}
+    -uv run pre-commit run biome-check {{ args }}
 
 ###################################################################################################
 
