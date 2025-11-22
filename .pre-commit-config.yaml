@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Check out https://pre-commit.com/ for documentation
-# ::tyranno:: rev: v$<< "dependency-groups" .dev .pypa_ver_spec_map(@) ."pre-commit" .pypa_ver_spec_min(@) >>
+# ::tyranno:: rev: v$<< $. 'dependency-groups' .dev .pypa_ver_spec_map(@) .'pre-commit' .pypa_ver_spec_min(@) >>
 minimum_pre_commit_version: 4.4.0
 repos:
   # Standard hooks
@@ -85,7 +85,7 @@ repos:
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    # ::tyranno:: rev: v$<< "dependency-groups" .dev .pypa_ver_spec_map(@) .ruff .pypa_ver_spec_max(@) >>
+    # ::tyranno:: rev: v$<< $ .'dependency-groups' .dev .pypa_ver_spec_map(@) .ruff .pypa_ver_spec_max(@) >>
     rev: v0.14.5
     hooks:
       - id: ruff-check

@@ -7,7 +7,7 @@
 # These must exist outside of any stage and be declared before the first FROM.
 ARG ALPINE_VERSION=""
 # ::tyranno:: ARG PYTHON_VERSION="$<<~."python-versions".default>>"
-ARG PYTHON_VERSION="3.13"
+ARG PYTHON_VERSION="3.14"
 
 #
 # -------------------------- Base image and uv --------------------------------------------------- #

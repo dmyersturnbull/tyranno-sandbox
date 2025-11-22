@@ -241,6 +241,7 @@ def new(
 def sync() -> None:
     """Syncs project metadata between configured files."""
     logger.info("Syncing metadata...")
+    logger.info("␣")
 
 
 if __name__ == "__main__":

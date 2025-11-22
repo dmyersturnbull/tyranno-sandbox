@@ -52,36 +52,34 @@ classifiers = [
 
 # -------------------------- dependencies -------------------------------------
 dependencies = [
-  "aiofiles>=25.1",
+  # "aiofiles>=25.1",
   "loguru>=0.7.2",
   "niquests>=3.15",
   "packaging>=25.0",
   "platformdirs>=4.5",
   "pathspec>=0.12",
-  "pathvalidate>=3.3",
   "python-jsonpath>=2.0",
   "semver>=3.0.4",
   # /usr/share/zoneinfo uses IANA zones; Windows does not
   # OR `"tzdata>=2025.2; platform_system == 'Windows'",`
   "tzdata>=2025.2",
-  "varname>=0.15",
 ]
 
 # -------------------------- optional dependencies ----------------------------
 [project.optional-dependencies]
 cli = [
-  "typer-slim>=0.19.2",
+  "typer-slim>=0.20",
 ]
-cli-full = [
-  "rich>=14.2",
-  "shellingham>=1.5.4",
-]
+#cli-full = [
+#  "rich>=14.2",
+#  "shellingham>=1.5.4",
+#]
 server = [
   "fastapi>=0.119",
   "fastapi-problem>=0.11.6",
-  "hypercorn[h3,uvloop]>=0.17",
+  "uvicorn>=0.38",
   "pydantic>=2.12",
-  "rfc9457>=0.3.5",
+  "rfc9457>=0.3.6",
 ]
 
 # -------------------------- scripts ------------------------------------------
@@ -117,46 +115,51 @@ Download = "https://pypi.org/project/tyranno-sandbox/"
 # uv includes the `dev` group by default (and with `--only-dev`), so include everything in that.
 # The other groups are solely intended for use in CI.
 dev = [
-  "uvicorn>=0.38",
-  "coverage[toml]>=7.11",
-  "hypothesis>=6.140",
+  "coverage[toml]>=7.12",
+  # "hypothesis>=6.140",
+  "markdown-callouts>=0.4",
   "mkdocs>=1.6",
   "mkdocs-material>=9.6.20",
   "mkdocs-minify-plugin>=0.8",
   "mkdocs-literate-nav>=0.6.2",
   "mkdocs-api-autonav>=0.4",
   "mkdocstrings[python]>=0.30",
-  "pre-commit>=4.2",
-  "pytest>=8.4.2",
+  "pathvalidate>=3.3",
+  "pre-commit>=4.4",
+  "pytest>=9.0",
   "pytest-cov>=7.0",
-  "pytest-datadir>=1.8",
-  "pytest-randomly>=4.0",
-  "pytest-xdist>=3.8",
-  "ruff>=0.14.1",
-  "ty>=0.0.1a23",
+  # "pytest-datadir>=1.8",
+  # "pytest-randomly>=4.0",
+  # "pytest-xdist>=3.8",
+  "ruff>=0.14.5",
+  "ty>=0.0.1a27",
 ]
 test = [
-  "coverage[toml]>=7.11", # Required for coverage.
-  "hypothesis>=6.140", # Property tests.
-  "pytest>=8.4.2", # Required.
+  "coverage[toml]>=7.12", # Required for coverage.
+  # "hypothesis>=6.140", # Required for property tests.
+  "pytest>=9.0", # Required.
   "pytest-cov>=7.0", # Required for coverage.
-  "pytest-datadir>=1.8", # Optional. To read test resources in the same dir.
-  "pytest-randomly>=4.0", # Optional. Sets and prints the seed, also randomizing test order.
-  "pytest-xdist>=3.8", # Optional. Used to distribute tests over multiple cores.
+  # "pytest-datadir>=1.8", # Optional. To read test resources in the same dir.
+  # "pytest-randomly>=4.0", # Optional. Sets and prints the seed, also randomizing test order.
+  # "pytest-xdist>=3.8", # Optional. Used to distribute tests over multiple cores.
 ]
 docs = [
+  "markdown-callouts>=0.4", # Optional. For better admonition syntax.
   "mkdocs>=1.6", # Required.
-  "mkdocs-material>=9.6.20", # Required.
+  "mkdocs-material>=9.6.20", # Optional but strongly recommended.
   "mkdocs-minify-plugin>=0.8", # Optional. Minifies CSS, etc., on build.
   "mkdocs-literate-nav>=0.6.2", # To list contents in `CONTENTS.md` rather than `mkdocs.yaml`.
   "mkdocs-api-autonav>=0.4", # Required for API docs. Extracts docs automatically.
   "mkdocstrings[python]>=0.30", # Required for API docs.
 ]
 lint = [
-  "ruff>=0.14.1",
-  "ty>=0.0.1a23", # Astral's fledgling type checker.
+  "ruff>=0.14.5",
+  "ty>=0.0.1a27", # Astral's fledgling type checker.
 ]
-precommit = ["pre-commit>=4.3"]
+precommit = [
+  "pathvalidate>=3.3", # Needed for local pre-commit hook.
+  "pre-commit>=4.4",
+]
 
 #
 ####################################################################################################
@@ -176,12 +179,13 @@ skip-magic-trailing-comma = true
 # -------------------------- [tool.ruff.lint] ---------------------------------
 [tool.ruff.lint]
 
+# It's simpler to select all rules and ignore the few we don't want.
 preview = true
 select = ["ALL"]
 
 #          >>>#<<< align to col 15 (max possible width)
 ignore = [
-  # Conflicts with the formatter:
+  # Rules that conflict with the formatter:
   # (See https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules)
   "W191",     # indented with tabs
   "D206",     # docstring indented with tabs
@@ -193,48 +197,50 @@ ignore = [
   "COM819",   # has trailing comma
   "D300",     # triple single quotes
   "ISC002",   # implicit string concatentation
-  "Q",        # quotes (formatter should cover completely)
   # ---
   # Other ignored rules:
-  "D1",       # Undocumented public __ (don't write useless comments)
-  "D401",     # Imperative mood
-  "D417",     # Undocumented param (again, don't write useless text)
-  "DOC201",   # Missing `Returns:`
-  "DOC402",   # Missing `Yields:`
-  "DOC501",   # Missing `Raises:` exception
-  "DOC502",   # `Raises` lists exeption not raised directly (often ok)
+  # Syntax of comments: <rule-description> '(' <reason-ignored> ')'
+  "D1",       # undocumented public __ (omit useless comments)
+  "D401",     # imperative mood (nitpicky rule)
+  "D417",     # undocumented param (mit useless comments)
+  "DOC201",   # missing `Returns:` (omit useless comments)
+  "DOC402",   # missing `Yields:` (omit useless comments)
+  "DOC501",   # missing `Raises:` exception (omit useless comments)
+  "DOC502",   # `Raises` lists exeption not raised directly (often helpful to list anyway)
   "E722",     # "bare-except" (use "blind-except" BLE001 instead)
-  "FIX002",   # T*O*D*O (consider these to be non-critical)
+  "FIX002",   # T*O*D*O (consider T*O*D*O non-crucial tasks, whereas F*I*X*M*E are crucial)
   "PLR2004",  # magic value (includes 2, 256, 404, etc.)
-  "PLR6301",  # 'self' not used (correct for overrides)
-  "RUF001",   # confusable characters (would ban en dash, etc.)
-  "RUF002",   # confusable characters
-  "RUF003",   # confusable characters
-  "RUF021",   # `or x and y` without parens (unnecessary)
-  "S403",     # import of pickle (S301 on pickle calls is sufficient)
-  "S404",     # import of subprocess (S602/S603 on subprocess calls is sufficient)
+  "PLR6301",  # 'self' not used (total non-issue and unavoidable when overriding)
+  "RUF001",   # confusable characters in strings (bans useful chars like en dashes)
+  "RUF002",   # confusable characters in docstrings (bans useful chars like en dashes)
+  "RUF003",   # confusable characters in comments (bans useful chars like en dashes)
+  "RUF021",   # `or x and y` without parentheses (unnecessary)
+  "S403",     # import of pickle (S301 on pickle calls is enough)
+  "S404",     # import of subprocess (S602/S603 on subprocess calls is enough)
   "TD",       # flake8-to*do (requires a specific format)
+  "Q",        # quotes (formatter should cover completely)
 ]
 
+# Syntax of comments: <rule-description> '(' <reason-for-change> ')'
 unfixable = [
-  "TC007",    # Quotes type alias definitions (move needed imports outside `TYPE_CHECKING` instead)
+  "TC007",    # quotes type alias definitions (move needed imports outside `TYPE_CHECKING` instead)
 ]
 extend-safe-fixes = [
-  "LOG004",   # Converts `.exception` to `.error` outside `except` blocks
+  "LOG004",   # converts `.exception()` to `.error()` outside `except` (only stops `NoneType: None`)
 ]
 extend-unsafe-fixes = [
-  "B905",     # Adds `strict=False` to `zip` (normally `strict=True` is wanted)
-  "PLW1510",  # Adds `check=False` to `subprocess.run` (normally `check=True` is wanted)
-  "RUF102",   # Removes invalid `noqa`
+  "PLW1510",  # adds `check=False` to `subprocess.run` (normally `check=True` is wanted)
+  "RUF102",   # removes invalid `noqa` (should review manually)
 ]
+
 
 # Delegated options
 flake8-bandit.check-typed-exception = true
 flake8-copyright.min-file-size = 2048
 flake8-copyright.notice-rgx = "(?m)^# SPDX-License-Identifier: "
 flake8-tidy-imports.ban-relative-imports = "all"
-isort.detect-same-package = false # Use `tool.ruff.src` instead.
-isort.split-on-trailing-comma = false # would conflict with formatter
+isort.detect-same-package = false # use `tool.ruff.src` instead
+isort.split-on-trailing-comma = false # conflicts with the formatter
 pycodestyle.max-doc-length = 100 # match tool.ruff.line-length
 pydocstyle.convention = "google"
 
@@ -248,17 +254,14 @@ max-nested-blocks = 4 # default is 5
 allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 
 [tool.ruff.lint.per-file-ignores]
-"**/__init__.py" = [
-  "F401",    # unused import
-]
 "tests/**/*" = [
   "D10",      # missing docstrings
-  "INP001",   # missing __init__
+  "INP001",   # missing` __init__.py`
   "PLC2701",  # import of private module
   "S101",     # assert
   "S105",     # possible password in string
-  "S106",     # ...in function arg
-  "S107",     # ...in function default
+  "S106",     # possible password in function arg
+  "S107",     # possible password in function default
   "S108",     # harcoded temp file
   "TID252",   # relative import
 ]
@@ -268,7 +271,7 @@ allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 #                                      [tool.pytest]
 ####################################################################################################
 
-[tool.pytest.ini_options] # pending `[tool.pytest]`
+[tool.pytest] # allowed as of PyTest 9!
 
 # ******************************* Notes for running tests ******************************************
 # CWD and editor support:
@@ -306,7 +309,7 @@ log_date_format = "%Y-%m-%d %H:%M:%S"
 # These are used when running `pytest --doctest-modules src/`.
 doctest_optionflags = [
   "DONT_ACCEPT_TRUE_FOR_1", # Makes doctest not consider 1 to equal True.
-  "NORMALIZE_WHITESPACE",   # Ignores newlines, so we can wrap expected output.
+  "NORMALIZE_WHITESPACE",   # Ignores newlines, so we can wrap the expected output.
 ]
 
 # -------------------------- Test markers -------------------------------------
@@ -323,14 +326,14 @@ markers = [
 
 # -------------------------- Pytest CLI args ----------------------------------
 # The `--cov-*` options are handled by pytest-cov.
-# `--quiet` just hides ouptut about 'rootdir', 'testpaths', etc.
-addopts = """
-  --import-mode=importlib \
-  --cov-report=term \
-  --strict-config \
-  --strict-markers \
-  --tb=short \
-"""
+addopts = [
+  "--import-mode=importlib", # recommended as of PyTest 8
+  "--cov-report=term",       # report what functions, etc., are covered
+  "--strict",                # fail if invalid markers, config options, etc. are passed
+  "--tb=short",              # prefer shorter tracebacks
+  "--quiet",                 # just hides ouptut about 'rootdir', 'testpaths', etc.
+]
+
 
 #
 ###################################################################################################
@@ -340,7 +343,7 @@ addopts = """
 [tool.coverage.run]
 data_file = ".coverage.json"
 branch = true # Quantify the % coverage of execution branches.
-relative_files = true # See https://coverage.readthedocs.io/en/7.6.12/config.html#run-relative-files
+relative_files = true # See https://coverage.readthedocs.io/en/7.12.0/config.html#run-relative-files
 omit = ["**/__main__.py"]
 concurrency = [] # Imortant!
 
@@ -390,18 +393,18 @@ targets = [
 # Keys only referenced in `::tyranno::` comments.
 [tool.tyranno.data]
 vendor = "dmyersturnbull"
-# ::tyranno:: namespace = "$<< project.name .replace(@, '_', '-') .lower(@) >>"
+# ::tyranno:: namespace = "$<< $ .project .name .replace(@, '_', '-') .lower(@) >>"
 namespace = "tyranno_sandbox"
-# ::tyranno:: frag = "$<<~.vendor>>/$<<project.name>>"
+# ::tyranno:: frag = "$<<.vendor>>/$<<project.name>>"
 frag = "dmyersturnbull/tyranno-sandbox"
 # ::tyranno:: copyright = "Copyright $<<now_utc().year>>, Contributors to $<<project.name>>"
 copyright = "Copyright 2025, Contributors to sandbox-tyranno"
-doi = "10.5281/zenodo.4485186" # <<<comment out for new
-# ::tyranno alias:: license-data = $<< project.license.text.spdx_license(@) >>
+doi = "10.5281/zenodo.4485186" # <<<comment out for new projects
+# ::tyranno alias:: license-data = $<< $.project.license.text.spdx_license(@) >>
 
 [tool.tyranno.data.python-versions]
 # List compatible Python versions; e.g. ["3.12.0", [...], "3.12.10", "3.13.0", "3.13.1", "3.13.2"]`.
 # Then choose a default (max), and versions to test (max per minor version).
-# ::tyranno alias:: valid = $<< project."requires-python".join('', ['python', @]).pep440_find(@) >>
-# ::tyranno alias:: default = $<< _.valid | pep440_max(@).minor_version >>
-# ::tyranno alias:: test = $<< _.valid | pep440_max_per(@, 'minor') >>
+# ::tyranno alias:: valid = $<< $ .project .'requires-python' .join('', ['python', @]) .pep440_find(@) >>
+# ::tyranno alias:: default = $<< ^@ .valid | pep440_max(@) .minor_version >>
+# ::tyranno alias:: test = $<< ^@ .valid | pep440_max_per(@, 'minor') >>

@@ -86,8 +86,9 @@ alias upgrade := update
 
 # Update the lock file and sync the venv.
 [group('project')]
-update-lock: sync
-    uv run pre-commit gc
+update-lock:
+    uv lock --upgrade
+    uv sync --all-extras --exact
 
 alias upgrade-lock := update-lock
 

@@ -84,6 +84,7 @@ class VersionParts(NamedTuple):
 
 
 class About(TypedDict):
+    # noinspection GrazieInspection
     """Metadata about this package.
 
     Attributes:
