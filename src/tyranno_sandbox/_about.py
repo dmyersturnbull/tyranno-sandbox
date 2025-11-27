@@ -120,9 +120,9 @@ class About(TypedDict):
 
 
 __about__: Final = About(
-    # ::tyranno:: name="$<<~.namespace>>",
+    # ::tyranno:: name="$<<.namespace>>",
     namespace="tyranno_sandbox",
-    # ::tyranno:: name="$<<~.vendor>>",
+    # ::tyranno:: name="$<<.vendor>>",
     vendor="dmyersturnbull",
     # ::tyranno:: name="$<<project.name>>",
     name="tyranno-sandbox",

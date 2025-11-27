@@ -23,7 +23,7 @@ node_modules/
 /CITATION.cff
 /compose.yaml
 /justfile
-/mkdocs.yaml
+/zensical.toml
 
 # Keep README.md (needed for build)
 !/README.md

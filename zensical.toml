@@ -1,0 +1,100 @@
+# Documentation config.
+# https://zensical.org/docs/setup/
+
+[project]
+
+# === Project information ===
+# ::tyranno:: site_name = "$<<project>>"
+site_name = "tyranno-sandbox"
+# ::tyranno:: LABEL site_url = "$<<project.urls.Documentation>>"
+site_url = "https://dmyersturnbull.github.com/tyranno-sandbox"
+# ::tyranno:: repo_url = "$<<project.urls.Homepage>>"
+repo_url = "https://github.com/dmyersturnbull/tyranno-sandbox"
+# ::tyranno:: copyright = "$<<.copyright>>"
+copyright = "Copyright 2025, Contributors to Tyrannosaurus"
+# ::tyranno:: site_description = "$<<project.description>>"
+site_description = "Sandbox for Tyrannosaurus"
+# ::tyranno:: site_author = "The $<<project.name>> team"
+site_author = "The Tyrannosaurus team"
+language = "en"
+
+# === Config ===
+site_dir = ".site"
+extra_javascript = [
+  "javascripts/mathjax.js",
+  "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js",
+  "javascripts/tablesort.js",
+  "https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js",
+]
+
+# Some Zensical features are pending, including API documentation:
+# https://zensical.org/about/roadmap/#api-documentation
+# Some of this config was ported from the preceeding `mkdocs.yaml`:
+# https://github.com/dmyersturnbull/tyranno-sandbox/blob/2fa3ff8296f3a9c194540e80438dcc79ab2fa5b7/mkdocs.yaml
+
+# **Most** of these built-in extensions are enabled by default:
+# https://zensical.org/docs/setup/extensions/
+# **Some** PyMdownX extensions are enabled by default:
+# https://zensical.org/docs/setup/extensions/python-markdown-extensions/
+
+# PyMdownX blocks extensions:
+# https://facelessuser.github.io/pymdown-extensions/extensions/blocks/
+[project.markdown_extensions.pymdownx.blocks.admonition]
+[project.markdown_extensions.pymdownx.blocks.caption]
+[project.markdown_extensions.pymdownx.blocks.details]
+[project.markdown_extensions.pymdownx.blocks.tabs]
+[project.markdown_extensions.pymdownx.blocks.html]
+
+# Other PyMdownX extensions:
+
+# https://facelessuser.github.io/pymdown-extensions/extensions/arithmatex/
+[project.markdown_extensions.pymdownx.arithmatex]
+inline_syntax = ["dollar"]
+block_syntax = ["dollar", "begin"]
+
+# https://facelessuser.github.io/pymdown-extensions/extensions/highlight/
+[project.markdown_extensions.pymdownx.highlight]
+anchor_linenums = true
+linenums_style = "pymdownx-inline"
+pygments_lang_class = true
+line_spans = "line"
+
+# https://facelessuser.github.io/pymdown-extensions/extensions/magiclink/
+[project.markdown_extensions.pymdownx.magiclink]
+repo_url_shortener = true
+repo_url_shorthand = true
+social_url_shorthand = true
+hide_protocol = true
+
+[project.theme]
+features = [
+  "navigation.instant",  # https://zensical.org/docs/setup/navigation/#instant-navigation
+  "navigation.tracking", # https://zensical.org/docs/setup/navigation/#anchor-tracking
+  "navigation.path",     # https://zensical.org/docs/setup/navigation/#navigation-path
+  "navigation.indexes",  # https://zensical.org/docs/setup/navigation/#section-index-pages
+  "toc.follow",          # https://zensical.org/docs/setup/navigation/#anchor-following
+  "search.highlight",    # https://zensical.org/docs/setup/search/#search-highlighting
+  "navigation.footer",
+]
+font.text = "Noto Sans"
+font.code = "Noto Sans Mono"
+
+# Palette toggle for automatic mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+toggle.icon = "lucide/sun-moon"
+toggle.name = "Switch to light mode"
+
+# Palette toggle for light mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+# Palette toggle for dark mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to system preference"

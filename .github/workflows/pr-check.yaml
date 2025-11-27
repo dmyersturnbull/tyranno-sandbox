@@ -49,4 +49,4 @@ jobs:
   check-docs:
     needs: filter
     if: ${{ needs.filter.outputs.src || needs.filter.outputs.docs }}
-    uses: ./.github/actions/check-mkdocs/action.yaml
+    uses: ./.github/actions/check-docs/action.yaml

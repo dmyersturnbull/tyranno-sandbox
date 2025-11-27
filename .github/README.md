@@ -7,7 +7,7 @@ There are
 under [`.github/actions/`](actions/).
 Additionally, some [workflows](workflows/) are prefixed with `_`.
 These are reusable workflows, which are only triggered via `workflow_call`.
-The reusable workflows need multiple jobs, or are simply to specialized to be actions.
+The reusable workflows need multiple jobs, or are simply too specialized to be actions.
 
 ## Notes
 

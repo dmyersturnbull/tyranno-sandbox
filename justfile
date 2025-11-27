@@ -372,15 +372,15 @@ test-with-pdb *args: (pytest "--pdb" args)
 
 ###################################################################################################
 
-# Build mkdocs docs from scratch, failing for warnings.
+# Build docs from scratch, failing for warnings.
 [group('docs')]
 [no-exit-message]
-build-docs *args: (run "mkdocs build --clean --strict" args)
+build-docs: (run "zensical build --clean")
 
-# Locally serve the mkdocs docs.
+# Locally serve the docs.
 [group('docs')]
 [no-exit-message]
-serve-docs *args: (run "mkdocs serve" args)
+serve-docs: (run "zensical serve -o")
 
 ###################################################################################################
 

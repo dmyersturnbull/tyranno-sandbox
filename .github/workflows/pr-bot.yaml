@@ -71,7 +71,7 @@ jobs:
   check-docs:
     if: ${{ contains(needs.cmd.outputs.nullary, 'check docs') }}
     needs: cmd
-    uses: ./.github/actions/check-mkdocs/action.yaml
+    uses: ./.github/actions/check-docs/action.yaml
 
   test:
     if: ${{ contains(needs.cmd.outputs.nullary, 'test') }}

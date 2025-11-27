@@ -2,8 +2,8 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-name: check-mkdocs
-description: Checks that 'mkdocs build' works.
+name: check-docs
+description: Checks that docs build.
 
 inputs:
   ref:
@@ -20,4 +20,4 @@ runs:
     - shell: bash
       run: |
         uv sync --locked --only-group docs
-        uv run --no-sync mkdocs build --strict
+        uv run --no-sync zensical build

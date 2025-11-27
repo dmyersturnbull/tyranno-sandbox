@@ -44,7 +44,7 @@ jobs:
     permissions:
       contents: write
       pages: write
-    uses: ./.github/actions/publish-mkdocs-to-pages/action.yaml
+    uses: ./.github/actions/publish-docs-to-pages/action.yaml
     secrets: inherit
 
   publish-github:

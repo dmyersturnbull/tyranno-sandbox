@@ -33,7 +33,7 @@ jobs:
         os:
           - ubuntu-latest
         python:
-          # ::tyranno start:: $<<~."python-versions".test|yaml(@)>>
+          # ::tyranno start:: $<<."python-versions".test|yaml(@)>>
           - "3.14"
           # ::tyranno end::
     env:

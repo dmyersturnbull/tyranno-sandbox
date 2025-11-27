@@ -1,7 +1,7 @@
 # This allows you to auto-assign reviewers for pull requests on matching code branches.
 # https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
 
-# ::tyranno:: /.github/ @$<<~.vendor>>
+# ::tyranno:: /.github/ @$<<.vendor>>
 /.github/ @dmyersturnbull
 
 # You can add lines here to auto-assign reviewers

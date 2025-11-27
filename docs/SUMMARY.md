@@ -1,3 +1,0 @@
-- [Home](index.md)
-- [Guide](guide.md)
-- [API docs](ref.md)

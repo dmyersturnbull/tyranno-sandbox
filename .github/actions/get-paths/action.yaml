@@ -24,7 +24,7 @@ outputs:
     value: ${{ steps.paths.outputs.tests == 'true' && 'true' || '' }}
   docs:
     description: >-
-      'true' if 'docs/', 'mkdocs.yaml', etc. was modified; otherwise ''
+      'true' if 'docs/', 'zensical.toml', etc. was modified; otherwise ''
     value: ${{ steps.paths.outputs.docs == 'true' && 'true' || '' }}
   docker:
     description: >-
@@ -50,7 +50,7 @@ runs:
             - tests/**
           docs:
             - docs/**
-            - mkdocs.yaml
+            - zensical.toml
           docker:
             - Dockerfile
             - .dockerignore

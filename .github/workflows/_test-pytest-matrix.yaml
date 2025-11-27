@@ -21,7 +21,7 @@ on:
         description: A JSON array of runner names.
       python-list:
         type: string
-        # ::tyranno:: default: '$<<~."python-versions".test|json(@)>>
+        # ::tyranno:: default: '$<<."python-versions".test|json(@)>>
         default: '["3.14"]'
         description: A JSON array of Python minor or patch versions (as strings).
       retention-days:

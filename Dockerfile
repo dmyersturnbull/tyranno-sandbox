@@ -6,7 +6,7 @@
 # Declare the core build args.
 # These must exist outside of any stage and be declared before the first FROM.
 ARG ALPINE_VERSION=""
-# ::tyranno:: ARG PYTHON_VERSION="$<<~."python-versions".default>>"
+# ::tyranno:: ARG PYTHON_VERSION="$<<."python-versions".default>>"
 ARG PYTHON_VERSION="3.14"
 
 #
@@ -38,7 +38,7 @@ ENV UV_COMPILE_BYTECODE=1
 # https://github.com/opencontainers/image-spec/blob/master/annotations.md
 # ::tyranno:: LABEL org.opencontainers.image.version="$<<project.version.pypa_ver(@).to_semver(@)>>"
 LABEL org.opencontainers.image.version="0.0.1-alpha.0"
-# ::tyranno:: LABEL org.opencontainers.image.vendor="$<<~.vendor>>"
+# ::tyranno:: LABEL org.opencontainers.image.vendor="$<<.vendor>>"
 LABEL org.opencontainers.image.vendor="dmyersturnbull"
 # ::tyranno:: LABEL org.opencontainers.image.title="$<<project.name>>"
 LABEL org.opencontainers.image.title="tyranno-sandbox"

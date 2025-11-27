@@ -2,9 +2,9 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-name: publish-mkdocs-to-pages
+name: publish-docs-to-pages
 description: >-
-  Builds mkdocs docs and publishes them to GitHub Pages.
+  Builds docs and publishes them to GitHub Pages.
   The GitHub context should be a tag but can be a branch.
   Needs permissions: 'contents: write', 'pages: write'.
 
@@ -16,7 +16,7 @@ runs:
     - shell: bash
       run: |
         uv sync --locked --only-group docs
-        uv run --no-sync mkdocs build --strict
+        uv run --no-sync zensical build
     # Don't update to v4 until this is fixed:
     # https://github.com/actions/upload-pages-artifact/pull/102
     # https://github.com/actions/upload-pages-artifact/issues/129

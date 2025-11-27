@@ -5,17 +5,17 @@ In GitHub-flavored Markdown, do this by ending the line with `\` .
 -->
 <!-- ::tyranno:: [![Version status](https://img.shields.io/pypi/status/$<<project.name>>?label=Status)](https://pypi.org/project/$<<project.name>>)-->
 <!-- ::tyranno:: [![Version on PyPi](https://badgen.net/pypi/v/$<<project.name>>?label=PyPi)-->
-<!-- ::tyranno:: [![Version on GitHub](https://badgen.net/github/release/$<<~.frag>>/stable?label=GitHub)]($<<~.frag>>/releases)-->
-<!-- ::tyranno:: [![Version on Docker Hub](https://img.shields.io/docker/v/$<<~.frag>>?color=green&label=Docker%20Hub)](https://hub.docker.com/repository/docker/$<<~.frag>>)\-->
-<!-- ::tyranno:: [![Build (Actions)](https://img.shields.io/github/workflow/status/$<<~.frag>>/test?label=Tests)]($<<~.frag>>/actions)-->
-<!-- ::tyranno:: [![Coverage (coveralls)](https://badgen.net/coveralls/c/github/$<<project.name>>/$<<project.name>>?label=Coveralls)](https://coveralls.io/github/$<<~.frag>>?branch=main)-->
-<!-- ::tyranno:: [![Coverage (codecov)](https://badgen.net/codecov/c/github/$<<~.frag>>?label=CodeCov)](https://codecov.io/gh/$<<~.frag>>)\-->
-<!-- ::tyranno:: [![Maintainability (Code Climate)](https://badgen.net/codeclimate/maintainability/$<<~.frag>>)](https://codeclimate.com/github/$<<~.frag>>/maintainability)-->
-<!-- ::tyranno:: [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/$<<~.frag>>/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/$<<~.frag>>/?branch=main)-->
-<!-- ::tyranno:: [![CodeFactor](https://www.codefactor.io/repository/github/$<<~.frag>>/badge)](https://www.codefactor.io/repository/github/$<<~.frag>>)\-->
+<!-- ::tyranno:: [![Version on GitHub](https://badgen.net/github/release/$<<.frag>>/stable?label=GitHub)]($<<.frag>>/releases)-->
+<!-- ::tyranno:: [![Version on Docker Hub](https://img.shields.io/docker/v/$<<.frag>>?color=green&label=Docker%20Hub)](https://hub.docker.com/repository/docker/$<<.frag>>)\-->
+<!-- ::tyranno:: [![Build (Actions)](https://img.shields.io/github/workflow/status/$<<.frag>>/test?label=Tests)]($<<.frag>>/actions)-->
+<!-- ::tyranno:: [![Coverage (coveralls)](https://badgen.net/coveralls/c/github/$<<project.name>>/$<<project.name>>?label=Coveralls)](https://coveralls.io/github/$<<.frag>>?branch=main)-->
+<!-- ::tyranno:: [![Coverage (codecov)](https://badgen.net/codecov/c/github/$<<.frag>>?label=CodeCov)](https://codecov.io/gh/$<<.frag>>)\-->
+<!-- ::tyranno:: [![Maintainability (Code Climate)](https://badgen.net/codeclimate/maintainability/$<<.frag>>)](https://codeclimate.com/github/$<<.frag>>/maintainability)-->
+<!-- ::tyranno:: [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/$<<.frag>>/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/$<<.frag>>/?branch=main)-->
+<!-- ::tyranno:: [![CodeFactor](https://www.codefactor.io/repository/github/$<<.frag>>/badge)](https://www.codefactor.io/repository/github/$<<.frag>>)\-->
 <!-- ::tyranno:: [![License](https://badgen.net/pypi/license/$<<project.name>>?label=License)]($<<project.license.url>>)-->
-<!-- ::tyranno:: [![DOI](https://zenodo.org/badge/DOI/$<<~.doi>>.svg)](https://doi.org/$<<~.doi>>)-->
-<!-- ::tyranno:: [![Created with Tyrannosaurus](https://img.shields.io/badge/Created_with-tyranno-sandbox-0000ff.svg)](https://github.com/$<<~.frag>>)-->
+<!-- ::tyranno:: [![DOI](https://zenodo.org/badge/DOI/$<<.doi>>.svg)](https://doi.org/$<<.doi>>)-->
+<!-- ::tyranno:: [![Created with Tyrannosaurus](https://img.shields.io/badge/Created_with-tyranno-sandbox-0000ff.svg)](https://github.com/$<<.frag>>)-->
 
 [![Version status](https://img.shields.io/pypi/status/tyranno-sandbox?label=Status)](https://pypi.org/project/tyranno-sandbox)
 [![Version on PyPi](https://badgen.net/pypi/v/tyranno-sandbox?label=PyPi)](https://pypi.org/project/tyranno-sandbox)
@@ -46,7 +46,7 @@ Tyranno is both:
    [Ruff](https://github.com/astral-sh/ruff),
    [Biome](https://biomejs.dev/),
    [GitHub actions](https://docs.github.com/en/actions), and
-   [mkdocs-material](https://squidfunk.github.io/mkdocs-material/).
+   [Zensical](https://zensical.org/).
 2. _As an installable tool:_
    A small but capable polyglot metaprogramming tool
    intended for keeping project metadata updated according to special comments.
@@ -145,11 +145,16 @@ Multiple lines can also be replaced; see below for details.
 Every JSONPath expression is assumed to already be inside `tool.tyranno.data`.
 That means that the first path element is significant:
 
-- `$<<.key>>` (or equivalently `$<<@.key>>`) gets `tool.tyranno.data.key`.
-- `$.key` accesses the `pyproject.toml` root, as in `$<<$.project.name>>`.
-- `^@.key` only works inside a YAML, TOML, or JSONC file.
+- `.key` (or equivalently `@.key`) gets `tool.tyranno.data.key`.
+  _E.g.: `$<<project.name>>`._
+- `$.key` accesses the `pyproject.toml` root.
+  _E.g.: `$<<$.project.name>>`._
+- `^@.key` only works inside a YAML, TOML, JSONC, XML, or HTML file.
   It gets `key` under the current key inside the file being processed.
+  For XML and HTML, attributes are ignored and cannot be accessed.
+  _E.g.: `$<<^@.versions>>`._
 - Similarly, `^$.key` gets `key` under the root of the file being processed.
+  _E.g. `$<<^.site_name>>` inside `zensical.toml`._
 
 ### A more complex example
 
@@ -203,7 +208,7 @@ public final String NOTICE = project.name
 
 ```java
 // ::tyranno start::
-// ::tyranno:: List<String> command = List.of($<<~.command|yaml_multiline(@, 4, true)>>);
+// ::tyranno:: List<String> command = List.of($<<.command|yaml_multiline(@, 4, true)>>);
 List<String> command = List.of(
     "#!/usr/bin/env bash",
     "printf 'Hello, world!\\n'",

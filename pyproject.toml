@@ -10,7 +10,7 @@
 [build-system]
 
 build-backend = "uv_build"
-requires = ["uv_build>=0.9.5"]
+requires = ["uv-build>=0.9.13"]
 
 #
 ####################################################################################################
@@ -52,7 +52,7 @@ classifiers = [
 
 # -------------------------- dependencies -------------------------------------
 dependencies = [
-  # "aiofiles>=25.1",
+  "aiofiles>=25.1",
   "loguru>=0.7.2",
   "niquests>=3.15",
   "packaging>=25.0",
@@ -84,24 +84,24 @@ server = [
 
 # -------------------------- scripts ------------------------------------------
 [project.scripts]
-# ::tyranno:: $<<project.name>> = "$<<~.namespace>>.__main__:cli"
+# ::tyranno:: $<<project.name>> = "$<<.namespace>>.__main__:cli"
 tyranno-sandbox = "tyranno_sandbox.__main__:cli"
 
 # -------------------------- project URIs -------------------------------------
 [project.urls]
-# ::tyranno:: "https://github.com/$<<~.frag>>"
+# ::tyranno:: "https://github.com/$<<.frag>>"
 Homepage = "https://github.com/dmyersturnbull/tyranno-sandbox"
-# ::tyranno:: "https://github.com/$<<~.frag>>"
+# ::tyranno:: "https://github.com/$<<.frag>>"
 Source = "https://github.com/dmyersturnbull/tyranno-sandbox"
-# ::tyranno:: Documentation = https://$<<~.vendor>>.github.io/$<<project.name>>
+# ::tyranno:: Documentation = https://$<<.vendor>>.github.io/$<<project.name>>
 Documentation = "https://dmyersturnbull.github.io/tyranno-sandbox"
-# ::tyranno:: "Issue Tracker" = $<<~.home>>/issues
+# ::tyranno:: "Issue Tracker" = $<<.home>>/issues
 Tracker = "https://github.com/dmyersturnbull/tyranno-sandbox/issues"
 # ::tyranno:: Download = "https://pypi.org/project/$<<project.name>>"
 Download = "https://pypi.org/project/tyranno-sandbox/"
-# ::tyranno:: "Release Notes" = "https://github.com/$<<~.frag>>/releases"
+# ::tyranno:: "Release Notes" = "https://github.com/$<<.frag>>/releases"
 "Release Notes" = "https://github.com/dmyersturnbull/tyranno-sandbox/releases"
-# ::tyranno:: # Sponsor = "https://$<<~.vendor>>.github.io/$<<project.name>>/placeholder#sponsor"
+# ::tyranno:: # Sponsor = "https://$<<.vendor>>.github.io/$<<project.name>>/placeholder#sponsor"
 # Sponsor = "https://dmyersturnbull.github.io/tyranno-sandbox/placeholder#sponsor"
 
 #
@@ -116,14 +116,8 @@ Download = "https://pypi.org/project/tyranno-sandbox/"
 # The other groups are solely intended for use in CI.
 dev = [
   "coverage[toml]>=7.12",
-  # "hypothesis>=6.140",
-  "markdown-callouts>=0.4",
-  "mkdocs>=1.6",
-  "mkdocs-material>=9.6.20",
-  "mkdocs-minify-plugin>=0.8",
-  "mkdocs-literate-nav>=0.6.2",
-  "mkdocs-api-autonav>=0.4",
-  "mkdocstrings[python]>=0.30",
+  "hypothesis>=6.140",
+  "zensical>=0.0.10",
   "pathvalidate>=3.3",
   "pre-commit>=4.4",
   "pytest>=9.0",
@@ -131,12 +125,12 @@ dev = [
   # "pytest-datadir>=1.8",
   # "pytest-randomly>=4.0",
   # "pytest-xdist>=3.8",
-  "ruff>=0.14.5",
-  "ty>=0.0.1a27",
+  "ruff>=0.14.6",
+  "ty>=0.0.1a28",
 ]
 test = [
   "coverage[toml]>=7.12", # Required for coverage.
-  # "hypothesis>=6.140", # Required for property tests.
+  "hypothesis>=6.140", # Required for property tests.
   "pytest>=9.0", # Required.
   "pytest-cov>=7.0", # Required for coverage.
   # "pytest-datadir>=1.8", # Optional. To read test resources in the same dir.
@@ -144,17 +138,11 @@ test = [
   # "pytest-xdist>=3.8", # Optional. Used to distribute tests over multiple cores.
 ]
 docs = [
-  "markdown-callouts>=0.4", # Optional. For better admonition syntax.
-  "mkdocs>=1.6", # Required.
-  "mkdocs-material>=9.6.20", # Optional but strongly recommended.
-  "mkdocs-minify-plugin>=0.8", # Optional. Minifies CSS, etc., on build.
-  "mkdocs-literate-nav>=0.6.2", # To list contents in `CONTENTS.md` rather than `mkdocs.yaml`.
-  "mkdocs-api-autonav>=0.4", # Required for API docs. Extracts docs automatically.
-  "mkdocstrings[python]>=0.30", # Required for API docs.
+  "zensical>=0.0.10", # https://zensical.org/
 ]
 lint = [
-  "ruff>=0.14.5",
-  "ty>=0.0.1a27", # Astral's fledgling type checker.
+  "ruff>=0.14.6",
+  "ty>=0.0.1a28", # Astral's fledgling type checker.
 ]
 precommit = [
   "pathvalidate>=3.3", # Needed for local pre-commit hook.
@@ -171,12 +159,12 @@ exclude = [] # Rely on https://docs.astral.sh/ruff/settings/#respect-gitignore
 src = ["src"] # Needed for import sorting
 line-length = 100 # Keep consistent with `.editorconfig`.
 
-# -------------------------- [tool.ruff.format] -------------------------------
+# -------------------------- Ruff formatter -----------------------------------
 [tool.ruff.format]
 docstring-code-format = true
 skip-magic-trailing-comma = true
 
-# -------------------------- [tool.ruff.lint] ---------------------------------
+# -------------------------- Ruff linter --------------------------------------
 [tool.ruff.lint]
 
 # It's simpler to select all rules and ignore the few we don't want.
@@ -334,12 +322,12 @@ addopts = [
   "--quiet",                 # just hides ouptut about 'rootdir', 'testpaths', etc.
 ]
 
-
 #
 ###################################################################################################
 #                                      [tool.coverage]
 ###################################################################################################
 
+# -------------------------- Coverage runs ------------------------------------
 [tool.coverage.run]
 data_file = ".coverage.json"
 branch = true # Quantify the % coverage of execution branches.
@@ -347,9 +335,11 @@ relative_files = true # See https://coverage.readthedocs.io/en/7.12.0/config.htm
 omit = ["**/__main__.py"]
 concurrency = [] # Imortant!
 
+# -------------------------- Default coverage paths ---------------------------
 [tool.coverage.paths]
 source = ["src/"]
 
+# -------------------------- Coverage reports ---------------------------------
 [tool.coverage.report]
 fail_under = 2 # Require % coverage to ensure config is correct
 format = "markdown"
@@ -389,7 +379,7 @@ targets = [
   "Dockerfile",
 ]
 
-# -------------------------- [tool.tyranno.data] ------------------------------
+# -------------------------- Tyranno data -------------------------------------
 # Keys only referenced in `::tyranno::` comments.
 [tool.tyranno.data]
 vendor = "dmyersturnbull"
@@ -402,9 +392,10 @@ copyright = "Copyright 2025, Contributors to sandbox-tyranno"
 doi = "10.5281/zenodo.4485186" # <<<comment out for new projects
 # ::tyranno alias:: license-data = $<< $.project.license.text.spdx_license(@) >>
 
+# -------------------------- Python version data ------------------------------
 [tool.tyranno.data.python-versions]
-# List compatible Python versions; e.g. ["3.12.0", [...], "3.12.10", "3.13.0", "3.13.1", "3.13.2"]`.
+# List compatible Python versions; e.g. ["3.13.0", [...], "3.13.9, "3.14.0"]`.
 # Then choose a default (max), and versions to test (max per minor version).
-# ::tyranno alias:: valid = $<< $ .project .'requires-python' .join('', ['python', @]) .pep440_find(@) >>
+# ::tyranno alias:: valid = $<< $ .project ."requires-python" .join("", ["python", @]) .pep440_find(@) >>
 # ::tyranno alias:: default = $<< ^@ .valid | pep440_max(@) .minor_version >>
-# ::tyranno alias:: test = $<< ^@ .valid | pep440_max_per(@, 'minor') >>
+# ::tyranno alias:: test = $<< ^@ .valid | pep440_max_per(@, "minor") >>
