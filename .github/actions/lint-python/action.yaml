@@ -31,7 +31,7 @@ runs:
     - name: Check Ruff rules
       env:
         FILES: ${{ inputs.glob || '.' }}
-        RULES: ${{ inputs.rules }}
+        RULES: ${{ inputs['ruff-rules'] }}
       shell: bash
       run: |
         if [[ -z "$RULES" ]]; then

@@ -43,7 +43,7 @@ jobs:
 
   check-images:
     needs: filter
-    if: ${{ needs.filter.paths.docker }}
+    if: ${{ needs.filter.outputs.docker }}
     uses: ./.github/workflows/_test-docker.yaml
 
   check-docs:

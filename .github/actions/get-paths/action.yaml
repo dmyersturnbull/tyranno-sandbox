@@ -42,7 +42,7 @@ runs:
       uses: dorny/paths-filter@v3
       with:
         ref: ${{ inputs.ref || github.head_ref || github.ref }}
-        base: ${{ inputs.ref || github.base_ref || '' }}
+        base: ${{ inputs.base || github.base_ref || '' }}
         filters: |
           src:
             - src/**

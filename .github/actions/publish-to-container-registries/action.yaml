@@ -6,7 +6,7 @@ name: publish-to-container-registries
 description: >-
   Builds a Docker image named '{owner}/{repo}' and publishes it to container registries.
   The GitHub context should be a tag but can be a branch.
-  Needs permissions: 'contents: read', 'packages: write', 'id-tokens: write'.
+  Needs permissions: 'contents: read', 'packages: write', 'id-token: write'.
   Needs variables: 'DOCKERHUB_USERNAME', 'GHCR_USERNAME' (skips when omitted).
   Needs secrets: 'DOCKERHUB_TOKEN', 'GHCR_TOKEN'.
 
@@ -23,7 +23,7 @@ runs:
     - name: Validate inputs
       shell: bash
       run: |
-        if [[ ! '${{ inputs.push }}' ^(true|false)$ ]]; then
+        if [[ ! '${{ inputs.push }}' =~ ^(true|false)$ ]]; then
           printf >&2 "'push' must be 'true' or 'false', not '%s'.\n" '${{ inputs.push }}'
           exit 2
         fi
@@ -61,4 +61,4 @@ runs:
         cache-from: type=gha
         # type=gha,mode=max is meant to maximize cache hits.
         cache-to: type=gha,mode=max
-        push: ${{ inputs.push == 'push' }}
+        push: ${{ inputs.push == 'true' }}

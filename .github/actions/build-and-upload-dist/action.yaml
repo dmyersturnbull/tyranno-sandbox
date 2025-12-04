@@ -20,19 +20,19 @@ inputs:
 outputs:
   ref-name:
     description: The ref name (provided for convenience).
-    value: ${{steps.define.ref_name }}
+    value: ${{ steps.define.outputs.ref-name }}
   artifact-name:
     description: The artifact name.
-    value: ${{steps.define.artifact-name }}
+    value: ${{ steps.define.outputs.artifact-name }}
   artifact-id:
     description: The artifact id.
-    value: ${{steps.upload.artifact-id }}
+    value: ${{ steps.upload.outputs.artifact-id }}
   artifact-url:
     description: The artifact URL.
-    value: ${{steps.upload.artifact-url }}
+    value: ${{ steps.upload.outputs.artifact-url }}
   artifact-digest:
     description: The artifact digest.
-    value: ${{steps.upload.artifact-digest }}
+    value: ${{ steps.upload.outputs.artifact-digest }}
 
 runs:
   using: composite
@@ -52,8 +52,8 @@ runs:
         ref_name="${ref_name#refs/heads/}"
         ref_name="${ref_name#refs/tags/}"
         echo "ref=$ref" >> "$GITHUB_OUTPUT"
-        echo "ref_name=$ref_name" >> "$GITHUB_OUTPUT"
-        echo "artifact_name=dist-$ref_name" >> "$GITHUB_OUTPUT"
+        echo "ref-name=$ref_name" >> "$GITHUB_OUTPUT"
+        echo "artifact-name=dist-$ref_name" >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v6
       with:
         ref: ${{ steps.define.outputs.ref }}

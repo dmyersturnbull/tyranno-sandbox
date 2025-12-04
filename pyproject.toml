@@ -117,7 +117,7 @@ Download = "https://pypi.org/project/tyranno-sandbox/"
 dev = [
   "coverage[toml]>=7.12",
   "hypothesis>=6.140",
-  "zensical>=0.0.10",
+  "zensical>=0.0.11",
   "pathvalidate>=3.3",
   "pre-commit>=4.4",
   "pytest>=9.0",
@@ -125,8 +125,8 @@ dev = [
   # "pytest-datadir>=1.8",
   # "pytest-randomly>=4.0",
   # "pytest-xdist>=3.8",
-  "ruff>=0.14.6",
-  "ty>=0.0.1a28",
+  "ruff>=0.14.7",
+  "ty>=0.0.1a30",
 ]
 test = [
   "coverage[toml]>=7.12", # Required for coverage.
@@ -141,8 +141,8 @@ docs = [
   "zensical>=0.0.10", # https://zensical.org/
 ]
 lint = [
-  "ruff>=0.14.6",
-  "ty>=0.0.1a28", # Astral's fledgling type checker.
+  "ruff>=0.14.7",
+  "ty>=0.0.1a30", # Astral's fledgling type checker.
 ]
 precommit = [
   "pathvalidate>=3.3", # Needed for local pre-commit hook.

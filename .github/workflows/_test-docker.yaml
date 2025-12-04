@@ -14,7 +14,7 @@ on:
         description: A branch or tag ref; defaults to github.head_ref then to github.ref.
       os-list:
         type: string
-        default: '["ubuntu-latest", "windows-latest]"'
+        default: '["ubuntu-latest", "windows-latest"]'
         description: >-
           A JSON array of runner names.
           Note that macOS is excluded from the default.
@@ -25,14 +25,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
+        os: ${{ fromJSON(inputs.os-list) }}
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref || github.head_ref || github.ref }}
       - uses: astral-sh/setup-uv@v7
-      - run: |
-          shell: bash
+      - shell: bash
+        run: |
           docker build .

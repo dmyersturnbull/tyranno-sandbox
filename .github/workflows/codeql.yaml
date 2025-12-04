@@ -41,6 +41,7 @@ jobs:
     # See https://gh.io/recommended-hardware-resources-for-running-codeql
     timeout-minutes: 30
     steps:
+      - uses: actions/checkout@v6
       - uses: github/codeql-action/init@v3
       - uses: github/codeql-action/autobuild@v3
       - uses: github/codeql-action/analyze@v3
