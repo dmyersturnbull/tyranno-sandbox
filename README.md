@@ -160,7 +160,7 @@ That means that the first path element is significant:
 
 Maybe you want your GitHub workflows to use your `pyproject.toml` Python version.
 Define `default-python` in `[tool.tyranno.data]`
-and reference it in a JMESPath expression using a tyranno-defined `pep440_` function.
+and reference it in a JSONPath expression using a tyranno-defined `pep440_` function.
 
 ```yaml
 - uses: astral-sh/setup-uv@v7

@@ -45,7 +45,7 @@ repos:
           - pre-commit
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.35.0
+    rev: 0.36.0
     hooks:
       - id: check-github-actions
       - id: check-github-workflows
@@ -79,14 +79,14 @@ repos:
 
   # UV lock and sync
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.9.11
+    rev: 0.9.21
     hooks:
       - id: uv-sync # first locks (without `--upgrade`)
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # ::tyranno:: rev: v$<< $ .'dependency-groups' .dev .pypa_ver_spec_map(@) .ruff .pypa_ver_spec_max(@) >>
-    rev: v0.14.5
+    rev: v0.14.10
     hooks:
       - id: ruff-check
         args:

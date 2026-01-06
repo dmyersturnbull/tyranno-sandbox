@@ -29,14 +29,15 @@ You must list either the files and specific changes or the exact commands.
   - Use PEP 695-style generic syntax (e.g. `class MyClass[T]`).
   - Use `pathlib` instead of `os.path`.
   - Use f-strings instead of `str.format`.
-- Use type annotations for everything except `self` and `cls`.
-  Use `| None` for nullable types and e.g. `int | str` for union types.
+  - Use `|` to join types (e.g. `str | None`).
+- Use type annotations everywhere except `self` and `cls`.
 - Where possible, use `@dataclass(frozen=True, slots=True)` or an equivalent.
-- A class should normally either hold data or do something, not both.
+- A class should either hold data or do something, not both.
 - A function or method should do only one thing.
-- Prefer a Scala-esque functional programming / object-oriented style.
-  Write immutable classes, and chain or compose methods to transform data.
-- Use proper inversion of control.
+- Prefer a Scala-inspired blend of functional and object-oriented programming.
+  - Write immutable classes.
+  - Chain or compose methods to transform data.
+- Apply inversion of control.
 - Let exceptions bubble up or catch and re-raise.
   Don't arbitrarily wrap code in `try` blocks.
 - Omit obvious docstrings and comments.

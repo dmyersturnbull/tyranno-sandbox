@@ -58,28 +58,29 @@ dependencies = [
   "packaging>=25.0",
   "platformdirs>=4.5",
   "pathspec>=0.12",
-  "python-jsonpath>=2.0",
+  "jsonpath-ng>=1.7",
   "semver>=3.0.4",
   # /usr/share/zoneinfo uses IANA zones; Windows does not
   # OR `"tzdata>=2025.2; platform_system == 'Windows'",`
-  "tzdata>=2025.2",
+  "tzdata>=2025.3",
 ]
 
 # -------------------------- optional dependencies ----------------------------
 [project.optional-dependencies]
 cli = [
-  "typer-slim>=0.20",
+  "typer-slim>=0.21",
 ]
 #cli-full = [
 #  "rich>=14.2",
 #  "shellingham>=1.5.4",
 #]
 server = [
-  "fastapi>=0.119",
+  "fastapi>=0.128",
   "fastapi-problem>=0.11.6",
-  "uvicorn>=0.38",
+  "Hypercorn[h3]>=0.18",
   "pydantic>=2.12",
   "rfc9457>=0.3.6",
+  "starlette-compress>=1.6",
 ]
 
 # -------------------------- scripts ------------------------------------------
@@ -125,8 +126,8 @@ dev = [
   # "pytest-datadir>=1.8",
   # "pytest-randomly>=4.0",
   # "pytest-xdist>=3.8",
-  "ruff>=0.14.7",
-  "ty>=0.0.1a30",
+  "ruff>=0.14.10",
+  "ty>=0.0.9",
 ]
 test = [
   "coverage[toml]>=7.12", # Required for coverage.
@@ -138,11 +139,11 @@ test = [
   # "pytest-xdist>=3.8", # Optional. Used to distribute tests over multiple cores.
 ]
 docs = [
-  "zensical>=0.0.10", # https://zensical.org/
+  "zensical>=0.0.15", # https://zensical.org/
 ]
 lint = [
-  "ruff>=0.14.7",
-  "ty>=0.0.1a30", # Astral's fledgling type checker.
+  "ruff>=0.14.10",
+  "ty>=0.0.9", # Astral's fledgling type checker.
 ]
 precommit = [
   "pathvalidate>=3.3", # Needed for local pre-commit hook.
@@ -220,7 +221,6 @@ extend-unsafe-fixes = [
   "PLW1510",  # adds `check=False` to `subprocess.run` (normally `check=True` is wanted)
   "RUF102",   # removes invalid `noqa` (should review manually)
 ]
-
 
 # Delegated options
 flake8-bandit.check-typed-exception = true
