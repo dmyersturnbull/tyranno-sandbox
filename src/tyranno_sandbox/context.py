@@ -7,15 +7,13 @@
 import re
 import tomllib
 from dataclasses import dataclass
-from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Final
+from typing import TYPE_CHECKING, Final
 
-import jmespath
+import jsonpath
 from pathspec import GitIgnoreSpec
 
 from tyranno_sandbox.dot_tree import DotTree, Toml
-from tyranno_sandbox.james import TyrannoJmesFunctions
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -33,11 +31,6 @@ class Data:
     """A data source for `::tyranno::` comments."""
 
     tree: DotTree
-    tyranno_functions: ClassVar[TyrannoJmesFunctions] = TyrannoJmesFunctions()
-
-    @cached_property
-    def _jmespath_options(self) -> jmespath.Options:
-        return jmespath.Options(custom_functions=self.tyranno_functions)
 
     def get(self, key: str) -> Toml | None:
         return self.tree.get(key)
@@ -59,7 +52,8 @@ class Data:
             expression = in_key + expression
         if SIMPLE_KEY_REGEX.fullmatch(expression):
             return self.tree.access(expression)
-        return jmespath.compile(expression).search(self.tree, self._jmespath_options)
+        # TODO
+        return jsonpath.compile(expression).search(self.tree, self._jsonpath_options)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

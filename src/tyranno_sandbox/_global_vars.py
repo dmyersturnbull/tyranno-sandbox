@@ -46,9 +46,6 @@ class Startup:
         return time.monotonic() - self.monotonic
 
 
-STARTUP: Final = Startup.now()
-
-
 @dataclass(frozen=True, slots=True, kw_only=True)
 class GlobalVars:
     """Collection of config values from environment variables and/or the platform."""
@@ -108,13 +105,8 @@ class XdgHelper[**P]:
         }
 
 
-OUT_IS_TTY: Final = sys.stdout.isatty()
-ERR_IS_TTY: Final = sys.stdout.isatty()
-GlobalVarsFactory = Callable[[], GlobalVars]
-
-
 @dataclass(frozen=True, slots=True, kw_only=True)
-class EnvGlobalVarsFactory(GlobalVarsFactory):
+class EnvGlobalVarsFactory(Callable[[], GlobalVars]):
     """Factory that reads from environment variables and platform config."""
 
     env: Mapping[str, str | None]
@@ -134,7 +126,7 @@ class EnvGlobalVarsFactory(GlobalVarsFactory):
 
     def _use_color(self) -> bool:
         # See https://force-color.org/) and https://no-color.org/
-        return self._flag("FORCE_COLOR", self._flag("NO_COLOR", OUT_IS_TTY))
+        return self._flag("FORCE_COLOR", self._flag("NO_COLOR", sys.stdout.isatty()))
 
     def _str(self, var: str, default: str) -> str:
         return self.env.get(var, default)
@@ -159,3 +151,6 @@ class EnvGlobalVarsFactory(GlobalVarsFactory):
                 raise GlobalConfigError("$" + var, value, "is not a relative path")
             return path
         return default
+
+
+STARTUP: Final = Startup.now()

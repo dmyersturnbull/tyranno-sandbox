@@ -6,33 +6,29 @@
 
 import asyncio
 import secrets
-from collections.abc import ItemsView
 from dataclasses import dataclass, field
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Response, status
 from loguru import logger
 from starlette.middleware.errors import ServerErrorMiddleware
 from starlette.middleware.exceptions import ExceptionMiddleware
+from starlette_compress import CompressMiddleware
 
 from tyranno_sandbox.api._meta import META
 
-try:
-    from starlette_compress import CompressMiddleware
-except ImportError:
-    logger.warning("starlette_compress is not available")
-    CompressMiddleware = None
+if TYPE_CHECKING:
+    from collections.abc import ItemsView
 
 api = FastAPI(**META)
 api.add_middleware(ServerErrorMiddleware)
 api.add_middleware(ExceptionMiddleware)
-if CompressMiddleware:
-    api.add_middleware(CompressMiddleware)
+api.add_middleware(CompressMiddleware)
 
 
 @dataclass(frozen=True, slots=True)
 class Job:
-    """Identifier + canonical URI for a queued job (used as response model)."""
+    """Identifier + canonical URI for a queued job (used as a response model)."""
 
     id: str
     uri: str
@@ -94,7 +90,7 @@ async def create_task(message: str, background: BackgroundTasks, response: Respo
         raise HTTPException(status_code=400, detail="Message payload cannot be empty.")
     job = Job.new(endpoint_name="get_task")
     background.add_task(manager.put, job.id, message)
-    # Expose canonical URL in Location header (clients then do GET /tasks/{id}).
+    # Expose canonical URL in a `Location` header (clients then do GET /tasks/{id}).
     response.headers["Location"] = job.uri
     return job
 
@@ -121,13 +117,3 @@ async def get_task(job_id: str) -> str | None:
 @api.get("/tasks", summary="List all finished jobs.")
 async def list_finished_tasks() -> dict[str, str]:
     return dict(manager.all_done())
-
-
-# --------------------------------------------------------------------------- #
-#  DEV ENTRY-POINT  (uvicorn main:api --reload)
-# --------------------------------------------------------------------------- #
-
-if __name__ == "__main__":  # pragma: no cover
-    import uvicorn
-
-    uvicorn.run("main:api", reload=True)
