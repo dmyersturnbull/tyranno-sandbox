@@ -163,7 +163,7 @@ override.tf.json
 !/.gitmodules
 
 # Template files
-/.env.template
+!/.env.template
 
 # `.ignore` files (e.g. `.dockerignore`, `.npmignore`)
 !/.*ignore
