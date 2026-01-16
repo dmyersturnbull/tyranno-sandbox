@@ -3,7 +3,6 @@
 
 [project]
 
-# === Project information ===
 # ::tyranno:: site_name = "$<<project>>"
 site_name = "tyranno-sandbox"
 # ::tyranno:: LABEL site_url = "$<<project.urls.Documentation>>"
@@ -11,15 +10,17 @@ site_url = "https://dmyersturnbull.github.com/tyranno-sandbox"
 # ::tyranno:: repo_url = "$<<project.urls.Homepage>>"
 repo_url = "https://github.com/dmyersturnbull/tyranno-sandbox"
 # ::tyranno:: copyright = "$<<.copyright>>"
-copyright = "Copyright 2025, Contributors to Tyrannosaurus"
+copyright = "Copyright 2020–2026, Contributors to Tyrannosaurus"
 # ::tyranno:: site_description = "$<<project.description>>"
 site_description = "Sandbox for Tyrannosaurus"
 # ::tyranno:: site_author = "The $<<project.name>> team"
 site_author = "The Tyrannosaurus team"
 language = "en"
 
-# === Config ===
-site_dir = ".site"
+# Navigation
+# https://zensical.org/docs/setup/navigation/#navigation-sections
+
+# Keep the default `site_dir` of `site/`.
 extra_javascript = [
   "javascripts/mathjax.js",
   "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js",
@@ -42,8 +43,8 @@ extra_javascript = [
 [project.markdown_extensions.pymdownx.blocks.admonition]
 [project.markdown_extensions.pymdownx.blocks.caption]
 [project.markdown_extensions.pymdownx.blocks.details]
-[project.markdown_extensions.pymdownx.blocks.tabs]
 [project.markdown_extensions.pymdownx.blocks.html]
+[project.markdown_extensions.pymdownx.blocks.tab]
 
 # Other PyMdownX extensions:
 
@@ -63,21 +64,20 @@ line_spans = "line"
 [project.markdown_extensions.pymdownx.magiclink]
 repo_url_shortener = true
 repo_url_shorthand = true
-social_url_shorthand = true
-hide_protocol = true
 
 [project.theme]
 features = [
-  "navigation.instant",  # https://zensical.org/docs/setup/navigation/#instant-navigation
-  "navigation.tracking", # https://zensical.org/docs/setup/navigation/#anchor-tracking
-  "navigation.path",     # https://zensical.org/docs/setup/navigation/#navigation-path
-  "navigation.indexes",  # https://zensical.org/docs/setup/navigation/#section-index-pages
-  "toc.follow",          # https://zensical.org/docs/setup/navigation/#anchor-following
-  "search.highlight",    # https://zensical.org/docs/setup/search/#search-highlighting
-  "navigation.footer",
+  "navigation.expand",            # https://zensical.org/docs/setup/navigation/#navigation-expansion
+  "navigation.footer",            # https://zensical.org/docs/setup/footer/#navigation
+  "navigation.indexes",           # https://zensical.org/docs/setup/navigation/#section-index-pages
+  "navigation.instant",           # https://zensical.org/docs/setup/navigation/#instant-navigation
+  "navigation.instant.progress",  # https://zensical.org/docs/setup/navigation/#progress-indicator
+  "navigation.path",              # https://zensical.org/docs/setup/navigation/#navigation-path
+  "navigation.sections",          # https://zensical.org/docs/setup/navigation/#navigation-sections_1
+  "navigation.tracking",          # https://zensical.org/docs/setup/navigation/#anchor-tracking
+  "search.highlight",             # https://zensical.org/docs/setup/search/#search-highlighting
+  "toc.follow",                   # https://zensical.org/docs/setup/navigation/#anchor-following
 ]
-font.text = "Noto Sans"
-font.code = "Noto Sans Mono"
 
 # Palette toggle for automatic mode
 [[project.theme.palette]]

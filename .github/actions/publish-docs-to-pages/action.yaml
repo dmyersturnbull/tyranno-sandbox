@@ -17,10 +17,10 @@ runs:
       run: |
         uv sync --locked --only-group docs
         uv run --no-sync zensical build
-    # Don't update to v4 until this is fixed:
-    # https://github.com/actions/upload-pages-artifact/pull/102
+    # Note that in v4, dot files are excluded, with no way to override.
+    # This is apparently by design.
     # https://github.com/actions/upload-pages-artifact/issues/129
-    - uses: actions/upload-pages-artifact@v3
+    - uses: actions/upload-pages-artifact@v4
       with:
-        path: .site
+        path: site
     - uses: actions/deploy-pages@v4

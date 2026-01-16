@@ -132,7 +132,7 @@ clean-git:
 [group('project')]
 delete-temp:
     # Generated docs:
-    -rm -f -r .site/
+    -rm -f -r site/
     # Python temp files:
     -rm -f -r .ruff_cache/
     -rm -f -r .hypothesis/
