@@ -54,7 +54,7 @@ repos:
         files: \.schemas/.*\.(yaml|yml|json)$
 
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.37.1
+    rev: v1.38.0
     hooks:
       - id: yamllint
         args:
@@ -79,14 +79,14 @@ repos:
 
   # UV lock and sync
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.9.21
+    rev: 0.9.26
     hooks:
       - id: uv-sync # first locks (without `--upgrade`)
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # ::tyranno:: rev: v$<< $ .'dependency-groups' .dev .pypa_ver_spec_map(@) .ruff .pypa_ver_spec_max(@) >>
-    rev: v0.14.10
+    rev: v0.14.13
     hooks:
       - id: ruff-check
         args:
@@ -109,7 +109,7 @@ repos:
   # Format and auto-fix various files with Biome.
   # Note that Biome's support for Markdown is pending.
   - repo: https://github.com/biomejs/pre-commit
-    rev: v2.3.6
+    rev: v2.3.11 # Note: biomejs/pre-commit only uses tags, not releases.
     hooks:
       - id: biome-check
 

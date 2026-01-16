@@ -10,7 +10,7 @@
 [build-system]
 
 build-backend = "uv_build"
-requires = ["uv-build>=0.9.13"]
+requires = ["uv-build>=0.9.20"]
 
 #
 ####################################################################################################
@@ -126,8 +126,9 @@ dev = [
   # "pytest-datadir>=1.8",
   # "pytest-randomly>=4.0",
   # "pytest-xdist>=3.8",
-  "ruff>=0.14.10",
-  "ty>=0.0.9",
+  "ruff>=0.14.13",
+  "ty>=0.0.12",
+  "zensical>=0.0.16",
 ]
 test = [
   "coverage[toml]>=7.12", # Required for coverage.
@@ -139,11 +140,11 @@ test = [
   # "pytest-xdist>=3.8", # Optional. Used to distribute tests over multiple cores.
 ]
 docs = [
-  "zensical>=0.0.15", # https://zensical.org/
+  "zensical>=0.0.16", # https://zensical.org/
 ]
 lint = [
-  "ruff>=0.14.10",
-  "ty>=0.0.9", # Astral's fledgling type checker.
+  "ruff>=0.14.13",
+  "ty>=0.0.12", # Astral's fledgling type checker.
 ]
 precommit = [
   "pathvalidate>=3.3", # Needed for local pre-commit hook.
