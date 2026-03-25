@@ -158,8 +158,10 @@ delete-temp:
     -rm -f **/.DS_Store
     -rm -f **/.localized
     -rm -f **/Thumbs.db
+    # Paths from other tools:
+    -rm -f -r .cache/
 
-# Run 'git remote prune --all' and 'git maintenance run gc'. ❗
+# Run 'git remote prune --all' and 'git maintenance run gc'. ⚠️
 [group('project')]
 prune-git:
     # Needed on macOS.
@@ -350,27 +352,27 @@ alias doctest := test-doctest
 [no-exit-message]
 test-with-cov *args: (pytest "-m 'not ux' --cov" args)
 
-# Run PyTest tests, highlighting test durations. ☆
+# Run PyTest tests, highlighting test durations.
 [group('test')]
 [no-exit-message]
 test-durations *args: (pytest "--durations=0 --durations-min=0" args)
 
-# Run tests marked hypothesis with explain phase enabled. ☆
+# Run tests marked hypothesis with explain phase enabled.
 [group('test')]
 [no-exit-message]
 test-hypothesis *args: (pytest "-m hypothesis --hypothesis-explain" args)
 
-# Run PyTest tests stepwise, starting at last failure. ☆
+# Run PyTest tests stepwise, starting at last failure.
 [group('test')]
 [no-exit-message]
 test-stepwise *args: (pytest "--stepwise" args)
 
-# Run PyTest tests, showing minimal output. ☆
+# Run PyTest tests, showing minimal output.
 [group('test')]
 [no-exit-message]
 test-quietly *args: (pytest "--capture=no --tb=line --quiet" args)
 
-# Run PyTest tests, showing tracebacks, locals, and INFO. ☆
+# Run PyTest tests, showing tracebacks, locals, and INFO.
 [group('test')]
 [no-exit-message]
 test-loudly *args: (pytest "--showlocals --full-trace --log-level=INFO --verbose" args)
