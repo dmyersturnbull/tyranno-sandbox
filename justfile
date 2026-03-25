@@ -165,7 +165,7 @@ prune-git:
     # Needed on macOS.
     @-chflags -R nouchg .git/*
     # Prune tracked refs first because it's a foreground task.
-    git remote prune --all
+    git remote prune origin
     # Uses 'gc.pruneExpire'.
     git maintenance run --task gc
 
