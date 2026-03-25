@@ -2,10 +2,9 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-name: build-and-upload-dist
+name: generate-sbom
 description: >-
-  Builds wheels and sdists, uploading them in a zip file
-  as GitHub workflow artifact 'dist-{ref-name}', where 'ref-name' is taken from input 'ref'.
+  Writes a SBOM and list of licenses.
 
 inputs:
   ref:
@@ -40,9 +39,9 @@ runs:
     - name: Validate inputs
       shell: bash
       run: |
-        if [[ ! '${{ inputs.retention-days }}' =~ ^(?:0|[1-9][0-9]*)$ ]]; then
+        if [[ ! '${{ inputs.retention-days }}' =~ ^[1-9][0-9]*$ ]]; then
           printf >&2 \
-            "ERROR: retention-days is not a nonnegative int: '%s'.\n" \
+            "retention-days is not a positive int: '%s'.\n" \
             '${{ inputs.retention-days }}'
           exit 2
         fi
@@ -61,19 +60,23 @@ runs:
       with:
         ref: ${{ steps.define.outputs.ref }}
     - uses: astral-sh/setup-uv@v7
-    - name: Build sources and wheels
+    - name: Run pip-licenses
       shell: bash
       run: |
-        uv build
-    - if: ${{ inputs.retention-days }}
-      name: Upload artifact '${{ steps.define.outputs.artifact_name }}'
+        uv tool install pip-licenses
+        uv sync --no-dev --all-extras
+        pip-licenses \
+          --python .venv/Scripts/python \
+          --format json \
+          --output-file licenses.json
+    - name: Upload artifact '${{ steps.define.outputs.artifact_name }}'
       id: upload
       uses: actions/upload-artifact@v6
       with:
         name: ${{ steps.define.outputs.artifact_name }}
-        path: dist/
+        path: licenses.json
         if-no-files-found: error
-        compression-level: 0 # they're already gzip-compressed
+        overwrite: true
         retention-days: ${{ inputs.retention-days }}
     - name: Print artifact info
       shell: bash

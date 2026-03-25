@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2026, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -43,11 +43,12 @@
 # Temp and misc. unwanted files
 *[.~]bak
 *[.~]out
-*[.~]swp
+*[.~]sw[opn]
 *[.~]temp
 *[.~]tmp
 *.log
 *.pid
+*.pid.lock
 Thumbs.db
 
 ### Large binary files ###
@@ -139,6 +140,7 @@ _deps
 # JavaScript and TypeScript
 node_modules/
 tsconfig.tsbuildinfo
+__snapshots__/
 
 # Julia
 *.jl.*.cov

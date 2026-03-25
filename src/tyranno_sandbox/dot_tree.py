@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2026, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -530,7 +530,9 @@ class DotTree(Mapping[str, Toml]):
     def get_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T], default: T) -> T: ...
 
     @overload
-    def get_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T], default: None) -> T | None: ...
+    def get_primitive_as[T: Primitive](
+        self, keys: str, /, as_type: type[T], default: None
+    ) -> T | None: ...
 
     def get_primitive_as[T: Primitive](
         self, keys: str, /, as_type: type[T], default: T | None = None

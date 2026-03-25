@@ -22,7 +22,6 @@ keywords:
   # ::tyranno start:: $<<project.keywords|yaml(@)>>
   - ci/cd
   - cookiecutter
-  - github-workflow
-  - pyproject
+  - github-actions
   - python-template
   # ::tyranno end::

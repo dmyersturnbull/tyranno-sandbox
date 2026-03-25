@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2026, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -14,8 +14,8 @@ inputs:
   push:
     required: true
     description: >-
-      A boolean 'true' or 'false'.
       Push to container registries; otherwise, only performs a dry run.
+      Literal 'true' or 'false'.
 
 runs:
   using: composite
@@ -23,8 +23,8 @@ runs:
     - name: Validate inputs
       shell: bash
       run: |
-        if [[ ! '${{ inputs.push }}' =~ ^(true|false)$ ]]; then
-          printf >&2 "'push' must be 'true' or 'false', not '%s'.\n" '${{ inputs.push }}'
+        if [[ ! '${{ inputs.push }}' =~ ^(?:true|false)$ ]]; then
+          printf >&2 "'push' is not true|false: '%s'.\n" '${{ inputs.push }}'
           exit 2
         fi
     - uses: actions/checkout@v6
@@ -33,7 +33,7 @@ runs:
       id: docker-metadata
       uses: docker/metadata-action@v5 # https://github.com/docker/metadata-action
       with:
-        images: "${{ github.repository }}"
+        images: ${{ github.repository }}
     - name: Print metadata
       shell: bash
       run: |

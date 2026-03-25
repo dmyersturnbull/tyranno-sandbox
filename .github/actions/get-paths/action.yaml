@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2026, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -17,23 +17,23 @@ outputs:
   src:
     description: >-
       'true' if 'src/' was modified; otherwise ''
-    value: ${{ steps.paths.outputs.src == 'true' && 'true' || '' }}
+    value: ${{ steps.paths.outputs.src == 'true' || '' }}
   tests:
     description: >-
       'true' if 'tests/' was modified; otherwise ''
-    value: ${{ steps.paths.outputs.tests == 'true' && 'true' || '' }}
+    value: ${{ steps.paths.outputs.tests == 'true' || '' }}
   docs:
     description: >-
       'true' if 'docs/', 'zensical.toml', etc. was modified; otherwise ''
-    value: ${{ steps.paths.outputs.docs == 'true' && 'true' || '' }}
+    value: ${{ steps.paths.outputs.docs == 'true' || '' }}
   docker:
     description: >-
       'true' if 'Dockerfile', '.dockerignore', etc. was modified; otherwise ''
-    value: ${{ steps.paths.outputs.docker == 'true' && 'true' || '' }}
+    value: ${{ steps.paths.outputs.docker == 'true' || '' }}
   setup:
     description: >-
       'true' if 'pyproject.toml' was modified; otherwise ''
-    value: ${{ steps.paths.outputs.setup == 'true' && 'true' || '' }}
+    value: ${{ steps.paths.outputs.setup == 'true' || '' }}
 runs:
   using: composite
   steps:

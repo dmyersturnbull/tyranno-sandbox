@@ -1,10 +1,9 @@
-# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2026, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
 # Check out https://pre-commit.com/ for documentation
-# ::tyranno:: rev: v$<< $. 'dependency-groups' .dev .pypa_ver_spec_map(@) .'pre-commit' .pypa_ver_spec_min(@) >>
-minimum_pre_commit_version: 4.4.0
+minimum_pre_commit_version: 4.5.0
 repos:
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -30,9 +29,11 @@ repos:
       - id: check-filenames
         name: Enforce file and directory naming conventions.
         entry: >-
-          Path components may only use 'A-Za-z0-9_.,+=-' and cannot start with '-' or end with '.'.
+          Path components may only use 'A-Za-z0-9_.,~+=-',
+          cannot start with `~` or '-',
+          and cannot end with `~` or '.'.
         language: fail
-        files: '[^/\w.,+=-]|(^|/)-|\.($|/)'
+        files: '[^/\w.,~+=-]|(^|/)[~-]|[~.]($|/)'
         stages:
           - pre-commit
       - id: pathvalidate
@@ -85,7 +86,6 @@ repos:
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    # ::tyranno:: rev: v$<< $ .'dependency-groups' .dev .pypa_ver_spec_map(@) .ruff .pypa_ver_spec_max(@) >>
     rev: v0.14.13
     hooks:
       - id: ruff-check

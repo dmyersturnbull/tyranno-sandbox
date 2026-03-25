@@ -1,0 +1,98 @@
+# SPDX-FileCopyrightText: Copyright 2020-2026, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: get-paths
+description: Summarize paths that changed with respect to a base
+
+inputs:
+  pr:
+    required: true
+    description: Pull request number.
+
+outputs:
+  is-breaking:
+    description: >-
+      'true' if the PR message indicates breaking changes; otherwise ''
+    value: ${{ steps.get-info.outputs.is_breaking == 'true' || '' }}
+  is-draft:
+    description: >-
+      'true' if the PR is a draft; otherwise ''
+    value: ${{ steps.get-info.outputs.is_draft == 'true' || '' }}
+  issue-number:
+    description: >-
+      The number of the associated issue, or '' if none exists
+    value: ${{ steps.get-info.outputs.issue_number }}
+  revert-hash:
+    description: >-
+      12 hex digits of the commit being reverted, or '' if no revert
+    value: ${{ steps.get-info.outputs.issue_url }}
+  commit-type:
+    description: >-
+      The commit type (feat, fix, etc.)
+    value: ${{ steps.get-info.outputs.commit_type }}
+  commit-scopes:
+    description: >-
+      A tab-separated list of commit scopes, if any
+    value: ${{ steps.get-info.outputs.commit_scopes }}
+  problems:
+    description: >-
+      A tab-separated list of textual descriptions of problems with the PR
+    value: ${{ steps.get-info.outputs.problems }}
+runs:
+  using: composite
+  steps:
+
+    - id: get-info
+      shell: bash
+      run: |
+        (
+          IFS=$'\x1F'
+          read -r title isDraft body < <(
+            gh pr view ${{ inputs.pr }} \
+              --json title,isDraft,body \
+              --template '{{ print .title "\x1F" .isDraft "\x1F" .body }}'
+          )
+          if [[ "$isDraft" == true ]]; then
+            echo "is_draft=true" >> "$GITHUB_OUTPUT"
+          fi
+          title_break=false
+          body_break=false
+          [[ "$title" =~ ^[^:]+!: ]] && title_break=true
+          grep --quiet --perl-regexp '^BREAKING CHANGES:' <<< "$body" && body_break=true
+          if [[ "$title_break" != "$body_break"
+          if [[ "$title_break" == true ]]; then
+            echo "is_breaking=true" >> "$GITHUB_OUTPUT"
+          fi
+        )
+
+    - id: get-info
+      shell: bash
+      run: |
+        (
+          IFS=$'\x1F'
+          read -r title is_draft body < <(
+            gh pr view ${{ inputs.pr }} \
+              --json title,is_draft,body \
+              --template '{{ print .title "\x1F" .isDraft "\x1F" .body }}'
+          )
+          is_breaking=$([[ "$title" =~ ^[^:]+!: ]] && echo true || echo false)
+          breaking_changes=$(
+            grep --only-matching --max-count 1 -E '^BREAKING CHANGES:' \
+              <<< "$body" \
+              | sed -E '^BREAKING CHANGES: //g \
+              || true
+          )
+          declare -a problems=()
+          if [[ "$is_breaking" == true ]] && [[ -z "$breaking_changes" ]]; then
+            problems+="Body does not describe breaking changes with 'BREAKING CHANGES:'."
+          elif [[ "$is_breaking" == false ]] && [[ -n "$breaking_changes" ]]; then
+            problems+="Title does not indicate breaking changes with '!'."
+          fi
+          if ((${#problems[@]})); then
+            for p in "${problems[@]}"; do
+              printf "%b\n" "$p"
+            fi
+            exit 1
+        echo "is_draft=$is_draft" >> "$GITHUB_OUTPUT"
+        echo "is_breaking=$is_breaking" >> "$GITHUB_OUTPUT"

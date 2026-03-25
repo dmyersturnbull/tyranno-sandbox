@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2026, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -16,7 +16,9 @@ inputs:
       For a PR, this is probably the base commit.
   push:
     required: true
-    description: Push changes; otherwise, errors if there were changes.
+    description: >-
+      Push changes; otherwise, errors if there were changes.
+      Literal 'true' or 'false'.
 
 outputs:
   auto-fix:
@@ -31,6 +33,13 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        if [[ ! '${{ inputs.push }}' =~ ^(?:true|false)$ ]]; then
+          printf >&2 "ERROR: push is not true|false: '%s'.\n" '${{ inputs.push }}'
+          exit 2
+        fi
     - name: Configure Git
       shell: bash
       run: |
@@ -51,7 +60,7 @@ runs:
     - uses: astral-sh/setup-uv@v7
     - shell: bash
       run: |
-        uv sync --locked --only-group precommit
+        uv sync --locked --only-group git-hooks
     - name: Sanity-check that there are no local changes
       shell: bash
       run: |
@@ -109,12 +118,13 @@ runs:
       run: |
         untracked="$(git ls-files --others --exclude-standard)"
         if [[ -n "$untracked" ]]; then
-          printf "\n\nWARNING: Found unexpected untracked files: (((\n%s\n)))\n\n" "$untracked"
-        fi
-        if [[ '${{ inputs.push }}' == true ]]; then
+          printf >&2 "\n\nERROR: Found unexpected untracked files! (((\n%s\n)))\n\n" "$untracked"
+          exit 1
+        elif [[ '${{ inputs.push }}' == true ]]; then
           # NOTE: Let it fail if another commit was added!
           git push
+          printf "Success. No changes needed.\n"
         else
-          printf "Changes are needed, as shown above.\n"
+          printf "Failure. Changes are needed, as shown above.\n"
           exit 1
         fi

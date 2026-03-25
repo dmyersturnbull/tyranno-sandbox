@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2026, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -11,7 +11,9 @@ inputs:
     description: The ref, which must be a branch.
   push:
     default: "true"
-    description: If false, skips the git push.
+    description: >-
+      Push any changes; otherwise, only performs a dry run.
+      Literal 'true' or 'false'.
 
 outputs:
   changed-lock-file:
@@ -26,6 +28,13 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        if [[ ! '${{ inputs.push }}' =~ ^(?:true|false)$ ]]; then
+          printf >&2 "'push' is not true|false: '%s'.\n" '${{ inputs.push }}'
+          exit 2
+        fi
     - uses: actions/checkout@v6
       with:
         ref: ${{ inputs.ref }}
@@ -48,12 +57,12 @@ runs:
       shell: bash
       run: |
         git add uv.lock
-        git commit --no-verify -m "chore: update lock file"
+        git commit -m "chore: update lock file"
     - name: Upgrade the pre-commit config
       id: precommit
       shell: bash
       run: |
-        uv sync --frozen --only-group precommit
+        uv sync --frozen --only-group git-hooks
         uv run --no-sync pre-commit install
         uv run --no-sync pre-commit autoupdate
         if [[ -n "$(git status --porcelain .pre-commit-config.yaml)" ]]; then

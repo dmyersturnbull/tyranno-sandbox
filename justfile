@@ -1,10 +1,10 @@
-# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2026, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 #
 # https://just.systems/man/en/
 # https://cheatography.com/linux-china/cheat-sheets/justfile/
-# Needs: Just 1.43
+# Needs: Just 1.48
 # CAUTION – Quotes aren't quotes.
 # This doesn't do what you'd expect:
 # ```
@@ -17,6 +17,7 @@
 set dotenv-load := true
 set ignore-comments := true
 
+# set windows-powershell := true # an option
 # Confusingly, Python has a default warning filter, which is **different** from `-W default`.
 
 export PYTHONWARNINGS := env('PYTHONWARNINGS', 'default')
@@ -27,11 +28,6 @@ export PYTHONDEVMODE := env('PYTHONDEVMODE', '1')
 
 # To complain when `encoding=` is omitted (in addition to Ruff rule):
 # export PYTHONWARNDEFAULTENCODING := env('PYTHONWARNDEFAULTENCODING', '1')
-
-git_sha := `git rev-parse --short=16 HEAD`
-git_ref := `git rev-parse --abbrev-ref HEAD`
-git_rev_date := `git --no-pager log -1 --format=%cd`
-
 ###################################################################################################
 
 # List available recipes.
@@ -44,22 +40,35 @@ alias help := list
 
 # Print info for a bug report.
 [group('help')]
-info:
+[unix]
+info: _info
+    @echo "os_ver: {{ `uname -r` }}"
+    @echo "lang: {{ env('LANG', '?') }}"
+
+# Print info for a bug report.
+[group('help')]
+[windows]
+info: _info
+    # We're running MSYS2 sh, so we need to cross back into Windows.
+    # Note that `uname -r` would run, but it would only report the MSYS2 kernel version.
+    @echo "os_ver: `powershell.exe -NoProfile -Command '(Get-CimInstance Win32_OperatingSystem).Version'`"
+    @echo "lang: `powershell.exe -NoProfile -Command '(Get-Culture).Name'`"
+
+# Print info we can get the same way on Unix-like and Windows.
+[group('help')]
+_info:
+    @echo "git_ref: {{ `git rev-parse --short=16 HEAD` }}"
+    @echo "git_sha: {{ `git rev-parse --abbrev-ref HEAD` }}"
+    @echo "git_rev: {{ `git --no-pager log -1 --format=%cd` }}"
     @echo "just_ver: {{ replace_regex(`just --version`, '^[^ ]+ ([^ ]+)$', '$1') }}"
     @echo "uv_ver: {{ replace_regex(`uv --version`, '^uv ([^ ]+) .+$', '$1') }}"
     @echo "git_ver: {{ replace_regex(`git --version`, '^git version ([^ ]+)$', '$1') }}"
     @echo "os: {{ os() }}"
-    -@echo "os_ver: {{ `uname -r` }}"
     @echo "cpu_arch: {{ arch() }}"
     @echo "cpu_count: {{ num_cpus() }}"
-    @echo "shell: {{ env('SHELL', '?') }}"
-    @echo "lang: {{ env('LANG', '?') }}"
     @echo "repo_dir: {{ file_name(justfile_directory()) }}"
     @echo "project_name: {{ replace_regex(`uv version`, '^([^ ]+) .+$', '$1') }}"
     @echo "project_ver: {{ `uv version --short` }}"
-    @echo "git_ref: {{ git_ref }}"
-    @echo "git_sha: {{ git_sha }}"
-    @echo "git_rev: {{ git_rev_date }}"
 
 ###################################################################################################
 
@@ -109,6 +118,7 @@ alias lock := sync
 
 # Prune temp data, including from uv, pre-commit, and git.
 [group('project')]
+[parallel]
 clean: delete-temp clean-main clean-git
 
 # Delete unused uv and pre-commit cache data.
@@ -166,23 +176,23 @@ prune-git:
     -rm -f *.log
     -rm -f src/*.log
     -rm -f tests/*.log
-    # Directories named exactly `.(bak|junk|temp|tmp|trash)`
+    # Directories named (regex) `\.(bak|junk|temp|tmp|trash)`
     -rm -f -r **/.bak
     -rm -f -r **/.junk
     -rm -f -r **/.temp
     -rm -f -r **/.tmp
     -rm -f -r **/.trash
-    # Files with extensions `.(bak|junk|temp|tmp|trash|swp)`
+    # Files with extensions (regex) `\.(bak|junk|temp|tmp|trash|swp)`
     -rm -f **/*.bak
     -rm -f **/*.junk
     -rm -f **/*.temp
     -rm -f **/*.tmp
     -rm -f **/*.trash
     -rm -f **/*.swp
-    # Files starting or end with `~|#|$` (or starting with `.~`).
+    # Files starting or end with (regex) `\.?[~#$]`.
     -rm -f **/[~#\$]*
-    -rm -f **/*[~#\$]
-    -rm -f **/.~*
+    -rm -f **/.[~#\$]*
+    -rm -f **/*[~#\$] # subsumes `\.[~#$]`
 
 # Minify the repo by deleting nearly all recreatable files. 🧨
 [group('project')]
@@ -213,6 +223,7 @@ _format *args:
     -uv run pre-commit run trailing-whitespace {{ args }}
     -uv run pre-commit run ruff-format {{ args }}
     -uv run pre-commit run biome-check {{ args }}
+    -uv run pre-commit run format-justfile {{ args }}
 
 ###################################################################################################
 
@@ -251,6 +262,7 @@ _stage_precommit:
 
 # `just check-simple check-ruff check-ty check-links` (slow)
 [group('check')]
+[parallel]
 check-all: check-core check-ruff check-ty check-schemas check-links
 
 # Check basic rules (via pre-commit).
@@ -338,8 +350,6 @@ alias doctest := test-doctest
 [no-exit-message]
 test-with-cov *args: (pytest "-m 'not ux' --cov" args)
 
-alias test-cov := test-with-cov
-
 # Run PyTest tests, highlighting test durations. ☆
 [group('test')]
 [no-exit-message]
@@ -364,11 +374,6 @@ test-quietly *args: (pytest "--capture=no --tb=line --quiet" args)
 [group('test')]
 [no-exit-message]
 test-loudly *args: (pytest "--showlocals --full-trace --log-level=INFO --verbose" args)
-
-# Run PyTest tests with pdb debugger. ☆
-[group('test')]
-[no-exit-message]
-test-with-pdb *args: (pytest "--pdb" args)
 
 ###################################################################################################
 
@@ -427,9 +432,3 @@ serve-docs: (run "zensical serve -o")
 [group('alias')]
 [no-exit-message]
 pytest *args: (run "pytest" args)
-
-# `gh pr create --fill-verbose`
-[group('alias')]
-[no-exit-message]
-pr *args="--web":
-    gh pr create --fill-verbose {{ args }}

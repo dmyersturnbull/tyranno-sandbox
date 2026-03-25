@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2026, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -27,11 +27,11 @@ runs:
         ref_name="${ref_name#refs/tags/}"
         echo "ref_name=$ref_name" >> "$GITHUB_OUTPUT"
         echo "artifact_name=dist-$ref_name" >> "$GITHUB_OUTPUT"
-        if [[ $ref_name =~ ^(main|master)$ ]]; then
+        if [[ $ref_name =~ ^(?:main|master)$ ]]; then
           echo "is-latest=true" >> "$GITHUB_OUTPUT"
         fi
     - name: Download workflow artifact ${{ steps.define.outputs.artifact_name }}
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: ${{ steps.define.outputs.artifact_name }}
     - name: Publish to GitHub Releases
@@ -45,7 +45,7 @@ runs:
     - name: Print info
       shell: bash
       run: |
-        printf "Published release to %s\n" '${{ steps.release.outputs.url }}'
+        printf "Published release to %s .\n" '${{ steps.release.outputs.url }}'
     - uses: Actions-R-Us/actions-tagger@v2
       with:
         publish_latest_tag: ${{ steps.define.outputs.is-latest }}

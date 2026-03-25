@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2026, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -19,7 +19,7 @@ runs:
     - name: Sync and confirm lock file is up-to-date
       shell: bash
       run: |
-        uv sync --frozen --only-group precommit
+        uv sync --frozen --only-group git-hooks
     - uses: extractions/setup-just@v3
     - name: Run pre-commit hooks
       shell: bash

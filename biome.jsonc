@@ -2,10 +2,9 @@
   "files": {
     "includes": [
       "**",
-      "!!**/recipes/*.yaml",
-      "!**/charts/**/templates/*.yaml",
-      "!**/helm-charts/**/templates/*.yaml",
-      "!**/*.svg"
+      "!**/recipes/*.yaml", // Conda recipes
+      "!**/charts/**/templates/*.yaml" // Helm chart templates
+      // "!**/*.svg" // SVGs
     ]
   },
   "formatter": {

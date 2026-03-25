@@ -8,9 +8,43 @@
 .~*
 
 # Temp and misc. unwanted files
+*[.~]bak
+*[.~]out
 *[.~]swp
 *[.~]temp
 *[.~]tmp
+*.log
+*.pid
+Thumbs.db
+
+# IDE directories
+.idea/
+.vscode/
+
+# Build directories
+/bin/
+/build/
+/dist/
+/obj/
+/out/
+/sdist/
+/target/
+.next/
+.nuxt/
+
+# Cache dirs
+.cache/
+.*-cache/
+.esbuild/
+.vite/
+.turbo/
+.nx/
+
+# Auto-generated docs
+/docs/html/
+/docs/_build/
+/docs/autoapi/
+/site/
 
 # Python
 __pycache__/
@@ -18,6 +52,18 @@ __pypackages__/
 cython_debug/
 *.py[cod]
 .venv/
+
+# JavaScript
+node_modules/
+.npm/
+.build/
+.eslintcache
+*.tsbuildinfo
+
+# Bundled assets
+*.map
+*.min.js
+*.min.css
 
 # Private
 .*.env

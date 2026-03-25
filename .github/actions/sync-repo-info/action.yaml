@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2025, Contributors to Tyrannosaurus
+# SPDX-FileCopyrightText: Copyright 2020-2026, Contributors to Tyrannosaurus
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
@@ -21,7 +21,7 @@ runs:
         labels_blob=$(gh api "/repos/$GITHUB_REPOSITORY/labels" --jq '.[].name')
         # Loop over the labels and delete them
         while IFS= read -r label; do
-          printf "Deleting label: //%s//\n" "$label"
+          printf "Deleting label: '%s'.\n" "$label"
           gh api --method DELETE "/repos/$GITHUB_REPOSITORY/labels/$label"
         done <<< "$labels_blob"
     - name: Wait for changes to be made
@@ -32,7 +32,7 @@ runs:
         sleep 15
         labels_blob=$(gh api "/repos/$GITHUB_REPOSITORY/labels" --jq '.[].name')
         if (( $(wc -l <<< "$labels_blob") > 0 )); then
-          printf "[ERROR] Labels were not deleted: %s.\n" "$labels_blob"
+          printf >&2 "ERROR: Labels were not deleted: (((\n%s\n)))\n\n" "$labels_blob"
           exit 1
         fi
     - name: Create new labels
@@ -65,7 +65,7 @@ runs:
         homepage=$(yq eval '.homepage' "$SETTINGS_PATH")
         topics=$(yq eval '.topics | join(",")' "$SETTINGS_PATH")
         # Update the repo metadata.
-        gh repo edit $GITHUB_REPOSITORY \
+        gh repo edit ${{ github.repository }} \
           --description "$description" \
           --homepage "$homepage" \
           --add-topic "$topics"
