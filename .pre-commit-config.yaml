@@ -116,34 +116,33 @@ repos:
         pass_filenames: false
         language: system
         files: justfile
-        stages:
-          - pre-commit
 
   # Format and auto-fix various files with Biome.
   # Note that Biome's support for Markdown is pending.
   - repo: https://github.com/biomejs/pre-commit
     rev: v2.4.12 # Note: biomejs/pre-commit only uses tags, not releases.
     hooks:
-      # "check" --> "fix" (auto-format and auto-fix)
+      # "check" hook -- auto-format and auto-fix
       - id: biome-check
         args:
-          - --vcs-enabled=false # pre-commit already handles this
-      # format
+          - --vcs-enabled=false # pre-commit is sending the file list already.
+      # Manual "format" hook -- formats
       - id: biome-format
         args:
           - --vcs-enabled=false
-        stages:
+        stages: # Omit `pre-commit` stage because `biome-check` includes all behavior.
           - manual
-      # lint
+      # Manual "lint" hook -- auto-fixes
       - id: biome-lint
         args:
           - --vcs-enabled=false
         stages:
           - manual
-      # ci
+      # Manual "ci" hook -- doesn't apply changes
       - id: biome-ci
         args:
-          - --error-on-warnings
+          - --error-on-warnings # Otherwise returns 0 on lint rule violations.
+          - --vcs-enabled=false
         stages:
           - manual
 
@@ -152,6 +151,6 @@ repos:
     hooks:
       - id: markdown-link-check
         args:
-          - -q
+          - --quiet
         stages:
           - manual

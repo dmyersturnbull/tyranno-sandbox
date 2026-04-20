@@ -163,6 +163,7 @@ delete-temp:
 
 # Run 'git remote prune --all' and 'git maintenance run gc'. ⚠️
 [group('project')]
+[metadata('caution')]
 prune-git:
     # Needed on macOS.
     @-chflags -R nouchg .git/*
@@ -173,6 +174,7 @@ prune-git:
 
 # Delete files that are probably temporary. 🧨
 [group('project')]
+[metadata('danger')]
 @delete-probable-temp:
     # Log files directly in `/`, `src/`, or `tests/`
     -rm -f *.log
@@ -198,7 +200,7 @@ prune-git:
 
 # Minify the repo by deleting nearly all recreatable files. 🧨
 [group('project')]
-[metadata('advanced')]
+[metadata('danger')]
 minify-repo: clean delete-probable-temp
     uv run pre-commit clean
     uv run pre-commit uninstall
@@ -224,7 +226,7 @@ _format *args:
     -uv run pre-commit run fix-byte-order-marker {{ args }}
     -uv run pre-commit run trailing-whitespace {{ args }}
     -uv run pre-commit run ruff-format {{ args }}
-    -uv run pre-commit run biome-check {{ args }}
+    -uv run pre-commit run --hook-stage manual biome-format {{ args }}
     -uv run pre-commit run format-justfile {{ args }}
 
 ###################################################################################################
@@ -232,24 +234,38 @@ _format *args:
 # Run pre-commit auto-fix hooks on STAGED files.
 [group('fix')]
 [no-exit-message]
-fix-changes: _stage_precommit (hook "ruff-check")
+fix-changes: _stage_precommit fix-ruff fix-biome
 
 alias fix := fix-changes
 
 # Run pre-commit auto-fix hooks on ALL files. ⚠️
 [group('fix')]
+[metadata('caution')]
 [no-exit-message]
-fix-all: _stage_precommit (hook "ruff-check --all-files")
+fix-all: _stage_precommit (fix-ruff "--all-files") (fix-biome "--all-files")
 
-# Preview Ruff auto-fixes. Runs on all files by default.
+# Apply Biome auto-fixes (via pre-commit). 'args' may be '--all-files' or empty.
+[arg("args", pattern="--all-files")]
+[group('fix')]
+[no-exit-message]
+fix-biome *args: (hook "--hook-stage manual biome-lint" args)
+
+# Apply Ruff auto-fixes (via pre-commit). 'args' may be '--all-files' or empty.
+[arg("args", pattern="--all-files")]
+[group('fix')]
+[no-exit-message]
+fix-ruff *args: (hook "ruff-fix" args)
+
+# Apply Ruff auto-fixes. Affects all files. ⚠️
+[group('fix')]
+[metadata('caution')]
+[no-exit-message]
+run-ruff-fix *args: (_fix_ruff args)
+
+# Preview Ruff auto-fixes. Affects all files.
 [group('fix')]
 [no-exit-message]
 diff-ruff *args: (_fix_ruff "--diff" args)
-
-# Apply Ruff auto-fixes. (Runs on all files by default.) ⚠️
-[group('fix')]
-[no-exit-message]
-fix-ruff *args: (_fix_ruff args)
 
 # <Internal.> (FYI: Use `--config` so users can still pass `--output-format`.)
 [no-exit-message]
@@ -297,25 +313,36 @@ check-schemas:
 [no-exit-message]
 check-ruff *args: (_check_ruff args)
 
-# Show the number of violations per Ruff rule.
-[group('check')]
-[no-exit-message]
-check-ruff-stats *args: (ruff "check --no-fix --statistics" args)
-
 # Check Ruff security (S) rules derived from Bandit.
 [group('check')]
 [no-exit-message]
 check-bandit *args: (_check_ruff "--select S" args)
 
-# Check Astral ty typing rules.
+# Check Astral ty typing rules (without auto-fixing).
 [group('check')]
 [no-exit-message]
 check-ty *args: (run "ty check" args)
 
+# Check Biome rules, format, and import order (without auto-fixing).
+[group('check')]
+[no-exit-message]
+check-biome *args: (hook "--hook-stage manual --all-files biome-ci")
+
 # Detect broken hyperlinks via pre-commit. (slow)
 [group('check')]
 [no-exit-message]
-check-links: (hook "markdown-link-check --hook-stage manual --all-files")
+check-links: (hook "--hook-stage manual --all-files markdown-link-check")
+
+# Show the number of violations per Ruff rule.
+[group('check')]
+[no-exit-message]
+show-ruff-stats *args: (ruff "check --no-fix --statistics" args)
+
+# Check dependencies for vulnerabilities.
+[group('check')]
+[no-exit-message]
+audit *args:
+    uv audit --locked --all-extras --all-groups {{ args }}
 
 # <Internal.> (FYI: Use `--config` so users can still pass `--output-format`.)
 [no-exit-message]
