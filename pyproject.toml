@@ -75,8 +75,8 @@ dependencies = [
   "jsonpath-ng>=1.8",
   "semver>=3.0.4",
   # /usr/share/zoneinfo uses IANA zones; Windows does not
-  # OR `"tzdata>=2025.2; platform_system == 'Windows'",`
-  "tzdata>=2025.2; platform_system != 'Linux'",
+  # OR `"tzdata>=2026.1; platform_system == 'Windows'",`
+  "tzdata>=2026.1; platform_system != 'Linux'",
 ]
 
 # -------------------------- optional dependencies ----------------------------
@@ -85,10 +85,10 @@ cli = [
   "typer>=0.24",
 ]
 server = [
-  "fastapi>=0.135",
+  "fastapi>=0.136",
   "fastapi-problem>=0.12",
   "Hypercorn[h3]>=0.18",
-  "pydantic>=2.12",
+  "pydantic>=2.13",
   "rfc9457>=0.4",
   "starlette-compress>=1.7; python_version < '3.15'",
 ]
@@ -124,17 +124,17 @@ Download = "https://pypi.org/project/tyranno-sandbox/"
 # uv includes `dev` by default and has dedicated `--only-dev` / `--no-dev` / etc. switches.
 # The other groups are used in CI.
 dev = [
-  {include-group = "test"},
-  {include-group = "docs"},
-  {include-group = "sbom"},
-  {include-group = "lint"},
-  {include-group = "git-hooks"},
+  { include-group = "test" },
+  { include-group = "docs" },
+  { include-group = "sbom" },
+  { include-group = "lint" },
+  { include-group = "git-hooks" },
 ]
 
 # pytest and supporting tools
 test = [
   "coverage[toml]>=7.13", # Required for coverage.
-  "hypothesis>=6.151", # Required for property tests.
+  "hypothesis>=6.152", # Required for property tests.
   "pytest>=9.0", # Required.
   "pytest-cov>=7.1", # Required for coverage.
   # "pytest-datadir>=1.8", # Optional. To read test resources in the same dir.
@@ -144,7 +144,7 @@ test = [
 
 # Documentation tools
 docs = [
-  "zensical>=0.0.29", # https://zensical.org/
+  "zensical>=0.0.33", # https://zensical.org/
 ]
 
 sbom = [
@@ -153,8 +153,8 @@ sbom = [
 
 # Python-ecosystem lint tools that can be called directly
 lint = [
-  "ruff>=0.15.7",
-  "ty>=0.0.25", # Astral's fledgling type checker.
+  "ruff>=0.15.11",
+  "ty>=0.0.31", # Astral's fledgling type checker.
 ]
 
 # pre-commit and any dependencies for local hooks
