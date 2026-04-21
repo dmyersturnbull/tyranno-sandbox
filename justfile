@@ -254,7 +254,7 @@ fix-biome *args: (hook "--hook-stage manual biome-lint" args)
 [arg("args", pattern="--all-files")]
 [group('fix')]
 [no-exit-message]
-fix-ruff *args: (hook "ruff-fix" args)
+fix-ruff *args: (hook "ruff-check" args)
 
 # Apply Ruff auto-fixes. Affects all files. ⚠️
 [group('fix')]
