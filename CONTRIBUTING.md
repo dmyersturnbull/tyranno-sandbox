@@ -59,3 +59,33 @@ whereas tests (including smoke tests like building images) default to MERGE.
 | `/plz quick test [ref]`          | _(MERGE)_ | Runs PyTest tests with no markers.            |
 | `/plz test [ref]`                | _(MERGE)_ | Runs PyTest tests not marked `ux` or `e2e`.   |
 | 🧪 `/plz e2e test [ref]`         | _(MERGE)_ | Runs end-to-end tests via Docker Compose.     |
+
+## Conventions
+
+- Assume Python 3.14+ and modern features:
+  - Use PEP 695-style generic syntax (e.g. `class MyClass[T]`).
+  - Use `pathlib` instead of `os.path`.
+  - Use f-strings instead of `str.format`.
+  - Use `|` to join types (e.g. `str | None`).
+- Use type annotations everywhere except on `self` and `cls`.
+- Where possible, use `@dataclass(frozen=True, slots=True)` or an equivalent.
+- A class should either hold data or do something, not normally both.
+- A function or method should do only one thing.
+- Prefer a Scala-inspired blend of functional and object-oriented programming.
+  - Liberally define new types.
+  - Keep types immutable where practical.
+  - Transform data by chaining or composing methods.
+- Apply inversion of control.
+- Be deliberate with exception handling.
+  Apply the following rules in the calling function, in order:
+  1. If appropriate: work around, retry, or log and proceed.
+  2. Translate into a more informative exception, normally chaining via `from e`.
+  3. Let it bubble up, and catch it higher in the call stack.
+     Instances of uninformative types like `ValueError` and `KeyError`,
+     when anticipated, should be translated low in the call stack.
+     It may be fine to let `OSError` (and its alias `IOError`) and its subclasses bubble up.
+- Omit obvious docstrings and comments.
+  Use docstrings to explain things like non-obvious parameters and edge cases.
+  Use comments to explain tricky or unusual code.
+- Don't add empty lines for spacing in function or method bodies.
+  If a function or method is that long, it should be split up.
