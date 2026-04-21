@@ -212,7 +212,7 @@ minify-repo: clean delete-probable-temp
 
 # Format STAGED files (via pre-commit).
 [group('format')]
-format-changes: _format
+format-changes: _stage_precommit _format
 
 alias format := format-changes
 
@@ -278,15 +278,17 @@ _stage_precommit:
 
 ###################################################################################################
 
-# `just check-core check-ruff check-ty check-biome check-schemas check-links` (slow)
+# `just check-fast check-schemas audit check-links` (slow)
 [group('check')]
 [parallel]
-check-all: check-core check-ruff check-ty check-biome check-schemas check-links
+check-all: check-fast check-schemas audit check-links
 
 # `just check-core check-ruff check-biome check-schemas`
 [group('check')]
 [parallel]
-check-fast: check-core check-ruff check-biome check-schemas
+check-fast: check-core check-ruff check-biome
+
+alias check := check-fast
 
 # Check basic rules (via pre-commit).
 [group('check')]
