@@ -171,7 +171,7 @@ git-hooks = [
 [tool.ruff]
 exclude = [] # Rely on https://docs.astral.sh/ruff/settings/#respect-gitignore
 src = ["src"] # Needed for import sorting
-line-length = 100 # Keep consistent with `.editorconfig`.
+line-length = 100
 
 # -------------------------- Ruff formatter -----------------------------------
 [tool.ruff.format]

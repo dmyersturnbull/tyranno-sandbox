@@ -14,8 +14,8 @@
 # ```
 # This results in `git -m style: reformat code` !
 
-set dotenv-load := true
-set ignore-comments := true
+set dotenv-load
+set ignore-comments
 
 # set windows-powershell := true # an option
 # Confusingly, Python has a default warning filter, which is **different** from `-W default`.
@@ -278,10 +278,15 @@ _stage_precommit:
 
 ###################################################################################################
 
-# `just check-simple check-ruff check-ty check-links` (slow)
+# `just check-core check-ruff check-ty check-biome check-schemas check-links` (slow)
 [group('check')]
 [parallel]
-check-all: check-core check-ruff check-ty check-schemas check-links
+check-all: check-core check-ruff check-ty check-biome check-schemas check-links
+
+# `just check-core check-ruff check-biome check-schemas`
+[group('check')]
+[parallel]
+check-fast: check-core check-ruff check-biome check-schemas
 
 # Check basic rules (via pre-commit).
 [group('check')]
