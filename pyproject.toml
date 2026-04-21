@@ -144,7 +144,7 @@ test = [
 
 # Documentation tools
 docs = [
-  "zensical>=0.0.33", # https://zensical.org/
+  "zensical>=0.0.34", # https://zensical.org/
 ]
 
 sbom = [
@@ -154,7 +154,7 @@ sbom = [
 # Python-ecosystem lint tools that can be called directly
 lint = [
   "ruff>=0.15.11",
-  "ty>=0.0.31", # Astral's fledgling type checker.
+  "ty>=0.0.32", # Astral's fledgling type checker.
 ]
 
 # pre-commit and any dependencies for local hooks
