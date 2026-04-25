@@ -11,7 +11,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from io import StringIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Self, override
+from tempfile import NamedTemporaryFile, SpooledTemporaryFile, TemporaryDirectory
+from typing import TYPE_CHECKING, Any, BinaryIO, Final, Self, TextIO, override
 from zoneinfo import ZoneInfo
 
 from hypothesis import settings as hyp
@@ -23,9 +24,13 @@ if TYPE_CHECKING:
 
 __all__ = ["Helper", "logger"]
 
+type EitherIO = BinaryIO | TextIO
+type Kwargs = dict[str, Any]
 ETC_UTC: Final = ZoneInfo("Etc/UTC")
-TESTS_ROOT: Final = Path(__file__).parent.resolve()  # .relative_to(Path.cwd())
-PROJECT_ROOT: Final = TESTS_ROOT.parent.resolve()  # .relative_to(Path.cwd())
+TESTS_ROOT: Final = Path(__file__).parent.resolve()
+PROJECT_ROOT: Final = TESTS_ROOT.parent.resolve()
+PROJECT_NAME: Final = PROJECT_ROOT.name
+KEEP_TEMP: Final = os.environ.get(f"{PROJECT_NAME.upper()}_KEEP_TEMP", "0").lower() in {"1", "true"}
 # Separate logging in the main package vs. inside test functions.
 logger = logging.getLogger(f"{PROJECT_ROOT.name}::test")
 
@@ -53,7 +58,8 @@ class Capture(ExitStack):
     """A context manager that captures standard out and error streams.
 
     Notes:
-        Logging is unaffected; if stderr is a handler, [stderr][] will include logging statements.
+        Logging is unaffected.
+        If stderr is a handler sink, [stderr][] will contain the log lines.
 
     Example:
         ```python
@@ -95,9 +101,9 @@ class Capture(ExitStack):
         exc_value: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        logger.debug("Finished capturing stdout and stderr")
         # The ExitStack handles everything
         super().__exit__(exc_type, exc_value, exc_tb)
+        logger.debug("Finished capturing stdout and stderr")
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,8 +121,8 @@ class Start:
     mono_ns: int
     local: datetime
     utc: datetime = field(init=False, repr=False, hash=False)
-    local_str: str = field(init=False, repr=False, hash=False)
-    utc_str: str = field(init=False, repr=False, hash=False)
+    local_ts: str = field(init=False, repr=False, hash=False)
+    utc_ts: str = field(init=False, repr=False, hash=False)
 
     @classmethod
     def new(cls) -> Self:
@@ -124,19 +130,74 @@ class Start:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "utc", self.local.astimezone(ETC_UTC))
-        object.__setattr__(self, "local_str", self.local.strftime("%Y-%m-%dT%H%M%S.%f%z"))
-        object.__setattr__(self, "utc_str", self.local.strftime("%Y-%m-%dT%H%M%S.%fZ"))
+        object.__setattr__(self, "local_ts", self.local.strftime("%Y-%m-%dT%H%M%S.%f%z"))
+        object.__setattr__(self, "utc_ts", self.utc.strftime("%Y-%m-%dT%H%M%S.%fZ"))
 
     @property
-    def ns_elapsed(self) -> int:
+    def elapsed_ns(self) -> int:
+        """Returns the number of elapsed nanoseconds per `time.monotonic`."""
         return time.monotonic_ns() - self.mono_ns
 
     @property
-    def time_elapsed(self) -> timedelta:
-        return timedelta(microseconds=self.ns_elapsed / 1000)
+    def elapsed(self) -> timedelta:
+        """Returns a timedelta of [elapsed_ns][] rounded to microseconds."""
+        return timedelta(microseconds=round(self.ns_elapsed / 1000))
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}@{self.local_str}"
+        return f"{self.__class__.__name__}@{self.local_ts}"
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TempHelper:
+    _delete: bool
+    _prefix: str
+
+    def dir(self, **kwargs) -> Path:
+        kwargs = self._defaults | kwargs
+        with TemporaryDirectory(**kwargs) as td:
+            yield Path(td)
+
+    def binary_file(self, **kwargs) -> BinaryIO:
+        self._ensure_binary_mode(kwargs)
+        yield from self._file(kwargs)
+
+    def text_file(self, **kwargs) -> TextIO:
+        self._ensure_text_mode(kwargs)
+        yield from self._file(kwargs, mode="w+", encoding="utf-8")
+
+    def binary_spool(self, **kwargs) -> BinaryIO:
+        self._ensure_binary_mode(kwargs)
+        yield from self._spool(kwargs)
+
+    def text_spool(self, **kwargs) -> TextIO:
+        self._ensure_text_mode(kwargs)
+        yield from self._spool(kwargs, mode="w+", encoding="utf-8")
+
+    def _file(self, kwargs: Kwargs, **more_defaults: Kwargs) -> EitherIO:
+        yield from NamedTemporaryFile(
+            self._defaults(kwargs, delete_on_close=False, **more_defaults)
+        )
+
+    def _spool(self, kwargs: Kwargs, **more_defaults: Kwargs) -> EitherIO:
+        yield from SpooledTemporaryFile(self._defaults(kwargs, **more_defaults))
+
+    def _defaults(self, kwargs: Kwargs, **more_defaults: Kwargs) -> Kwargs:
+        prefix = self._prefix + kwargs.get("prefix", "")
+        without_prefix = {k: v for k, v in kwargs.items() if k != "prefix"}
+        defaults = {"prefix": prefix, "delete": self._delete} | more_defaults
+        return defaults | without_prefix
+
+    @classmethod
+    def _ensure_binary_mode(cls, kwargs: Kwargs) -> None:
+        if "b" not in kwargs.get("mode", "b"):
+            msg = f"Mode '{kwargs['mode']}' is text"
+            raise ValueError(msg)
+
+    @classmethod
+    def _ensure_text_mode(cls, kwargs: Kwargs) -> None:
+        if "b" in kwargs.get("mode", ""):
+            msg = f"Mode '{kwargs['mode']}' is binary"
+            raise ValueError(msg)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -151,9 +212,6 @@ class Helper:
     @classmethod
     def new(cls) -> Self:
         return cls(start=Start.new())
-
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}(start={self.start})"
 
     @contextmanager
     def capture(self) -> Generator[Capture]:
@@ -175,3 +233,6 @@ class Helper:
             The Path `tests`/`resources`/`<node-1>`/.../`<node-n>`, relative to the CWD.
         """
         return Path(TESTS_ROOT, "resources", *nodes)
+
+    def temp(self) -> TempHelper:
+        return TempHelper(delete=not KEEP_TEMP, prefix=f"{PROJECT_NAME}-")
