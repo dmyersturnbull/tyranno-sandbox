@@ -99,7 +99,7 @@ repos:
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.11
+    rev: v0.15.12
     hooks:
       - id: ruff-check
         args:
@@ -120,7 +120,7 @@ repos:
   # Format and auto-fix various files with Biome.
   # Note that Biome's support for Markdown is pending.
   - repo: https://github.com/biomejs/pre-commit
-    rev: v2.4.12 # Note: biomejs/pre-commit only uses tags, not releases.
+    rev: v2.4.13 # Note: biomejs/pre-commit only uses tags, not releases.
     hooks:
       # "check" hook -- auto-format and auto-fix
       - id: biome-check
