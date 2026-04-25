@@ -15,13 +15,13 @@ runs:
     - uses: actions/checkout@v6
       with:
         ref: ${{ inputs.ref || github.head_ref || github.ref }}
-    - uses: astral-sh/setup-uv@v7
+    - uses: astral-sh/setup-uv@v8
     - name: Sync and confirm lock file is up-to-date
       shell: bash
       run: |
         uv sync --frozen --only-group git-hooks
-    - uses: extractions/setup-just@v3
+    - uses: extractions/setup-just@v4
     - name: Run pre-commit hooks
       shell: bash
       run: |
-        just check-simple
+        just check-core

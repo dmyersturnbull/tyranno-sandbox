@@ -163,7 +163,7 @@ Define `default-python` in `[tool.tyranno.data]`
 and reference it in a JSONPath expression using a tyranno-defined `pep440_` function.
 
 ```yaml
-- uses: astral-sh/setup-uv@v7
+- uses: astral-sh/setup-uv@v8
   with:
     # ::tyranno:: python-version: "$<< .'default-python' | pep440_minor(@) >>"
     python-version: "3.14"

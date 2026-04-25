@@ -16,7 +16,7 @@ runs:
     - uses: actions/checkout@v6
       with:
         ref: ${{ inputs.ref || github.head_ref || github.ref }}
-    - uses: astral-sh/setup-uv@v7
+    - uses: astral-sh/setup-uv@v8
     - shell: bash
       run: |
         uv sync --locked --only-group docs

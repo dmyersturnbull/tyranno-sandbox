@@ -57,7 +57,7 @@ runs:
       shell: bash
       run: |
         git fetch --no-tags --depth=1 origin '${{ inputs.compare-to-ref }}'
-    - uses: astral-sh/setup-uv@v7
+    - uses: astral-sh/setup-uv@v8
     - shell: bash
       run: |
         uv sync --locked --only-group git-hooks
