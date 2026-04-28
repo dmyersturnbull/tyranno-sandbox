@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright 2020-2026, Contributors to Tyrannosaurus
+# SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
+# SPDX-License-Identifier: Apache-2.0
+
+name: do-bump-actions
+description: >-
+  Upgrades GitHub Actions to the latest stable versions.
+  Commits and pushes if 'push' is true.
+
+inputs:
+  ref:
+    required: true
+    description: The ref, which must be a branch.
+  update:
+    default: ""
+    description: >-
+      Bump action versions; otherwise, only verifies.
+      Literal 'true' or ''.
+  exclude:
+    default: ""
+    description: >-
+      Line-by-line list of action names to ignore.
+  push:
+    default: ""
+    description: >-
+      Push changes; otherwise, only performs a dry run.
+      Literal 'true' or ''.
+
+outputs:
+  changed-any:
+    description: >-
+      'true' if there were changes; '' otherwise.
+    value: ${{ steps.lock.outputs.diff && 'true' || '' }}
+
+runs:
+  using: composite
+  steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        if [[ ! '${{ inputs.push }}' =~ ^(?:true)?$ ]]; then
+          printf >&2 "'push' is not true|'': '%s'.\n" '${{ inputs.push }}'
+          exit 2
+        fi
+    - uses: suzuki-shunsuke/pinact-action@v2.0.0
+      with:
+        skip_push: ${{ inputs.push && 'false' || 'true' }}
+        update: ${{ inputs.update && 'true' || 'false' }}
+        verify: "true"
+        excludes: ${{ inputs.exclude }}
