@@ -3,27 +3,29 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: do-bump-dependencies
-description: Upgrades the uv lock file and pre-commit config. Commits and pushes if 'push' is true.
+description: >-
+  Upgrades the uv lock file and pre-commit config.
+  Commits and pushes if 'push' is true.
 
 inputs:
   ref:
     required: true
     description: The ref, which must be a branch.
   push:
-    default: "true"
+    default: ""
     description: >-
       Push any changes; otherwise, only performs a dry run.
-      Literal 'true' or 'false'.
+      Literal 'true' or ''.
 
 outputs:
   changed-lock-file:
     description: >-
       'true' if uv.lock was modified; '' otherwise.
-    value: ${{ steps.lock.outputs.diff || 'false' }}
+    value: ${{ steps.lock.outputs.diff && 'true' || '' }}
   changed-hooks:
     description: >-
       'true' if .pre-commit-config.yaml was modified; '' otherwise.
-    value: ${{ steps.precommit.outputs.diff || 'false' }}
+    value: ${{ steps.precommit.outputs.diff && 'true' || '' }}
 
 runs:
   using: composite
@@ -31,8 +33,8 @@ runs:
     - name: Validate inputs
       shell: bash
       run: |
-        if [[ ! '${{ inputs.push }}' =~ ^(?:true|false)$ ]]; then
-          printf >&2 "'push' is not true|false: '%s'.\n" '${{ inputs.push }}'
+        if [[ ! '${{ inputs.push }}' =~ ^(?:true)?$ ]]; then
+          printf >&2 "'push' is not true|'': '%s'.\n" '${{ inputs.push }}'
           exit 2
         fi
     - uses: actions/checkout@v6

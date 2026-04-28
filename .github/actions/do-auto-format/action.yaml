@@ -15,10 +15,16 @@ inputs:
       If empty, runs on all files.
       For a PR, this is probably the base commit.
   push:
-    required: true
+    default: ""
     description: >-
       Push changes; otherwise, errors if there were changes.
-      Literal 'true' or 'false'.
+      Literal 'true' or ''.
+  ruff-fix-git-subject:
+    description: Git commit subject for auto-lint.
+    default: "refactor: auto-lint"
+  ruff-format-git-subject:
+    description: Git commit subject for auto-format.
+    default: "style: auto-format"
 
 outputs:
   auto-fix:
@@ -33,13 +39,17 @@ outputs:
 runs:
   using: composite
   steps:
+    # ====================
+    # 0. Validate args.
     - name: Validate inputs
       shell: bash
       run: |
-        if [[ ! '${{ inputs.push }}' =~ ^(?:true|false)$ ]]; then
-          printf >&2 "ERROR: push is not true|false: '%s'.\n" '${{ inputs.push }}'
+        if [[ ! '${{ inputs.push }}' =~ ^(?:true)?$ ]]; then
+          printf >&2 "ERROR: push is not true|'': '%s'.\n" '${{ inputs.push }}'
           exit 2
         fi
+    # ====================
+    # 1. Set up.
     - name: Configure Git
       shell: bash
       run: |
@@ -76,17 +86,20 @@ runs:
       env:
         FROM: ${{ inputs.compare-to-ref }}
         TO: ${{ inputs.ref }}
+        SUBJECT: ${{ inputs.auto-fix-git-subject }}
       run: |
         if [[ -z $FROM ]]; then
           uv run --no-sync pre-commit run ruff-check --all-files || true
+          uv run --no-sync pre-commit run biome-lint --all-files || true
         else
           uv run --no-sync pre-commit run ruff-check --from-ref $FROM --to-ref $TO || true
+          uv run --no-sync pre-commit run biome-lint --from-ref $FROM --to-ref $TO || true
         fi
         if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
           git diff --histogram # Show in logs.
           echo "changed=true" >> $GITHUB_OUTPUT
           git add --update
-          git commit -m "style: auto-fix Ruff rule violations"
+          git commit -m "$SUBJECT"
         fi
     # ====================
     # 3. Auto-format.
@@ -96,19 +109,22 @@ runs:
       env:
         FROM: ${{ inputs.compare-to-ref }}
         TO: ${{ inputs.ref }}
+        SUBJECT: ${{ inputs.auto-format-git-subject }}
       run: |
         if [[ -z $FROM ]]; then
           uv run --no-sync pre-commit run ruff-format --all-files || true
-          uv run --no-sync pre-commit run prettier --all-files || true
+          uv run --no-sync pre-commit run biome-format --all-files || true
+          uv run --no-sync pre-commit run format-justfile --all-files || true
         else
           uv run --no-sync pre-commit run ruff-format --from-ref $FROM --to-ref $TO || true
-          uv run --no-sync pre-commit run prettier --from-ref $FROM --to-ref $TO || true
+          uv run --no-sync pre-commit run biome-format --from-ref $FROM --to-ref $TO || true
+          uv run --no-sync pre-commit run format-justfile --from-ref $FROM --to-ref $TO || true
         fi
         if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
           git diff --histogram # Show in logs.
           echo "changed=true" >> $GITHUB_OUTPUT
           git add --update
-          git commit -m "style: auto-format"
+          git commit -m "$SUBJECT"
         fi
     # ====================
     # 4. Push changes.
@@ -120,7 +136,7 @@ runs:
         if [[ -n "$untracked" ]]; then
           printf >&2 "\n\nERROR: Found unexpected untracked files! (((\n%s\n)))\n\n" "$untracked"
           exit 1
-        elif [[ '${{ inputs.push }}' == true ]]; then
+        elif [[ '${{ inputs.push }}' ]]; then
           # NOTE: Let it fail if another commit was added!
           git push
           printf "Success. No changes needed.\n"

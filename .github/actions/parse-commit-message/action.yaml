@@ -78,9 +78,9 @@ runs:
           )
           is_breaking=$([[ "$title" =~ ^[^:]+!: ]] && echo true || echo false)
           breaking_changes=$(
-            grep --only-matching --max-count 1 -E '^BREAKING CHANGES:' \
+            grep --only-matching --max-count 1 -E '^BREAKING[ -]CHANGES:' \
               <<< "$body" \
-              | sed -E '^BREAKING CHANGES: //g \
+              | sed -E '^BREAKING[ -]CHANGES: //g \
               || true
           )
           declare -a problems=()

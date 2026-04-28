@@ -14,6 +14,30 @@ inputs:
     description: The ref to compare against; defaults to github.base_ref
 
 outputs:
+  compose:
+    description: >-
+      'true' if 'compose.yaml' was modified; otherwise ''
+    value: ${{ steps.paths.outputs.compose == 'true' || '' }}
+  docs:
+    description: >-
+      'true' if 'docs/', 'zensical.toml', etc. was modified; otherwise ''
+    value: ${{ steps.paths.outputs.docs == 'true' || '' }}
+  docker:
+    description: >-
+      'true' if 'Dockerfile' or '.dockerignore' was modified; otherwise ''
+    value: ${{ steps.paths.outputs.docker == 'true' || '' }}
+  git:
+    description: >-
+      'true' if '.gitignore' or '.gitattributes' was modified; otherwise ''
+    value: ${{ steps.paths.outputs.git == 'true' || '' }}
+  readme:
+    description: >-
+      'true' if '/*.md' or 'LICENSE.txt' was modified; otherwise ''
+    value: ${{ steps.paths.outputs.readme == 'true' || '' }}
+  setup:
+    description: >-
+      'true' if 'pyproject.toml' was modified; otherwise ''
+    value: ${{ steps.paths.outputs.setup == 'true' || '' }}
   src:
     description: >-
       'true' if 'src/' was modified; otherwise ''
@@ -22,37 +46,52 @@ outputs:
     description: >-
       'true' if 'tests/' was modified; otherwise ''
     value: ${{ steps.paths.outputs.tests == 'true' || '' }}
-  docs:
+  tools:
     description: >-
-      'true' if 'docs/', 'zensical.toml', etc. was modified; otherwise ''
-    value: ${{ steps.paths.outputs.docs == 'true' || '' }}
-  docker:
+      'true' if 'justfile', 'biome.jsonc', etc. was modified; otherwise ''
+    value: ${{ steps.paths.outputs.tools == 'true' || '' }}
+  workflows:
     description: >-
-      'true' if 'Dockerfile', '.dockerignore', etc. was modified; otherwise ''
-    value: ${{ steps.paths.outputs.docker == 'true' || '' }}
-  setup:
-    description: >-
-      'true' if 'pyproject.toml' was modified; otherwise ''
-    value: ${{ steps.paths.outputs.setup == 'true' || '' }}
+      'true' if '.github/**/*.ya?ml' was modified; otherwise ''
+    value: ${{ steps.paths.outputs.workflows == 'true' || '' }}
 runs:
   using: composite
   steps:
     - name: Identify modified paths
       id: paths
-      uses: dorny/paths-filter@v3
+      uses: dorny/paths-filter@v4
       with:
         ref: ${{ inputs.ref || github.head_ref || github.ref }}
         base: ${{ inputs.base || github.base_ref || '' }}
         filters: |
+          compose:
+            - compose.yaml
+          docker:
+            - Dockerfile
+            - .dockerignore
+          docs:
+            - docs/**
+            - zensical.toml
+          git:
+            - .gitattributes
+            - .gitignore
+          readme:
+            - *.md
+            - CITATION.cff
+            - LICENSE.txt
+          setup:
+            - pyproject.toml
           src:
             - src/**
           tests:
             - tests/**
-          docs:
-            - docs/**
-            - zensical.toml
-          docker:
-            - Dockerfile
-            - .dockerignore
-          setup:
-            - pyproject.toml
+          tools:
+            - .editorconfig
+            - .pre-commit-config.yaml
+            - biome.jsonc
+            - devcontainer.json
+            - justfile
+            - bin/
+            - scripts/
+          workflows:
+            - .github/**/*.ya?ml

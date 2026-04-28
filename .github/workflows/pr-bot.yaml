@@ -86,6 +86,7 @@ jobs:
     uses: ./.github/actions/do-bump-dependencies/action.yaml
     with:
       ref: ${{ github.head_ref }}
+      push: 'true'
 
   format:
     if: ${{ contains(needs.cmd.outputs.nullary, 'format') }}
@@ -96,4 +97,4 @@ jobs:
     with:
       ref: ${{ github.head_ref }}
       compare-to-ref: ${{ github.base_ref }}
-      push: true
+      push: 'true'

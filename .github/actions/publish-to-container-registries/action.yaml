@@ -12,10 +12,10 @@ description: >-
 
 inputs:
   push:
-    required: true
+    default: ""
     description: >-
       Push to container registries; otherwise, only performs a dry run.
-      Literal 'true' or 'false'.
+      Literal 'true' or ''.
 
 runs:
   using: composite
@@ -23,8 +23,8 @@ runs:
     - name: Validate inputs
       shell: bash
       run: |
-        if [[ ! '${{ inputs.push }}' =~ ^(?:true|false)$ ]]; then
-          printf >&2 "'push' is not true|false: '%s'.\n" '${{ inputs.push }}'
+        if [[ ! '${{ inputs.push }}' =~ ^(?:true)?$ ]]; then
+          printf >&2 "'push' is not true|'': '%s'.\n" '${{ inputs.push }}'
           exit 2
         fi
     - uses: actions/checkout@v6
@@ -61,4 +61,4 @@ runs:
         cache-from: type=gha
         # type=gha,mode=max is meant to maximize cache hits.
         cache-to: type=gha,mode=max
-        push: ${{ inputs.push == 'true' }}
+        push: ${{ inputs.push }}
