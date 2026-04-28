@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref || github.head_ref || github.ref }}
-      - uses: astral-sh/setup-uv@v8
+      - uses: astral-sh/setup-uv@v8.1.0
       - shell: bash
         run: |
           docker build .

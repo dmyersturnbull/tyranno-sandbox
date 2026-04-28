@@ -31,7 +31,7 @@ runs:
     - uses: actions/checkout@v6
       with:
         ref: ${{ steps.define.outputs.ref }}
-    - uses: astral-sh/setup-uv@v8 # Some subsequent tools expect Python.
+    - uses: astral-sh/setup-uv@v8.1.0 # Some subsequent tools expect Python.
       with:
         activate-environment: true
     - uses: azure/setup-helm@v4.3.1

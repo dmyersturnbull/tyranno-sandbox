@@ -59,7 +59,7 @@ runs:
     - uses: actions/checkout@v6
       with:
         ref: ${{ steps.define.outputs.ref }}
-    - uses: astral-sh/setup-uv@v8
+    - uses: astral-sh/setup-uv@v8.1.0
     - name: Run pip-licenses
       shell: bash
       run: |
