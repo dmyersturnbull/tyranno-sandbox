@@ -6,7 +6,7 @@ name: publish-docs-to-pages
 description: >-
   Builds docs and publishes them to GitHub Pages.
   The GitHub context should be a tag but can be a branch.
-  Needs permissions: 'contents: write', 'pages: write'.
+  Needs permissions: 'contents: write', 'id-token: write', 'pages: write'.
 
 runs:
   using: composite
@@ -17,10 +17,7 @@ runs:
       run: |
         uv sync --locked --only-group docs
         uv run --no-sync zensical build
-    # Note that in v4, dot files are excluded, with no way to override.
-    # This is apparently by design.
-    # https://github.com/actions/upload-pages-artifact/issues/129
-    - uses: actions/upload-pages-artifact@v4
+    - uses: actions/upload-pages-artifact@v5
       with:
         path: site
-    - uses: actions/deploy-pages@v4
+    - uses: actions/deploy-pages@v5
