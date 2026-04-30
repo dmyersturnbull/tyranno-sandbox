@@ -17,41 +17,55 @@ site_description = "Sandbox for Tyrannosaurus"
 site_author = "The Tyrannosaurus team"
 language = "en"
 
-# Navigation
-# https://zensical.org/docs/setup/navigation/#navigation-sections
-
-# Keep the default `site_dir` of `site/`.
+extra_css = [
+  "css/extra.css"
+]
 extra_javascript = [
-  "javascripts/mathjax.js",
+  "js/mathjax.js",
   "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js",
-  "javascripts/tablesort.js",
+  "js/tablesort.js",
   "https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js",
 ]
-
-# Some Zensical features are pending, including API documentation:
-# https://zensical.org/about/roadmap/#api-documentation
-# Some of this config was ported from the preceeding `mkdocs.yaml`:
-# https://github.com/dmyersturnbull/tyranno-sandbox/blob/2fa3ff8296f3a9c194540e80438dcc79ab2fa5b7/mkdocs.yaml
 
 # **Most** of these built-in extensions are enabled by default:
 # https://zensical.org/docs/setup/extensions/
 # **Some** PyMdownX extensions are enabled by default:
 # https://zensical.org/docs/setup/extensions/python-markdown-extensions/
 
-# PyMdownX blocks extensions:
-# https://facelessuser.github.io/pymdown-extensions/extensions/blocks/
-[project.markdown_extensions.pymdownx.blocks.admonition]
-[project.markdown_extensions.pymdownx.blocks.caption]
-[project.markdown_extensions.pymdownx.blocks.details]
-[project.markdown_extensions.pymdownx.blocks.html]
-[project.markdown_extensions.pymdownx.blocks.tab]
+# [project.markdown_extensions.abbr]
 
-# Other PyMdownX extensions:
+# https://zensical.org/docs/setup/extensions/python-markdown/#abbreviations
+[project.markdown_extensions.admonition]
+
+# https://zensical.org/docs/setup/extensions/python-markdown/#attribute-lists
+# [project.markdown_extensions.attr_list]
+
+# https://zensical.org/docs/setup/extensions/python-markdown/#definition-lists
+# [project.markdown_extensions.def_list]
+
+# https://zensical.org/docs/setup/extensions/python-markdown/#footnotes
+[project.markdown_extensions.footnotes]
+
+# https://zensical.org/docs/setup/extensions/python-markdown/#markdown-in-html
+[project.markdown_extensions.md_in_html]
 
 # https://facelessuser.github.io/pymdown-extensions/extensions/arithmatex/
 [project.markdown_extensions.pymdownx.arithmatex]
 inline_syntax = ["dollar"]
 block_syntax = ["dollar", "begin"]
+
+# https://facelessuser.github.io/pymdown-extensions/extensions/blocks/plugins/caption/
+[project.markdown_extensions.pymdownx.blocks.caption]
+
+# https://zensical.org/docs/setup/extensions/python-markdown-extensions/#details
+[project.markdown_extensions.pymdownx.details]
+
+[project.markdown_extensions.pymdownx.emoji]
+emoji_generator = "zensical.extensions.emoji.to_svg"
+emoji_index = "zensical.extensions.emoji.twemoji"
+
+# https://facelessuser.github.io/pymdown-extensions/extensions/fancylists/
+[project.markdown_extensions.pymdownx.fancylists]
 
 # https://facelessuser.github.io/pymdown-extensions/extensions/highlight/
 [project.markdown_extensions.pymdownx.highlight]
@@ -60,10 +74,33 @@ linenums_style = "pymdownx-inline"
 pygments_lang_class = true
 line_spans = "line"
 
+# https://facelessuser.github.io/pymdown-extensions/extensions/keys/
+[project.markdown_extensions.pymdownx.keys]
+
 # https://facelessuser.github.io/pymdown-extensions/extensions/magiclink/
 [project.markdown_extensions.pymdownx.magiclink]
 repo_url_shortener = true
 repo_url_shorthand = true
+
+# https://zensical.org/docs/setup/extensions/python-markdown-extensions/#superfences
+[project.markdown_extensions.pymdownx.superfences]
+
+# https://zensical.org/docs/setup/extensions/python-markdown-extensions/#tabbed
+[project.markdown_extensions.pymdownx.tabbed]
+alternate_style = true
+combine_header_slug = true
+
+# https://zensical.org/docs/setup/extensions/python-markdown/#tables
+[project.markdown_extensions.tables]
+
+[project.plugins.mkdocstrings.handlers.python]
+inventories = ["https://docs.python.org/3/objects.inv"]
+paths = ["src"]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "google"
+inherited_members = true
+show_source = true
 
 [project.theme]
 features = [
@@ -72,6 +109,7 @@ features = [
   "navigation.indexes",           # https://zensical.org/docs/setup/navigation/#section-index-pages
   "navigation.instant",           # https://zensical.org/docs/setup/navigation/#instant-navigation
   "navigation.instant.progress",  # https://zensical.org/docs/setup/navigation/#progress-indicator
+  "content.footnote.tooltips",     # https://zensical.org/docs/authoring/footnotes/#footnote-tooltips
   "navigation.path",              # https://zensical.org/docs/setup/navigation/#navigation-path
   "navigation.sections",          # https://zensical.org/docs/setup/navigation/#navigation-sections_1
   "navigation.tracking",          # https://zensical.org/docs/setup/navigation/#anchor-tracking

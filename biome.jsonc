@@ -12,6 +12,32 @@
     "indentStyle": "space", // default is `tab`
     "lineWidth": 100
   },
+  "linter": {
+    "rules": {
+      "a11y": {
+        "noNoninteractiveElementInteractions": "error"
+      },
+      "complexity": {
+        "useSimplifiedLogicExpression": "error",
+        "useWhile": "error"
+      },
+      "correctness": {
+        "noGlobalDirnameFilename": "error"
+      },
+      "suspicious": {
+        "noConstantBinaryExpressions": "error",
+        "noDeprecatedImports": "error",
+        "noEmptyBlockStatements": "error",
+        "noEvolvingTypes": "error",
+        "noImportCycles": "error",
+        "noMisplacedAssertion": "error"
+      },
+      "style": {
+        "noValueAtRule": "error",
+        "useGraphqlNamingConvention": "error"
+      }
+    }
+  },
   "javascript": {
     "formatter": {
       "lineWidth": 80,

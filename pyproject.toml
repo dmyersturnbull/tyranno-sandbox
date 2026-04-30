@@ -144,7 +144,8 @@ test = [
 
 # Documentation tools
 docs = [
-  "zensical>=0.0.34", # https://zensical.org/
+  "mkdocstrings-python>=2.0,<3.0",
+  "zensical>=0.0.37", # https://zensical.org/
 ]
 
 sbom = [
@@ -204,13 +205,13 @@ ignore = [
   # Syntax of comments: <rule-description> '(' <reason-ignored> ')'
   "D1",       # undocumented public __ (omit useless comments)
   "D401",     # imperative mood (nitpicky rule)
-  "D417",     # undocumented param (mit useless comments)
+  "D417",     # undocumented param (omit useless comments)
   "DOC201",   # missing `Returns:` (omit useless comments)
   "DOC402",   # missing `Yields:` (omit useless comments)
   "DOC501",   # missing `Raises:` exception (omit useless comments)
   "DOC502",   # `Raises` lists exeption not raised directly (often helpful to list anyway)
   "E722",     # "bare-except" (use "blind-except" BLE001 instead)
-  "FIX002",   # T*O*D*O (consider T*O*D*O non-crucial tasks, whereas F*I*X*M*E are crucial)
+  "FIX002",   # TO*DO (consider TO*DO non-crucial tasks, whereas FIX*ME are crucial)
   "PLR2004",  # magic value (includes 2, 256, 404, etc.)
   "PLR6301",  # 'self' not used (total non-issue and unavoidable when overriding)
   "RUF001",   # confusable characters in strings (bans useful chars like en dashes)
@@ -257,13 +258,10 @@ allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*" = [
   "D10",      # missing docstrings
-  "INP001",   # missing` __init__.py`
-  "PLC2701",  # import of private module
   "S101",     # assert
   "S105",     # possible password in string
   "S106",     # possible password in function arg
   "S107",     # possible password in function default
-  "S108",     # harcoded temp file
   "TID252",   # relative import
 ]
 
@@ -272,7 +270,7 @@ allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 #                                      [tool.pytest]
 ####################################################################################################
 
-[tool.pytest] # allowed as of PyTest 9!
+[tool.pytest]
 
 # ******************************* Notes for running tests ******************************************
 # CWD and editor support:
