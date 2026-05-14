@@ -145,7 +145,7 @@ test = [
 # Documentation tools
 docs = [
   "mkdocstrings-python>=2.0,<3.0",
-  "zensical>=0.0.37", # https://zensical.org/
+  "zensical>=0.0.41", # https://zensical.org/
 ]
 
 sbom = [
@@ -154,8 +154,8 @@ sbom = [
 
 # Python-ecosystem lint tools that can be called directly
 lint = [
-  "ruff>=0.15.11",
-  "ty>=0.0.32", # Astral's fledgling type checker.
+  "ruff>=0.15.13",
+  "ty>=0.0.35", # Astral's fledgling type checker.
 ]
 
 # pre-commit and any dependencies for local hooks
@@ -190,16 +190,18 @@ select = ["ALL"]
 ignore = [
   # Rules that conflict with the formatter:
   # (See https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules)
-  "W191",     # indented with tabs
-  "D206",     # docstring indented with tabs
-  "E114",     # indent not multiple of 4
-  "E117",     # over-indented
-  "E501",     # line too long
-  "W505",     # docstring line too long
-  "COM812",   # lacks trailing comma
-  "COM819",   # has trailing comma
-  "D300",     # triple single quotes
-  "ISC002",   # implicit string concatentation
+  "W191",
+  "E111",
+  "E114",
+  "E117",
+  "D203",
+  "D206",
+  "D300",
+  "Q",
+  "COM812",
+  "COM819",
+  "ISC002",
+  "E501",
   # ---
   # Other ignored rules:
   # Syntax of comments: <rule-description> '(' <reason-ignored> ')'
@@ -210,30 +212,23 @@ ignore = [
   "DOC402",   # missing `Yields:` (omit useless comments)
   "DOC501",   # missing `Raises:` exception (omit useless comments)
   "DOC502",   # `Raises` lists exeption not raised directly (often helpful to list anyway)
-  "E722",     # "bare-except" (use "blind-except" BLE001 instead)
   "FIX002",   # TO*DO (consider TO*DO non-crucial tasks, whereas FIX*ME are crucial)
   "PLR2004",  # magic value (includes 2, 256, 404, etc.)
   "PLR6301",  # 'self' not used (total non-issue and unavoidable when overriding)
-  "RUF001",   # confusable characters in strings (bans useful chars like en dashes)
-  "RUF002",   # confusable characters in docstrings (bans useful chars like en dashes)
-  "RUF003",   # confusable characters in comments (bans useful chars like en dashes)
+  "RUF001",   # confusable characters in strings (bans useful chars)
+  "RUF002",   # confusable characters in docstrings (bans useful chars)
+  "RUF003",   # confusable characters in comments (bans useful chars)
   "RUF021",   # `or x and y` without parentheses (unnecessary)
   "S403",     # import of pickle (S301 on pickle calls is enough)
   "S404",     # import of subprocess (S602/S603 on subprocess calls is enough)
   "TD",       # flake8-to*do (requires a specific format)
   "Q",        # quotes (formatter should cover completely)
+  "W505",     # docstring line too long (use semantic line breaks instead)
 ]
 
 # Syntax of comments: <rule-description> '(' <reason-for-change> ')'
 unfixable = [
   "TC007",    # quotes type alias definitions (move needed imports outside `TYPE_CHECKING` instead)
-]
-extend-safe-fixes = [
-  "LOG004",   # converts `.exception()` to `.error()` outside `except` (only stops `NoneType: None`)
-]
-extend-unsafe-fixes = [
-  "PLW1510",  # adds `check=False` to `subprocess.run` (normally `check=True` is wanted)
-  "RUF102",   # removes invalid `noqa` (should review manually)
 ]
 
 # Delegated options
@@ -257,11 +252,8 @@ allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*" = [
-  "D10",      # missing docstrings
+  "D1",       # missing docstrings
   "S101",     # assert
-  "S105",     # possible password in string
-  "S106",     # possible password in function arg
-  "S107",     # possible password in function default
   "TID252",   # relative import
 ]
 
@@ -383,6 +375,7 @@ targets = [
   "/.editorconfig",
   "/CITATION.cff",
   "/justfile",
+  "*.jsonc",
   "*.md",
   "*.py",
   "*.toml",
