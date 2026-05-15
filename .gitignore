@@ -11,23 +11,25 @@
 # This approach makes the file much simpler and easier to understand.
 # Some of the rules are derived from <https://github.com/github/gitignore/>.
 #
-# Whether to use a more universal or more tailored gitignore is debatable.
-# I recommend:
+# Whether to use a broad or tailored gitignore is debatable.
+# I recommend a hybrid approach:
 # - Tailor to per-repo languages, build tools, and runtime systems.
 #   E.g. it's reasonable to remove the sqlite and Cmake sections.
-# - Be more universal for popular IDEs and tools.
+# - Broadly cover popular IDEs and tools.
 #   E.g. if vim starts prefixing temp files with `%`, you should probably add it.
 #   Yes, developers should use `core.excludesfile`, but many don't.
-# - Be more universal for clearly unwanted files.
+# - Broadly ignore clearly unwanted files.
 #   E.g. `aws-private-key.pem` should probably never be inside the repo,
 #   but make sure it's ignored anyway.
+# - Ignore dotfiles by default, then whitelist the ones you want.
 #
 # Notes:
 # - Unlike  in `.dockerignore` and `.prettierignore`, patterns are relative.
 #  `x` is equivalent to `**/x`, in contrast to `.dockerignore` and `.prettierignore`.
 # - Always mark directories with a `/` suffix.
 # - Per section, place directories above files; then sort lexicographically.
-#   (Order (using regex): `/` ≺ `*` ≺ `[^A-Za-z0-9]` ≺ `[0-9]` ≺ `[A-Za-z]`.)
+#   Order (using regex): `/` ≺ `*` ≺ `[^A-Za-z0-9]` ≺ `[0-9]` ≺ `[A-Za-z]`.
+#   (Maybe eventually we'll have a Git hook do this.)
 
 ### Temporary paths ###
 
@@ -80,6 +82,31 @@ Thumbs.db
 *.pkg
 *.so
 
+# Credentials (best-effort)
+credentials/
+private/
+secrets/
+*.private
+credentials.json
+credentials.properties
+credentials.yaml
+secrets.json
+secrets.properties
+secrets.yaml
+
+# Keystore/certificate files
+*.asc
+*.jks
+*.key
+*.keystore
+*.pem
+*.p12
+*.pfx
+*.pkcs12
+id_rsa
+id_ecdsa
+id_ed25519
+
 ### Cross-language directories ###
 
 # Build directories
@@ -99,6 +126,7 @@ Thumbs.db
 /docs/html/
 /docs/_build/
 /docs/autoapi/
+/docs/generated/
 /site/
 
 ### Language-specific paths ###
@@ -112,6 +140,7 @@ __pycache__/
 __pypackages__/
 cython_debug/
 *.py[cod]
+venv/
 
 # Java
 /pom.xml.*
@@ -157,31 +186,41 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
-### Whitelist dotted files ###
+### Whitelist specific dotfiles ###
 
 # Git
 !/.git-blame-ignore-revs
 !/.gitattributes
 !/.gitmodules
 
-# Template files
-!/.env.template
-
-# `.ignore` files (e.g. `.dockerignore`, `.npmignore`)
-!/.*ignore
-
 # GitHub
 !/.devcontainer
 !/.github/
 !/.nojekyll
 
+# AI tools
+!/.claude/settings.json
+
 # Linters
 !/.editorconfig
 !/.prettierrc*
 
-# External service config
+### Whitelist general dotfile patterns ###
+
+# Template env files
+!/.env.template
+
+# `.ignore` files (e.g. `.dockerignore`, `.npmignore`)
+!/.*ignore
+
+# Config files in the root
+!/.*.jsonc
 !/.*.toml
 !/.*.yaml
+!/.*.yml
+
+# Config files in `.foo/*`
+!/.*/[a-z0-9_-]*.jsonc
 !/.*/[a-z0-9_-]*.toml
 !/.*/[a-z0-9_-]*.yaml
-!/.circleci/
+!/.*/[a-z0-9_-]*.yml
