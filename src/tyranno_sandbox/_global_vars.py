@@ -46,6 +46,13 @@ class Startup:
         return time.monotonic() - self.monotonic
 
 
+class GlobalVarsFactory:
+    """Factory that creates a [GlobalVars][] instance."""
+
+    def __call__(self) -> GlobalVars:
+        raise NotImplementedError
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class GlobalVars:
     """Collection of config values from environment variables and/or the platform."""
@@ -100,13 +107,12 @@ class XdgHelper[**P]:
             "appname": __about__["name"],
             "appauthor": __about__["vendor"],
             "version": str(__about__["version_parts"].major),
-            "roaming": False,
             "ensure_exists": False,
         }
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class EnvGlobalVarsFactory(Callable[[], GlobalVars]):
+class EnvGlobalVarsFactory(GlobalVarsFactory):
     """Factory that reads from environment variables and platform config."""
 
     env: Mapping[str, str | None]
@@ -125,8 +131,13 @@ class EnvGlobalVarsFactory(Callable[[], GlobalVars]):
         )
 
     def _use_color(self) -> bool:
-        # See https://force-color.org/) and https://no-color.org/
-        return self._flag("FORCE_COLOR", self._flag("NO_COLOR", sys.stdout.isatty()))
+        # See https://force-color.org/ and https://no-color.org/
+        if self._flag("FORCE_COLOR"):
+            return True
+        no_color = self.env.get("NO_COLOR")
+        if no_color is not None and no_color not in {"", "0"}:
+            return False
+        return sys.stdout.isatty()
 
     def _str(self, var: str, default: str) -> str:
         return self.env.get(var, default)
