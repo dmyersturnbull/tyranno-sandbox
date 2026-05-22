@@ -4,7 +4,6 @@
 
 """Environment variables and internal utils."""
 
-import sys
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -62,7 +61,6 @@ class GlobalVars:
     data_dir: Path
     log_dir: Path
     tyranno_dir: str
-    use_color: bool
     log_format: str
     debug_mode: bool
 
@@ -124,20 +122,10 @@ class EnvGlobalVarsFactory(GlobalVarsFactory):
             config_dir=xdg.dir(platformdirs.user_config_dir),
             data_dir=xdg.dir(platformdirs.user_data_dir),
             log_dir=xdg.dir(platformdirs.user_log_dir),
-            use_color=self._use_color(),
             tyranno_dir=str(self._rel_dir("TYRANNO_DIR", Path(".tyranno"))),
             log_format=self._str("TYRANNO_LOG_FORMAT", ""),
             debug_mode=self._flag("TYRANNO_DEBUG_MODE"),
         )
-
-    def _use_color(self) -> bool:
-        # See https://force-color.org/ and https://no-color.org/
-        if self._flag("FORCE_COLOR"):
-            return True
-        no_color = self.env.get("NO_COLOR")
-        if no_color is not None and no_color not in {"", "0"}:
-            return False
-        return sys.stdout.isatty()
 
     def _str(self, var: str, default: str) -> str:
         return self.env.get(var, default)

@@ -7,20 +7,23 @@
 import re
 import tomllib
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Any, Final
 
+from jsonpath_ng import parse as jsonpath_parse
 from pathspec import GitIgnoreSpec
 
 from tyranno_sandbox.dot_tree import DotTree, Toml
+from tyranno_sandbox.tyranno_functions import FUNCS, SOURCE_FUNCS
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
     from tyranno_sandbox._global_vars import GlobalVars
 
-__all__ = ["Context", "ContextFactory", "Data", "DefaultContextFactory"]
+__all__ = ["Context", "ContextFactory", "Data", "DefaultContextFactory", "ExpressionError"]
+
+# ── Regex patterns (all pre-compiled) ────────────────────────────────────────
 
 # Match simple dotted key names like `project.name` or `tool.tyranno.data.vendor`
 SIMPLE_KEY_REGEX: Final = re.compile(
@@ -35,6 +38,22 @@ _FUNC_CALL_RE: Final = re.compile(r"([a-zA-Z_][a-zA-Z0-9_]*)\(([^)]*)\)$")
 
 # Split a pipe chain:  a | b | c
 _PIPE_SPLIT_RE: Final = re.compile(r"\s*\|\s*")
+
+# Collapse whitespace around dots for spaced key notation:  "$ .project .name"
+_WS_DOT_RE: Final = re.compile(r"\s*\.\s*")
+_MULTI_SPACE_RE: Final = re.compile(r"\s+")
+
+# ── Key prefix constants ──────────────────────────────────────────────────────
+
+_PREFIX_ROOT: Final = "$."       # $.key → pyproject root key
+_PREFIX_AT: Final = "@."         # @.key → tool.tyranno.data.key
+_PREFIX_LOCAL: Final = "."       # .key → relative to in_key context
+_ROOT_ONLY: Final = "$"          # bare "$" → empty string
+_MARKER_FILE_LOCAL: Final = "^"  # ^key → strip this marker (file-local reference)
+
+
+class ExpressionError(Exception):
+    """Raised when a Tyranno template expression cannot be evaluated."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,10 +82,10 @@ class Data:
         """Evaluate a single expression from inside ``$<< >>``.
 
         Handles:
-        - Simple key paths: ``project.name``, ``.vendor``
-        - Pipe syntax:  ``project.keywords | yaml(@)``
-        - Chained functions: ``project.description.yaml(@)``
-        - Standalone calls: ``now_utc().year``
+        - Simple key paths: `project.name`, `.vendor`
+        - Pipe syntax: `project.keywords | yaml(@)`
+        - Chained functions: `project.description | yaml(@)`
+        - Standalone calls: `now_utc().year`
         """
         expression = expression.strip()
         if not expression:
@@ -75,32 +94,26 @@ class Data:
         # Pipe syntax: split on | and process left-to-right
         if "|" in expression:
             parts = _PIPE_SPLIT_RE.split(expression)
-            value = self._resolve_key(parts[0].strip(), in_key=in_key)
+            first = parts[0].strip()
+            value: Any = (
+                self._apply_func(first, None) if "(" in first else self._resolve_key(first, in_key=in_key)
+            )
             for func_call in parts[1:]:
                 value = self._apply_func(func_call.strip(), value)
-            return value
+            return self._to_str(value)
 
-        # Compact dot-chained syntax: project.description.yaml(@)
-        # Split into key path + trailing function calls
-        key_part, func_calls = self._parse_chained(expression, in_key=in_key)
-
-        # If key_part is empty the whole expression is a standalone function chain
-        # (e.g. "now_utc().year") — reconstruct and evaluate directly.
-        if not key_part and func_calls:
-            return self._resolve_key(".".join(func_calls), in_key=in_key)
-
-        value = self._resolve_key(key_part, in_key=in_key)
+        # Compact dot-chained syntax: key.func1(args).func2(args)
+        key_part, func_calls = self._parse_chained(expression)
+        value = None if not key_part else self._resolve_key(key_part, in_key=in_key)
         for fc in func_calls:
             value = self._apply_func(fc, value)
-        return value
+        return self._to_str(value) if value is not None else ""
 
-    def _parse_chained(self, expr: str, *, in_key: str = "") -> tuple[str, list[str]]:
-        """Split ``key.func1(args).func2(args)`` into key + function list."""
-        # Collapse spaces in "$ .project .name" style
+    def _parse_chained(self, expr: str) -> tuple[str, list[str]]:
+        """Split `key.func1(args).func2(args)` into a key path and function list."""
         if re.search(r"\s", expr):
-            expr = re.sub(r"\s*\.\s*", ".", re.sub(r"\s+", " ", expr)).strip()
+            expr = _WS_DOT_RE.sub(".", _MULTI_SPACE_RE.sub(" ", expr)).strip()
 
-        # Walk dot-segments left to right; once a segment has "(" it's a func call
         segments = expr.split(".")
         key_segs: list[str] = []
         func_calls: list[str] = []
@@ -113,148 +126,62 @@ class Data:
             else:
                 key_segs.append(seg)
 
-        # Keep empty leading string so that ".frag" → key ".frag", not "frag"
+        # Preserve empty leading element so `.frag` → `".frag"` not `"frag"`
         return ".".join(key_segs), func_calls
 
-    def _resolve_key(self, expr: str, *, in_key: str = "") -> str:
-        """Resolve a key expression (no function calls) to a string value."""
+    def _resolve_key(self, expr: str, *, in_key: str = "") -> Any:
+        """Resolve a dotted key expression to its raw value in the tree."""
         expr = expr.strip()
         if not expr:
             return ""
 
-        # Standalone function call: now_utc().year  /  now_local()
-        if "(" in expr:
-            return self._eval_standalone(expr)
-
-        # Strip file-local marker
-        if expr.startswith("^"):
-            expr = expr[1:]
-
-        # Normalise prefix to a plain dotted key
-        if expr.startswith("$."):
+        if expr.startswith(_PREFIX_ROOT):
             simple_key = expr[2:]
-        elif expr.startswith("@."):
+        elif expr.startswith(_PREFIX_AT):
             simple_key = "tool.tyranno.data." + expr[2:]
-        elif expr.startswith("."):
+        elif expr.startswith(_PREFIX_LOCAL):
             simple_key = (in_key + expr) if in_key else ("tool.tyranno.data" + expr)
-        elif expr == "$":
+        elif expr == _ROOT_ONLY:
             return ""
         else:
-            simple_key = expr
+            simple_key = expr.removeprefix(_MARKER_FILE_LOCAL)
 
-        # Fast path: plain dotted key
         if SIMPLE_KEY_REGEX.fullmatch(simple_key):
             try:
-                value = self.tree.access(simple_key)
-                return self._to_str(value)
-            except (KeyError, TypeError):
-                pass
+                return self.tree.access(simple_key)
+            except (KeyError, TypeError) as e:
+                raise ExpressionError(f"Key not found: {simple_key!r}") from e
 
-        # Fallback: JSONPath via jsonpath_ng
+        jpath = expr if expr.startswith("$") else f"$.{simple_key}"
         try:
-            from jsonpath_ng import parse as jsonpath_parse  # noqa: PLC0415
-
-            jpath = expr if expr.startswith("$") else f"$.{simple_key}"
             matches = jsonpath_parse(jpath).find(dict(self.tree))
             if matches:
-                return self._to_str(matches[0].value)
-        except Exception:  # noqa: BLE001
-            pass
+                return matches[0].value
+        except Exception as e:
+            raise ExpressionError(f"Key not found: {expr!r}") from e
+        raise ExpressionError(f"Key not found: {expr!r}")
 
-        return f"<unresolved:{expr}>"
-
-    def _eval_standalone(self, expr: str) -> str:
-        """Evaluate a standalone function call expression like ``now_utc().year``."""
-        # now_utc() and now_local() return a dict-like with year/month/day etc.
-        now_utc = datetime.now(UTC)
-        now_local = datetime.now().astimezone()
-
-        known: dict[str, object] = {
-            "now_utc()": now_utc,
-            "now_local()": now_local,
-        }
-        # Check for attribute access: now_utc().year
-        for prefix, dt_obj in known.items():
-            if expr.startswith(prefix):
-                rest = expr[len(prefix):]
-                if rest.startswith("."):
-                    attr = rest[1:]
-                    return str(getattr(dt_obj, attr, f"<no attr {attr}>"))
-                if not rest:
-                    return str(dt_obj)
-        return f"<unresolved:{expr}>"
-
-    @staticmethod
-    def _apply_func(func_call: str, value: str) -> str:
-        """Apply a single function call like ``yaml(@)`` to ``value``."""
+    def _apply_func(self, func_call: str, value: Any) -> Any:
+        """Apply a single function call like `yaml(@)` or attribute access like `year`."""
         func_call = func_call.strip()
-        m = _FUNC_CALL_RE.fullmatch(func_call)
-        if not m:
-            return value
-
-        name = m.group(1)
-        raw_args = [a.strip() for a in m.group(2).split(",") if a.strip()]
-        # Replace @ with the current value in positional args
-        args = [value if a == "@" else a.strip("'\"") for a in raw_args]
-
-        match name:
-            case "yaml":
-                return Data._yaml_scalar(value)
-            case "yaml_multiline":
-                indent = int(args[1]) if len(args) > 1 else 0
-                return Data._yaml_seq_multiline(value, indent)
-            case "lower":
-                return value.lower()
-            case "upper":
-                return value.upper()
-            case "replace":
-                # replace(@, old, new) — args[0] is @ (value), [1] is old, [2] is new
-                if len(args) >= 3:  # noqa: PLR2004
-                    return args[0].replace(args[1], args[2])
-            case "spdx_license":
-                # Return the SPDX identifier itself — license data lookup is unimplemented
-                return value
-            case "pep440_minor":
-                try:
-                    from packaging.version import Version  # noqa: PLC0415
-
-                    v = Version(value)
-                    return f"{v.major}.{v.minor}"
-                except Exception:  # noqa: BLE001
-                    return value
-            case "sort":
-                items = [i.strip() for i in value.split(",")]
-                return ", ".join(sorted(items))
-            case "join":
-                # join(sep, @) — args[0] is sep, args[1] is @ (value)
-                sep = args[0] if args else ", "
-                items = [i.strip() for i in value.split(",")]
-                return sep.join(items)
-        return value
+        if m := _FUNC_CALL_RE.fullmatch(func_call):
+            name = m.group(1)
+            raw_args = [a.strip() for a in m.group(2).split(",") if a.strip()]
+            # `@` is the value placeholder; strip it — value is always passed as first arg
+            extra_args = [a.strip("'\"") for a in raw_args if a != "@"]
+            if name in SOURCE_FUNCS:
+                return SOURCE_FUNCS[name](*extra_args)
+            if name in FUNCS:
+                return FUNCS[name](value, *extra_args)
+            raise ExpressionError(f"Unknown function: {name!r}")
+        # No parentheses: treat as attribute access on the current value
+        try:
+            return getattr(value, func_call)
+        except AttributeError:
+            raise ExpressionError(f"No attribute {func_call!r} on {type(value).__name__}")
 
     @staticmethod
-    def _yaml_scalar(value: str) -> str:
-        """Quote a string as a YAML scalar if necessary."""
-        needs_quoting = (
-            not value
-            or value[0] in "#&*?|->!%@`'\""
-            or any(c in value for c in ":#\n{[")
-            or value.lower() in {"true", "false", "null", "yes", "no", "on", "off"}
-        )
-        if needs_quoting:
-            escaped = value.replace("\\", "\\\\").replace('"', '\\"')
-            return f'"{escaped}"'
-        return value
-
-    @staticmethod
-    def _yaml_seq_multiline(value: str, indent: int = 0) -> str:
-        """Format a comma-separated value as an indented YAML sequence block."""
-        pad = " " * indent
-        items = [v.strip() for v in value.split(",") if v.strip()]
-        return "\n".join(f'{pad}"{item}"' for item in items)
-
-    @staticmethod
-    def _to_str(value: Toml) -> str:
+    def _to_str(value: Any) -> str:
         if isinstance(value, list):
             return ", ".join(str(v) for v in value)
         return str(value)

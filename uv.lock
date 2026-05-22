@@ -1306,6 +1306,7 @@ dependencies = [
     { name = "packaging" },
     { name = "pathspec" },
     { name = "platformdirs" },
+    { name = "pyyaml" },
     { name = "semver" },
     { name = "tzdata", marker = "sys_platform != 'linux'" },
 ]
@@ -1371,6 +1372,7 @@ requires-dist = [
     { name = "pathspec", specifier = ">=1.1" },
     { name = "platformdirs", specifier = ">=4.10" },
     { name = "pydantic", marker = "extra == 'server'", specifier = ">=2.13" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "rfc9457", marker = "extra == 'server'", specifier = ">=0.4" },
     { name = "semver", specifier = ">=3.0.4" },
     { name = "starlette-compress", marker = "python_full_version < '3.14' and extra == 'server'", specifier = ">=1.7" },

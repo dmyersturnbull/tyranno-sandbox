@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING, Final, Literal, NamedTuple, NewType, Self
 
 from loguru import logger
 
+from tyranno_sandbox.context import ExpressionError
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -39,7 +41,7 @@ class Tokens:
     def inline_regex(self, comment_start: str, comment_end: str) -> Pattern[str]:
         """Build a regex matching a single `::tyranno::` comment line.
 
-        The named group ``line`` captures everything between the marker and the
+        The named group `line` captures everything between the marker and the
         (optional) comment-close token, so that the caller can extract and
         evaluate the template expression.
         """
@@ -209,7 +211,14 @@ class SyncHelper:
             n = len(expressions)
             old_lines = lines[i : i + n]
             i += n
-            new_lines = [self.context.data.replace_vars_in(e) for e in expressions]
+            new_lines: list[str] = []
+            content_start = first_line + len(header_lines) + 1  # 1-based line number
+            for idx, expr in enumerate(expressions):
+                try:
+                    new_lines.append(self.context.data.replace_vars_in(expr))
+                except ExpressionError as e:
+                    logger.error(f"{self.path}:{content_start + idx}: {e}")
+                    new_lines.append(old_lines[idx] if idx < len(old_lines) else "")
             result.extend(new_lines)
 
             self._hits.append(
