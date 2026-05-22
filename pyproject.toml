@@ -73,6 +73,7 @@ dependencies = [
   "platformdirs>=4.9",
   "pathspec>=1.0",
   "jsonpath-ng>=1.8",
+  "pyyaml>=6.0",
   "semver>=3.0.4",
   # /usr/share/zoneinfo uses IANA zones; Windows does not
   # OR `"tzdata>=2026.1; platform_system == 'Windows'",`
