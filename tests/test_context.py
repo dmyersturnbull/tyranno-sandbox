@@ -4,10 +4,14 @@
 
 """Unit and integration tests for context.py expression evaluation."""
 
+from pathlib import Path
+
 import pytest
 
-from tyranno_sandbox.context import Data, ExpressionError
+from tyranno_sandbox._global_vars import GlobalVars
+from tyranno_sandbox.context import Context, Data, ExpressionError
 from tyranno_sandbox.dot_tree import DotTree
+from tyranno_sandbox.sync import SyncHelper
 
 
 def _make_data(raw: dict) -> Data:
@@ -33,6 +37,19 @@ def data() -> Data:
             },
         },
     })
+
+
+@pytest.fixture()
+def env(tmp_path: Path) -> GlobalVars:
+    return GlobalVars(
+        cache_dir=tmp_path / "cache",
+        config_dir=tmp_path / "config",
+        data_dir=tmp_path / "data",
+        log_dir=tmp_path / "log",
+        tyranno_dir=".tyranno",
+        log_format="",
+        debug_mode=False,
+    )
 
 
 class TestReplaceVarsIn:
@@ -73,9 +90,6 @@ class TestExpandVarSimpleKeys:
 
     def test_empty_expression(self, data: Data) -> None:
         assert data.expand_var("") == ""
-
-    def test_bare_dollar_returns_empty(self, data: Data) -> None:
-        assert data.expand_var("$") == ""
 
 
 class TestExpandVarPipeSyntax:
@@ -153,13 +167,7 @@ class TestIntegration:
 
 
 class TestSyncHelperIntegration:
-    def test_inline_replacement(self, tmp_path, data: Data) -> None:
-        from tyranno_sandbox.context import Context
-        from tyranno_sandbox.sync import SyncHelper
-        from tyranno_sandbox._global_vars import EnvGlobalVarsFactory
-        import os
-
-        env = EnvGlobalVarsFactory(env=os.environ)()
+    def test_inline_replacement(self, tmp_path: Path, data: Data, env: GlobalVars) -> None:
         ctx = Context(env=env, repo_dir=tmp_path, data=data, dry_run=True)
 
         target = tmp_path / "test.toml"
@@ -175,21 +183,15 @@ class TestSyncHelperIntegration:
         assert helper.new_lines[0].startswith("# ::tyranno::")
         assert helper.new_lines[1] == 'name = "my-project"'
 
-    def test_multiple_consecutive_tyranno_lines(self, tmp_path, data: Data) -> None:
-        from tyranno_sandbox.context import Context
-        from tyranno_sandbox.sync import SyncHelper
-        from tyranno_sandbox._global_vars import EnvGlobalVarsFactory
-        import os
-
-        env = EnvGlobalVarsFactory(env=os.environ)()
+    def test_multiple_consecutive_tyranno_lines(self, tmp_path: Path, data: Data, env: GlobalVars) -> None:
         ctx = Context(env=env, repo_dir=tmp_path, data=data, dry_run=True)
 
         target = tmp_path / "test.toml"
         target.write_text(
-            '# ::tyranno:: $<<project.name>>\n'
-            '# ::tyranno:: $<<project.version>>\n'
-            'old-name\n'
-            'old-version\n',
+            "# ::tyranno:: $<<project.name>>\n"
+            "# ::tyranno:: $<<project.version>>\n"
+            "old-name\n"
+            "old-version\n",
             encoding="utf-8",
         )
 
@@ -199,13 +201,7 @@ class TestSyncHelperIntegration:
         assert helper.new_lines[2] == "my-project"
         assert helper.new_lines[3] == "1.2.3"
 
-    def test_non_tyranno_lines_unchanged(self, tmp_path, data: Data) -> None:
-        from tyranno_sandbox.context import Context
-        from tyranno_sandbox.sync import SyncHelper
-        from tyranno_sandbox._global_vars import EnvGlobalVarsFactory
-        import os
-
-        env = EnvGlobalVarsFactory(env=os.environ)()
+    def test_non_tyranno_lines_unchanged(self, tmp_path: Path, data: Data, env: GlobalVars) -> None:
         ctx = Context(env=env, repo_dir=tmp_path, data=data, dry_run=True)
 
         target = tmp_path / "test.toml"

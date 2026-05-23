@@ -41,7 +41,11 @@ class Pep440SpecDict(TypedDict):
 
 @dataclass(frozen=True, slots=True)
 class Pep440Functions:
-    PEP440_PRE_STRS: ClassVar = {"alpha": "a", "beta": "b", "c": "rc", "pre": "rc", "preview": "rc"}
+    PEP440_PRE_STRS: ClassVar = {
+        "a": "a", "alpha": "a",
+        "b": "b", "beta": "b",
+        "rc": "rc", "c": "rc", "pre": "rc", "preview": "rc",
+    }
     PEP440_SPEC_RE: ClassVar = re.compile(r"""([A-Za-z0-9_-]++)(.++)""")
 
     def of(self, v: Pep440 | str) -> Pep440Dict:
@@ -76,7 +80,7 @@ class Pep440Functions:
         has_pre = v.pre is not None
         has_post = v.post is not None
         has_dev = v.dev is not None
-        if sum((has_pre, has_post, has_dev)):
+        if sum((has_pre, has_post, has_dev)) > 1:
             msg = f"PyPa package version {v} mixes pre, post, and/or dev numbers."
             raise FunctionError.from_call(msg, depth=2)
         epoch = f"{v.epoch}!" if v.epoch else ""

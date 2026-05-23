@@ -4,130 +4,188 @@
 
 """Unit tests for the Tyranno function registry."""
 
-import pytest
-
-from tyranno_sandbox.tyranno_functions import FUNCS, SOURCE_FUNCS
+from tyranno_sandbox.tyranno_functions import (
+    from_json,
+    from_yaml,
+    join,
+    now_local,
+    now_utc,
+    pep440,
+    pep440_minor,
+    semver,
+    sort,
+    timestamp,
+    yaml,
+    yaml_multiline,
+)
 
 
 class TestYamlFunc:
     def test_plain_string(self) -> None:
-        assert FUNCS["yaml"]("hello world") == "hello world"
+        assert yaml("hello world") == "hello world"
 
     def test_string_needing_quotes(self) -> None:
-        result = FUNCS["yaml"]("with: colon")
+        result = yaml("with: colon")
         assert result == "'with: colon'"
 
     def test_boolean_string_gets_quoted(self) -> None:
-        result = FUNCS["yaml"]("true")
+        result = yaml("true")
         assert result == "'true'"
 
     def test_url_is_valid_yaml_scalar(self) -> None:
-        result = FUNCS["yaml"]("https://example.com")
+        result = yaml("https://example.com")
         assert "example.com" in result
 
     def test_list_becomes_block_sequence(self) -> None:
-        result = FUNCS["yaml"](["alpha", "beta"])
+        result = yaml(["alpha", "beta"])
         assert "- alpha" in result
         assert "- beta" in result
 
     def test_integer(self) -> None:
-        result = FUNCS["yaml"](42)
+        result = yaml(42)
         assert result == "42"
 
 
 class TestFromYaml:
     def test_parses_scalar(self) -> None:
-        assert FUNCS["from_yaml"]("hello") == "hello"
+        assert from_yaml("hello") == "hello"
 
     def test_parses_sequence(self) -> None:
-        result = FUNCS["from_yaml"]("- a\n- b")
+        result = from_yaml("- a\n- b")
         assert result == ["a", "b"]
 
     def test_roundtrip(self) -> None:
         original = ["ci/cd", "python"]
-        dumped = FUNCS["yaml"](original)
-        parsed = FUNCS["from_yaml"](dumped)
+        dumped = yaml(original)
+        parsed = from_yaml(dumped)
         assert parsed == original
 
 
 class TestFromJson:
     def test_parses_object(self) -> None:
-        result = FUNCS["from_json"]('{"key": "value"}')
+        result = from_json('{"key": "value"}')
         assert result == {"key": "value"}
 
     def test_parses_array(self) -> None:
-        result = FUNCS["from_json"]('["a", "b"]')
+        result = from_json('["a", "b"]')
         assert result == ["a", "b"]
 
 
-class TestStringFuncs:
-    def test_lower(self) -> None:
-        assert FUNCS["lower"]("Hello World") == "hello world"
+class TestPep440:
+    def test_minor_version(self) -> None:
+        result = pep440("1.2.3")
+        assert result["minor_version"] == "1.2"
 
-    def test_upper(self) -> None:
-        assert FUNCS["upper"]("hello") == "HELLO"
+    def test_major_minor_micro(self) -> None:
+        result = pep440("3.14.1")
+        assert result["major"] == 3
+        assert result["minor"] == 14
+        assert result["micro"] == 1
 
-    def test_replace(self) -> None:
-        assert FUNCS["replace"]("foo_bar", "_", "-") == "foo-bar"
+    def test_pre_release(self) -> None:
+        result = pep440("1.0.0a1")
+        assert result["pre_type"] == "a"
+        assert result["pre_number"] == 1
 
-    def test_sort(self) -> None:
-        assert FUNCS["sort"]("banana, apple, cherry") == "apple, banana, cherry"
+    def test_no_pre_release(self) -> None:
+        result = pep440("2.0.0")
+        assert result["pre"] == ""
+        assert result["pre_type"] == ""
 
-    def test_join_default_sep(self) -> None:
-        assert FUNCS["join"]("a, b, c") == "a, b, c"
 
-    def test_join_custom_sep(self) -> None:
-        assert FUNCS["join"]("a, b, c", " | ") == "a | b | c"
+class TestPep440Minor:
+    def test_strips_patch(self) -> None:
+        assert pep440_minor("1.2.3") == "1.2"
 
-    def test_spdx_license(self) -> None:
-        assert FUNCS["spdx_license"]("Apache-2.0") == "Apache-2.0"
+    def test_large_minor(self) -> None:
+        assert pep440_minor("3.14.0") == "3.14"
 
-    def test_pep440_minor(self) -> None:
-        assert FUNCS["pep440_minor"]("1.2.3") == "1.2"
 
-    def test_pep440_minor_strips_patch(self) -> None:
-        assert FUNCS["pep440_minor"]("3.14.0") == "3.14"
+class TestSemver:
+    def test_major_minor_patch(self) -> None:
+        result = semver("1.2.3")
+        assert result["major"] == 1
+        assert result["minor"] == 2
+        assert result["patch"] == 3
+
+    def test_minor_version_string(self) -> None:
+        result = semver("2.5.0")
+        assert result["minor_version"] == "2.5"
+
+    def test_pre_release(self) -> None:
+        result = semver("1.0.0-alpha.1")
+        assert result["pre"] == "alpha.1"
+
+    def test_no_pre_release(self) -> None:
+        result = semver("1.2.3")
+        assert result["pre"] == ""
+
+
+class TestTimestamp:
+    def test_parses_iso_datetime(self) -> None:
+        result = timestamp("2025-06-15T10:30:00+00:00")
+        assert result["year"] == 2025
+        assert result["month"] == 6
+        assert result["day"] == 15
+
+    def test_unix_time(self) -> None:
+        result = timestamp("2025-01-01T00:00:00+00:00")
+        assert result["unix_time"] == 1735689600
 
 
 class TestSourceFuncs:
-    def test_now_utc_returns_datetime(self) -> None:
-        import datetime
+    def test_now_utc_returns_time_dict(self) -> None:
+        result = now_utc()
+        assert isinstance(result, dict)
+        assert "year" in result
+        assert "unix_time" in result
 
-        result = SOURCE_FUNCS["now_utc"]()
-        assert isinstance(result, datetime.datetime)
-        assert result.tzinfo is not None
-
-    def test_now_local_returns_datetime(self) -> None:
-        import datetime
-
-        result = SOURCE_FUNCS["now_local"]()
-        assert isinstance(result, datetime.datetime)
+    def test_now_local_returns_time_dict(self) -> None:
+        result = now_local()
+        assert isinstance(result, dict)
+        assert "year" in result
 
     def test_now_utc_is_startup_time(self) -> None:
         from tyranno_sandbox._global_vars import STARTUP
 
-        result = SOURCE_FUNCS["now_utc"]()
-        assert result == STARTUP.utc
+        result = now_utc()
+        assert result["unix_time"] == int(STARTUP.utc.timestamp())
 
     def test_now_utc_year_is_reasonable(self) -> None:
-        result = SOURCE_FUNCS["now_utc"]()
-        assert 2020 <= result.year <= 2100
+        result = now_utc()
+        assert 2020 <= result["year"] <= 2100
 
-    def test_now_utc_and_now_local_differ_only_by_timezone(self) -> None:
-        utc = SOURCE_FUNCS["now_utc"]()
-        local = SOURCE_FUNCS["now_local"]()
-        import datetime
-
-        diff = abs((utc - local.astimezone(datetime.timezone.utc)).total_seconds())
-        assert diff < 1  # same instant
+    def test_now_utc_and_now_local_same_instant(self) -> None:
+        utc = now_utc()
+        local = now_local()
+        assert utc["unix_time"] == local["unix_time"]
 
 
 class TestYamlMultiline:
     def test_basic(self) -> None:
-        result = FUNCS["yaml_multiline"]("alpha, beta, gamma")
-        lines = result.splitlines()
-        assert len(lines) == 3
+        assert yaml_multiline("alpha, beta, gamma") == "alpha\nbeta\ngamma"
 
     def test_with_indent(self) -> None:
-        result = FUNCS["yaml_multiline"]("a, b", "2")
-        assert all(line.startswith("  ") for line in result.splitlines())
+        assert yaml_multiline("a, b", 2) == "  a\n  b"
+
+    def test_list_input(self) -> None:
+        assert yaml_multiline(["x", "y"]) == "x\ny"
+
+
+class TestSort:
+    def test_csv_string(self) -> None:
+        assert sort("banana, apple, cherry") == "apple, banana, cherry"
+
+    def test_list_input(self) -> None:
+        assert sort(["gamma", "alpha", "beta"]) == "alpha, beta, gamma"
+
+
+class TestJoin:
+    def test_default_sep(self) -> None:
+        assert join("a, b, c") == "a, b, c"
+
+    def test_custom_sep(self) -> None:
+        assert join("a, b, c", " | ") == "a | b | c"
+
+    def test_list_input(self) -> None:
+        assert join(["x", "y", "z"], "-") == "x-y-z"
