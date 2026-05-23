@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 
-from jsonpath_ng import parse as jsonpath_parse
+from jsonpath_ng.ext import parse as jsonpath_parse
 from pathspec import GitIgnoreSpec
 
 from tyranno_sandbox.dot_tree import DotTree, Toml
@@ -21,7 +21,20 @@ if TYPE_CHECKING:
 
     from tyranno_sandbox._global_vars import GlobalVars
 
-__all__ = ["Context", "ContextFactory", "Data", "DefaultContextFactory", "ExpressionError"]
+__all__ = [
+    "CommentSyntaxError",
+    "Context",
+    "ContextFactory",
+    "Data",
+    "DefaultContextFactory",
+    "ErrorLocation",
+    "ExpressionError",
+    "FunctionFailedError",
+    "NoSuchFunctionError",
+    "NoSuchKeyError",
+    "SignatureMismatchError",
+    "SyncError",
+]
 
 # ── Regex patterns (all pre-compiled) ────────────────────────────────────────
 
@@ -43,6 +56,9 @@ _PIPE_SPLIT_RE: Final = re.compile(r"\s*\|\s*")
 _WS_DOT_RE: Final = re.compile(r"\s*\.\s*")
 _MULTI_SPACE_RE: Final = re.compile(r"\s+")
 
+# Detect any whitespace in an expression
+_WS_CHECK_RE: Final = re.compile(r"\s")
+
 # ── Key prefix constants ──────────────────────────────────────────────────────
 
 _PREFIX_ROOT: Final = "$."       # $.key → pyproject root key
@@ -51,9 +67,109 @@ _PREFIX_LOCAL: Final = "."       # .key → relative to in_key context
 _ROOT_ONLY: Final = "$"          # bare "$" → empty string
 _MARKER_FILE_LOCAL: Final = "^"  # ^key → strip this marker (file-local reference)
 
+# ── Error types ───────────────────────────────────────────────────────────────
 
-class ExpressionError(Exception):
-    """Raised when a Tyranno template expression cannot be evaluated."""
+
+@dataclass(frozen=True, slots=True)
+class ErrorLocation:
+    path: Path
+    line: int
+    column: int = 0
+
+
+class SyncError(Exception):
+    def __init__(self, *, location: ErrorLocation | None = None) -> None:
+        super().__init__()
+        self.location: ErrorLocation | None = location
+
+    def _loc_str(self) -> str:
+        if self.location:
+            return f" at {self.location.path}:{self.location.line}"
+        return ""
+
+    def __str__(self) -> str:
+        return f"Sync error{self._loc_str()}"
+
+
+class CommentSyntaxError(SyncError):
+    def __init__(self, *, detail: str, location: ErrorLocation | None = None) -> None:
+        super().__init__(location=location)
+        self.detail = detail
+
+    def __str__(self) -> str:
+        return f"Comment syntax error{self._loc_str()}: {self.detail}"
+
+
+class ExpressionError(SyncError):
+    def __init__(self, *, context: str | None = None, location: ErrorLocation | None = None) -> None:
+        super().__init__(location=location)
+        self.context = context
+
+    def __str__(self) -> str:
+        ctx = f" (in {self.context!r})" if self.context else ""
+        return f"Expression error{self._loc_str()}{ctx}"
+
+
+class NoSuchKeyError(ExpressionError):
+    def __init__(self, key: str, *, context: str | None = None, location: ErrorLocation | None = None) -> None:
+        super().__init__(context=context, location=location)
+        self.key = key
+
+    def __str__(self) -> str:
+        ctx = f" (in {self.context!r})" if self.context else ""
+        return f"Key not found{self._loc_str()}: {self.key!r}{ctx}"
+
+
+class NoSuchFunctionError(ExpressionError):
+    def __init__(self, name: str, *, context: str | None = None, location: ErrorLocation | None = None) -> None:
+        super().__init__(context=context, location=location)
+        self.name = name
+
+    def __str__(self) -> str:
+        ctx = f" (in {self.context!r})" if self.context else ""
+        return f"Unknown function{self._loc_str()}: {self.name!r}{ctx}"
+
+
+class SignatureMismatchError(ExpressionError):
+    def __init__(
+        self,
+        name: str,
+        *,
+        expected: str,
+        actual: str,
+        context: str | None = None,
+        location: ErrorLocation | None = None,
+    ) -> None:
+        super().__init__(context=context, location=location)
+        self.name = name
+        self.expected = expected
+        self.actual = actual
+
+    def __str__(self) -> str:
+        return (
+            f"Signature mismatch for {self.name!r}{self._loc_str()}: "
+            f"expected {self.expected}, got {self.actual}"
+        )
+
+
+class FunctionFailedError(ExpressionError):
+    def __init__(
+        self,
+        name: str,
+        *,
+        cause: str,
+        context: str | None = None,
+        location: ErrorLocation | None = None,
+    ) -> None:
+        super().__init__(context=context, location=location)
+        self.name = name
+        self.cause = cause
+
+    def __str__(self) -> str:
+        return f"Function {self.name!r} failed{self._loc_str()}: {self.cause}"
+
+
+# ── Data and Context ──────────────────────────────────────────────────────────
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,7 +200,7 @@ class Data:
         Handles:
         - Simple key paths: `project.name`, `.vendor`
         - Pipe syntax: `project.keywords | yaml(@)`
-        - Chained functions: `project.description | yaml(@)`
+        - Chained functions: `project.version.pep440(@).minor_version`
         - Standalone calls: `now_utc().year`
         """
         expression = expression.strip()
@@ -111,7 +227,7 @@ class Data:
 
     def _parse_chained(self, expr: str) -> tuple[str, list[str]]:
         """Split `key.func1(args).func2(args)` into a key path and function list."""
-        if re.search(r"\s", expr):
+        if _WS_CHECK_RE.search(expr):
             expr = _WS_DOT_RE.sub(".", _MULTI_SPACE_RE.sub(" ", expr)).strip()
 
         segments = expr.split(".")
@@ -150,7 +266,7 @@ class Data:
             try:
                 return self.tree.access(simple_key)
             except (KeyError, TypeError) as e:
-                raise ExpressionError(f"Key not found: {simple_key!r}") from e
+                raise NoSuchKeyError(simple_key) from e
 
         jpath = expr if expr.startswith("$") else f"$.{simple_key}"
         try:
@@ -158,11 +274,11 @@ class Data:
             if matches:
                 return matches[0].value
         except Exception as e:
-            raise ExpressionError(f"Key not found: {expr!r}") from e
-        raise ExpressionError(f"Key not found: {expr!r}")
+            raise NoSuchKeyError(expr) from e
+        raise NoSuchKeyError(expr)
 
     def _apply_func(self, func_call: str, value: Any) -> Any:
-        """Apply a single function call like `yaml(@)` or attribute access like `year`."""
+        """Apply a single function call like `yaml(@)` or key access like `year`."""
         func_call = func_call.strip()
         if m := _FUNC_CALL_RE.fullmatch(func_call):
             name = m.group(1)
@@ -173,15 +289,17 @@ class Data:
                 return SOURCE_FUNCS[name](*extra_args)
             if name in FUNCS:
                 return FUNCS[name](value, *extra_args)
-            raise ExpressionError(f"Unknown function: {name!r}")
-        # No parentheses: treat as attribute access on the current value
+            raise NoSuchFunctionError(name)
+        # No parentheses: treat as attribute or dict-key access on the current value
         try:
             return getattr(value, func_call)
         except AttributeError:
-            raise ExpressionError(f"No attribute {func_call!r} on {type(value).__name__}")
+            if isinstance(value, dict) and func_call in value:
+                return value[func_call]
+            raise NoSuchFunctionError(func_call)
 
     @staticmethod
-    def _to_str(value: Any) -> str:
+    def _to_str(value: object) -> str:
         if isinstance(value, list):
             return ", ".join(str(v) for v in value)
         return str(value)

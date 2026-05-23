@@ -70,8 +70,8 @@ Suffix = NewType("Suffix", str)
 class CommentTokenPair(NamedTuple):
     """Start and optional end comment tokens (e.g. ``("//", "")``).
 
-    - If ``end == ""``, the comment is single-line.
-    - If ``end != ""``, the comment is multi-line.
+    - If `end == ""`, the comment is single-line.
+    - If `end != ""`, the comment is multi-line.
     """
 
     start: str
