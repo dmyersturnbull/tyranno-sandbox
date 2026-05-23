@@ -5,6 +5,7 @@
 """Utilities for tests."""
 
 import logging
+import os
 import time
 from contextlib import ExitStack, contextmanager, redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field

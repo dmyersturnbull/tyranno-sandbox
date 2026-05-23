@@ -208,13 +208,16 @@ class DotDictChecker:
             for v in node:
                 if isinstance(v, list | dict):
                     self.check_values(v)
+                else:
+                    self.check_primitive(v)
         elif isinstance(node, dict):
-            if bad := {k: type(v) for k, v in node.items() if not self.check_primitive(v)}:
+            if bad := {k: type(v) for k, v in node.items()
+                       if not isinstance(v, dict | list) and not self.is_primitive(v)}:
                 # noinspection PyUnboundLocalVariable
-                msg = f"Key(s) {bad.keys()} have invalid values of type(s) {set(bad.values())}"
+                msg = f"Key(s) {list(bad.keys())} have invalid values of type(s) {set(bad.values())}"
                 raise TypeError(msg)
             for v in node.values():
-                if isinstance(v, dict):
+                if isinstance(v, dict | list):
                     self.check_values(v)
         return node
 

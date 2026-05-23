@@ -16,13 +16,15 @@ from typing import Annotated, Final, Self, TextIO
 
 import click
 import typer
+from click import Context as ClickContext
 from click import Parameter
 from loguru import logger
 from typer import Argument, Option, Typer
 
 from tyranno_sandbox._about import __about__
 from tyranno_sandbox._global_vars import EnvGlobalVarsFactory, GlobalVars
-from tyranno_sandbox.context import Context, ContextFactory, DefaultContextFactory
+from tyranno_sandbox.context import ContextFactory, DefaultContextFactory
+from tyranno_sandbox.sync import Syncer
 
 ENV: GlobalVars = EnvGlobalVarsFactory(env=os.environ)()
 
@@ -36,7 +38,7 @@ class SpdxLicense(Enum):
     MPL = "MPL-2.0"
 
 
-class LogLevel(Enum):
+class LogLevel(int, Enum):
     """Default loguru log levels, except for CRITICAL."""
 
     TRACE = 5
@@ -49,7 +51,7 @@ class LogLevel(Enum):
     @classmethod
     def by_index(cls, i: int, *, clamp: bool = False) -> Self:
         if clamp:
-            i = max(len(cls) - 1, min(0, i))
+            i = min(len(cls) - 1, max(0, i))
         return list(cls)[i]
 
 
@@ -93,12 +95,13 @@ class Logging:
 
     # ruff: noqa: A001, A002
     def configure(self, *, quiet: int, verbose: int, to: str, format: str) -> None:
-        index = LogLevel.SUCCESS.value + quiet - verbose
+        success_index = list(LogLevel).index(LogLevel.SUCCESS)
+        index = success_index + quiet - verbose
         self.level = LogLevel.by_index(index, clamp=True)
         logger.remove()
         sink = LogSink.of(to).sink
         format = format or self._default_fmt()
-        logger.add(sink=sink, level=self.level.name, format=format, encoding="utf-8")
+        logger.add(sink=sink, level=self.level.name, format=format)
 
     def _default_fmt(self) -> str:
         if self.level is LogLevel.TRACE:
@@ -120,7 +123,7 @@ class Inode(click.Path):
         #   Override to prevent passing arguments.
         super().__init__()
 
-    def convert(self, value: str, param: Parameter, ctx: Context) -> Path:
+    def convert(self, value: str, param: Parameter, ctx: ClickContext) -> Path:
         path = self.resolve(Path(super().convert(value, param, ctx)))
         try:
             mode: int = path.stat(follow_symlinks=False).st_mode
@@ -241,7 +244,10 @@ def new(
 def sync() -> None:
     """Syncs project metadata between configured files."""
     logger.info("Syncing metadata...")
-    logger.info("␣")
+    context = state.create_context()
+    syncer = Syncer(context)
+    syncer.run()
+    logger.success("Sync complete.")
 
 
 if __name__ == "__main__":
