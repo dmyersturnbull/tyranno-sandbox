@@ -27,7 +27,7 @@ name = "tyranno-sandbox"
 # 1. `major.minor.patch` => triggers release
 # 2. `major.minor.patch.{alpha|beta|rc}.{0+}` (e.g. `1.0.0-rc.0`) => test only
 version = "0.0.1-alpha.0"
-requires-python = "~=3.14.0"
+requires-python = "~=3.14.5"
 
 # `readme` is `description` in `importlib.metadata`.
 readme = { file = "README.md", content-type = "text/markdown" }
@@ -67,22 +67,22 @@ classifiers = [
 # https://packaging.python.org/en/latest/specifications/dependency-specifiers/#dependency-specifiers
 dependencies = [
   "aiofiles>=25.1",
-  "loguru>=0.7.2",
-  "niquests>=3.18",
+  "loguru>=0.7.3",
+  "niquests>=3.19",
   "packaging>=26.0",
-  "platformdirs>=4.9",
-  "pathspec>=1.0",
+  "platformdirs>=4.10",
+  "pathspec>=1.1",
   "jsonpath-ng>=1.8",
   "semver>=3.0.4",
   # /usr/share/zoneinfo uses IANA zones; Windows does not
   # OR `"tzdata>=2026.1; platform_system == 'Windows'",`
-  "tzdata>=2026.1; platform_system != 'Linux'",
+  "tzdata>=2026.2; platform_system != 'Linux'",
 ]
 
 # -------------------------- optional dependencies ----------------------------
 [project.optional-dependencies]
 cli = [
-  "typer>=0.24",
+  "typer>=0.26.6",
 ]
 server = [
   "fastapi>=0.136",
@@ -90,7 +90,7 @@ server = [
   "Hypercorn[h3]>=0.18",
   "pydantic>=2.13",
   "rfc9457>=0.4",
-  "starlette-compress>=1.7; python_version < '3.15'",
+  "starlette-compress>=1.7; python_version < '3.14'",
 ]
 
 # -------------------------- scripts ------------------------------------------
@@ -133,8 +133,8 @@ dev = [
 
 # pytest and supporting tools
 test = [
-  "coverage[toml]>=7.13", # Required for coverage.
-  "hypothesis>=6.152", # Required for property tests.
+  "coverage[toml]>=7.14", # Required for coverage.
+  "hypothesis>=6.155", # Required for property tests.
   "pytest>=9.0", # Required.
   "pytest-cov>=7.1", # Required for coverage.
   # "pytest-datadir>=1.8", # Optional. To read test resources in the same dir.
@@ -145,7 +145,7 @@ test = [
 # Documentation tools
 docs = [
   "mkdocstrings-python>=2.0,<3.0",
-  "zensical>=0.0.41", # https://zensical.org/
+  "zensical>=0.0.43", # https://zensical.org/
 ]
 
 sbom = [
@@ -154,14 +154,14 @@ sbom = [
 
 # Python-ecosystem lint tools that can be called directly
 lint = [
-  "ruff>=0.15.13",
-  "ty>=0.0.35", # Astral's fledgling type checker.
+  "ruff>=0.15.15",
+  "ty>=0.0.42", # Astral's fledgling type checker.
 ]
 
-# pre-commit and any dependencies for local hooks
+# prek and any dependencies for local hooks
 git-hooks = [
-  "pathvalidate>=3.3", # Needed for local pre-commit hook.
-  "pre-commit>=4.5",
+  "pathvalidate>=3.3", # Needed for local prek hook.
+  "prek>=0.4.3",
 ]
 
 #
@@ -392,7 +392,7 @@ namespace = "tyranno_sandbox"
 # ::tyranno:: frag = "$<<.vendor>>/$<<project.name>>"
 frag = "dmyersturnbull/tyranno-sandbox"
 # ::tyranno:: copyright = "Copyright $<<now_utc().year>>, Contributors to $<<project.name>>"
-copyright = "Copyright 2025, Contributors to sandbox-tyranno"
+copyright = "Copyright 2026, Contributors to sandbox-tyranno"
 doi = "10.5281/zenodo.4485186" # <<<comment out for new projects
 # ::tyranno alias:: license-data = $<< $.project.license.text.spdx_license(@) >>
 

@@ -4,7 +4,7 @@
 
 name: do-bump-dependencies
 description: >-
-  Upgrades the uv lock file and pre-commit config.
+  Upgrades the uv lock file and prek config.
   Commits and pushes if 'push' is true.
 
 inputs:
@@ -60,18 +60,18 @@ runs:
       run: |
         git add uv.lock
         git commit -m "chore: update lock file"
-    - name: Upgrade the pre-commit config
+    - name: Upgrade the prek config
       id: precommit
       shell: bash
       run: |
         uv sync --frozen --only-group git-hooks
-        uv run --no-sync pre-commit install
-        uv run --no-sync pre-commit autoupdate
+        uv run --no-sync prek install
+        uv run --no-sync prek autoupdate
         if [[ -n "$(git status --porcelain .pre-commit-config.yaml)" ]]; then
           echo "diff=true" >> $GITHUB_OUTPUT
         fi
     - if: ${{ steps.precommit.outputs.diff }}
-      name: Commit pre-commit changes
+      name: Commit prek changes
       shell: bash
       run: |
         git add .pre-commit-config.yaml

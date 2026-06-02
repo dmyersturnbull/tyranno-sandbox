@@ -77,9 +77,9 @@ _info:
 init:
     -rm .git/hooks/*.sample
     uv sync --all-extras --exact
-    uv run --no-sync pre-commit install --install-hooks --overwrite
-    uv run --no-sync pre-commit gc
-    uv run --no-sync pre-commit run
+    uv run --no-sync prek install --install-hooks --overwrite
+    uv run --no-sync prek gc
+    uv run --no-sync prek run
 
 ###################################################################################################
 
@@ -104,8 +104,8 @@ alias upgrade-lock := update-lock
 # Auto-update commit hooks.
 [group('project')]
 update-hooks:
-    uv run --locked pre-commit autoupdate
-    uv run --no-sync pre-commit gc
+    uv run --locked prek autoupdate
+    uv run --no-sync prek gc
 
 alias upgrade-hooks := update-hooks
 
@@ -116,15 +116,16 @@ sync:
 
 alias lock := sync
 
-# Prune temp data, including from uv, pre-commit, and git.
+# Prune temp data, including from uv, prek, and git.
 [group('project')]
 [parallel]
 clean: delete-temp clean-main clean-git
 
-# Delete unused uv and pre-commit cache data.
+# Delete unused uv and prek cache data.
 [group('project')]
 clean-main:
-    uv run --no-sync pre-commit gc
+    uv run --no-sync prek gc
+    -rm .git/hooks/pre-commit
     uv cache prune
 
 # Start incremental 'git maintenance' tasks. Called by `clean`.
@@ -202,55 +203,55 @@ prune-git:
 [group('project')]
 [metadata('danger')]
 minify-repo: clean delete-probable-temp
-    uv run pre-commit clean
-    uv run pre-commit uninstall
+    uv run prek clean
+    uv run prek uninstall
     -rm -f -r .venv
     -rm -f -r .idea
     -rm -f uv.lock
 
 ###################################################################################################
 
-# Format STAGED files (via pre-commit).
+# Format STAGED files (via prek).
 [group('format')]
 format-changes: _stage_precommit _format
 
 alias format := format-changes
 
-# Format ALL files (via pre-commit).
+# Format ALL files (via prek).
 [group('format')]
 format-all: (_format "--all-files")
 
 # <Internal.>
 _format *args:
-    -uv run pre-commit run end-of-file-fixer {{ args }}
-    -uv run pre-commit run fix-byte-order-marker {{ args }}
-    -uv run pre-commit run trailing-whitespace {{ args }}
-    -uv run pre-commit run ruff-format {{ args }}
-    -uv run pre-commit run --hook-stage manual biome-format {{ args }}
-    -uv run pre-commit run format-justfile {{ args }}
+    -uv run prek run end-of-file-fixer {{ args }}
+    -uv run prek run fix-byte-order-marker {{ args }}
+    -uv run prek run trailing-whitespace {{ args }}
+    -uv run prek run ruff-format {{ args }}
+    -uv run prek run --hook-stage manual biome-format {{ args }}
+    -uv run prek run format-justfile {{ args }}
 
 ###################################################################################################
 
-# Run pre-commit auto-fix hooks on STAGED files.
+# Run prek auto-fix hooks on STAGED files.
 [group('fix')]
 [no-exit-message]
 fix-changes: _stage_precommit fix-ruff fix-biome
 
 alias fix := fix-changes
 
-# Run pre-commit auto-fix hooks on ALL files. ⚠️
+# Run prek auto-fix hooks on ALL files. ⚠️
 [group('fix')]
 [metadata('caution')]
 [no-exit-message]
 fix-all: _stage_precommit (fix-ruff "--all-files") (fix-biome "--all-files")
 
-# Apply Biome auto-fixes (via pre-commit). 'args' may be '--all-files' or empty.
+# Apply Biome auto-fixes (via prek). 'args' may be '--all-files' or empty.
 [arg("args", pattern="--all-files")]
 [group('fix')]
 [no-exit-message]
 fix-biome *args: (hook "--hook-stage manual biome-lint" args)
 
-# Apply Ruff auto-fixes (via pre-commit). 'args' may be '--all-files' or empty.
+# Apply Ruff auto-fixes (via prek). 'args' may be '--all-files' or empty.
 [arg("args", pattern="--all-files")]
 [group('fix')]
 [no-exit-message]
@@ -290,30 +291,30 @@ check-fast: check-core check-ruff check-biome
 
 alias check := check-fast
 
-# Check basic rules (via pre-commit).
+# Check basic rules (via prek).
 [group('check')]
 check-core:
     # Keep slower hooks lower in the list.
-    uv run --no-sync pre-commit run check-filenames
-    uv run --no-sync pre-commit run pathvalidate
-    uv run --no-sync pre-commit run check-symlinks
-    uv run --no-sync pre-commit run check-case-conflict
-    uv run --no-sync pre-commit run check-illegal-windows-names
-    uv run --no-sync pre-commit run check-shebang-scripts-are-executable
-    uv run --no-sync pre-commit run check-github-actions
-    uv run --no-sync pre-commit run check-github-workflows
-    uv run --no-sync pre-commit run check-compose-spec
-    uv run --no-sync pre-commit run forbid-new-submodules
-    uv run --no-sync pre-commit run trailing-whitespace
-    uv run --no-sync pre-commit run check-added-large-files
+    uv run --no-sync prek run check-filenames
+    uv run --no-sync prek run pathvalidate
+    uv run --no-sync prek run check-symlinks
+    uv run --no-sync prek run check-case-conflict
+    uv run --no-sync prek run check-illegal-windows-names
+    uv run --no-sync prek run check-shebang-scripts-are-executable
+    uv run --no-sync prek run check-github-actions
+    uv run --no-sync prek run check-github-workflows
+    uv run --no-sync prek run check-compose-spec
+    uv run --no-sync prek run forbid-new-submodules
+    uv run --no-sync prek run trailing-whitespace
+    uv run --no-sync prek run check-added-large-files
 
-# Check JSON schemas (via pre-commit).
+# Check JSON schemas (via prek).
 [group('check')]
 check-schemas:
-    uv run --no-sync pre-commit run check-github-actions
-    uv run --no-sync pre-commit run check-github-workflows
-    uv run --no-sync pre-commit run check-compose-spec
-    uv run --no-sync pre-commit run check-metaschema
+    uv run --no-sync prek run check-github-actions
+    uv run --no-sync prek run check-github-workflows
+    uv run --no-sync prek run check-compose-spec
+    uv run --no-sync prek run check-metaschema
 
 # Check Ruff rules (without auto-fixing).
 [group('check')]
@@ -335,7 +336,7 @@ check-ty *args: (run "ty check" args)
 [no-exit-message]
 check-biome *args: (hook "--hook-stage manual --all-files biome-ci")
 
-# Detect broken hyperlinks via pre-commit. (slow)
+# Detect broken hyperlinks via prek. (slow)
 [group('check')]
 [no-exit-message]
 check-links: (hook "--hook-stage manual --all-files markdown-link-check")
@@ -432,11 +433,11 @@ serve-docs: (run "zensical serve -o")
 @uv *args:
     uv {{ args }}
 
-# `pre-commit`
+# `prek`
 [group('alias')]
 [no-exit-message]
 [private]
-@pre-commit *args: (run "pre-commit" args)
+@prek *args: (run "prek" args)
 
 # `uv run --locked`
 [group('alias')]
@@ -449,10 +450,10 @@ serve-docs: (run "zensical serve -o")
 [no-exit-message]
 @python *args: (run "python" args)
 
-# `uv run --locked pre-commit run {hook}`
+# `uv run --locked prek run {hook}`
 [group('alias')]
 [no-exit-message]
-@hook name *args: (run "pre-commit run" name args)
+@hook name *args: (run "prek run" name args)
 
 # `uv run --locked ruff`
 [group('alias')]

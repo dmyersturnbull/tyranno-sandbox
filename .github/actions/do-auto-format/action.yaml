@@ -89,11 +89,11 @@ runs:
         SUBJECT: ${{ inputs.auto-fix-git-subject }}
       run: |
         if [[ -z $FROM ]]; then
-          uv run --no-sync pre-commit run ruff-check --all-files || true
-          uv run --no-sync pre-commit run biome-lint --all-files || true
+          uv run --no-sync prek run ruff-check --all-files || true
+          uv run --no-sync prek run biome-lint --all-files || true
         else
-          uv run --no-sync pre-commit run ruff-check --from-ref $FROM --to-ref $TO || true
-          uv run --no-sync pre-commit run biome-lint --from-ref $FROM --to-ref $TO || true
+          uv run --no-sync prek run ruff-check --from-ref $FROM --to-ref $TO || true
+          uv run --no-sync prek run biome-lint --from-ref $FROM --to-ref $TO || true
         fi
         if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
           git diff --histogram # Show in logs.
@@ -112,13 +112,13 @@ runs:
         SUBJECT: ${{ inputs.auto-format-git-subject }}
       run: |
         if [[ -z $FROM ]]; then
-          uv run --no-sync pre-commit run ruff-format --all-files || true
-          uv run --no-sync pre-commit run biome-format --all-files || true
-          uv run --no-sync pre-commit run format-justfile --all-files || true
+          uv run --no-sync prek run ruff-format --all-files || true
+          uv run --no-sync prek run biome-format --all-files || true
+          uv run --no-sync prek run format-justfile --all-files || true
         else
-          uv run --no-sync pre-commit run ruff-format --from-ref $FROM --to-ref $TO || true
-          uv run --no-sync pre-commit run biome-format --from-ref $FROM --to-ref $TO || true
-          uv run --no-sync pre-commit run format-justfile --from-ref $FROM --to-ref $TO || true
+          uv run --no-sync prek run ruff-format --from-ref $FROM --to-ref $TO || true
+          uv run --no-sync prek run biome-format --from-ref $FROM --to-ref $TO || true
+          uv run --no-sync prek run format-justfile --from-ref $FROM --to-ref $TO || true
         fi
         if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
           git diff --histogram # Show in logs.

@@ -2,13 +2,11 @@
 # SPDX-PackageHomePage: https://github.com/dmyersturnbull/tyrannosaurus
 # SPDX-License-Identifier: Apache-2.0
 
-# Check out https://pre-commit.com/ for documentation.
+# Check out https://prek.com/ for documentation.
 minimum_pre_commit_version: 4.5.0
 
 # Set the default stages for hooks that don't specify `stages`.
-# If we didn't set this, the defaults would be all 10 stages.
-# See https://pre-commit.com/#confining-hooks-to-run-at-certain-stages
-# Stages (https://pre-commit.com/#supported-git-hooks):
+# If we didn't set this, the defaults would be all 10 stages:
 #   commit-msg
 #   | prepare-commit-msg
 #   | pre-(commit|merge-commit|push|rebase)
@@ -19,9 +17,8 @@ default_stages:
   - manual
 
 repos:
-  # Standard hooks
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+  # Built-in hooks
+  - repo: builtin
     hooks:
       - id: check-added-large-files
         args:
@@ -30,9 +27,10 @@ repos:
       - id: check-case-conflict # ban ABC and abc both existing
       - id: check-illegal-windows-names # ban filenames that are illegal on Windows
       - id: check-merge-conflict # ban merge conflict markers
-        # Use our `default_stages` -- both merge and rebase trigger pre-commit at the right time.
+        # Use our `default_stages` -- both merge and rebase trigger prek at the right time.
         args:
           - --assume-in-merge # otherwise skipped in rebase
+      - id: detect-private-key
       - id: check-symlinks # ban *broken* symlinks
       - id: check-shebang-scripts-are-executable # ensures all shebangs are executable
       - id: end-of-file-fixer # auto-add final \n
@@ -90,7 +88,7 @@ repos:
                 forbid-explicit-octal: true
 
   # UV lock and sync
-  - repo: https://github.com/astral-sh/uv-pre-commit
+  - repo: https://github.com/astral-sh/uv-prek
     rev: 0.11.14
     hooks:
       - id: uv-sync
@@ -99,7 +97,7 @@ repos:
 
   # Format and lint Python with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.13
+    rev: v0.15.15
     hooks:
       - id: ruff-check
         args:
@@ -120,12 +118,12 @@ repos:
   # Format and auto-fix various files with Biome.
   # Note that Biome's support for Markdown is pending.
   - repo: https://github.com/biomejs/pre-commit
-    rev: v2.4.15 # Note: biomejs/pre-commit only uses tags, not releases.
+    rev: v2.4.16 # Note: biomejs/pre-commit only uses tags, not releases.
     hooks:
       # "check" hook -- auto-format and auto-fix
       - id: biome-check
         args:
-          - --vcs-enabled=false # pre-commit is sending the file list already.
+          - --vcs-enabled=false # prek is sending the file list already.
       # Manual "format" hook -- formats
       - id: biome-format
         args:

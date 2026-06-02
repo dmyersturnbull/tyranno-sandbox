@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: check-hooks
-description: Runs basic pre-commit hooks.
+description: Runs basic prek hooks.
 inputs:
   ref:
     default: ""
@@ -21,7 +21,7 @@ runs:
       run: |
         uv sync --frozen --only-group git-hooks
     - uses: extractions/setup-just@v4
-    - name: Run pre-commit hooks
+    - name: Run prek hooks
       shell: bash
       run: |
         just check-core
