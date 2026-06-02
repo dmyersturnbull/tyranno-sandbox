@@ -350,7 +350,7 @@ show-ruff-stats *args: (ruff "check --no-fix --statistics" args)
 [group('check')]
 [no-exit-message]
 audit *args:
-    uv audit --locked --all-extras --all-groups {{ args }}
+    uv audit --locked {{ args }}
 
 # <Internal.> (FYI: Use `--config` so users can still pass `--output-format`.)
 [no-exit-message]
