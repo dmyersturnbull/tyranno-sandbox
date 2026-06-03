@@ -7,7 +7,6 @@
 import re
 import tomllib
 from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 
 from jsonpath_ng.ext import parse as jsonpath_parse
@@ -18,8 +17,9 @@ from tyranno_sandbox.tyranno_functions import FUNCS, SOURCE_FUNCS
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+    from pathlib import Path
 
-    from tyranno_sandbox._global_vars import GlobalVars
+    from tyranno_sandbox.global_vars import GlobalVars
 
 __all__ = [
     "CommentSyntaxError",
@@ -39,9 +39,7 @@ __all__ = [
 # ── Regex patterns (all pre-compiled) ────────────────────────────────────────
 
 # Match simple dotted key names like `project.name` or `tool.tyranno.data.vendor`
-SIMPLE_KEY_REGEX: Final = re.compile(
-    r"[A-Za-z_][A-Za-z0-9_-]*+(?:\.[A-Za-z_][A-Za-z0-9_-]*+)*+"
-)
+SIMPLE_KEY_REGEX: Final = re.compile(r"[A-Za-z_][A-Za-z0-9_-]*+(?:\.[A-Za-z_][A-Za-z0-9_-]*+)*+")
 
 # Match `$<<expr>>` using a non-greedy inner pattern
 EXPR_REGEX: Final = re.compile(r"\$<<(?P<expr>.*?)>>", re.DOTALL)
@@ -61,10 +59,10 @@ _WS_CHECK_RE: Final = re.compile(r"\s")
 
 # ── Key prefix constants ──────────────────────────────────────────────────────
 
-_PREFIX_ROOT: Final = "$."       # $.key → pyproject root key
-_PREFIX_AT: Final = "@."         # @.key → tool.tyranno.data.key
-_PREFIX_LOCAL: Final = "."       # .key → relative to in_key context
-_ROOT_ONLY: Final = "$"          # bare "$" → empty string
+_PREFIX_ROOT: Final = "$."  # $.key → pyproject root key
+_PREFIX_AT: Final = "@."  # @.key → tool.tyranno.data.key
+_PREFIX_LOCAL: Final = "."  # .key → relative to in_key context
+_ROOT_ONLY: Final = "$"  # bare "$" → empty string
 _MARKER_FILE_LOCAL: Final = "^"  # ^key → strip this marker (file-local reference)
 
 # ── Error types ───────────────────────────────────────────────────────────────
@@ -101,7 +99,9 @@ class CommentSyntaxError(SyncError):
 
 
 class ExpressionError(SyncError):
-    def __init__(self, *, context: str | None = None, location: ErrorLocation | None = None) -> None:
+    def __init__(
+        self, *, context: str | None = None, location: ErrorLocation | None = None
+    ) -> None:
         super().__init__(location=location)
         self.context = context
 
@@ -111,7 +111,9 @@ class ExpressionError(SyncError):
 
 
 class NoSuchKeyError(ExpressionError):
-    def __init__(self, key: str, *, context: str | None = None, location: ErrorLocation | None = None) -> None:
+    def __init__(
+        self, key: str, *, context: str | None = None, location: ErrorLocation | None = None
+    ) -> None:
         super().__init__(context=context, location=location)
         self.key = key
 
@@ -121,7 +123,9 @@ class NoSuchKeyError(ExpressionError):
 
 
 class NoSuchFunctionError(ExpressionError):
-    def __init__(self, name: str, *, context: str | None = None, location: ErrorLocation | None = None) -> None:
+    def __init__(
+        self, name: str, *, context: str | None = None, location: ErrorLocation | None = None
+    ) -> None:
         super().__init__(context=context, location=location)
         self.name = name
 
@@ -212,7 +216,9 @@ class Data:
             parts = _PIPE_SPLIT_RE.split(expression)
             first = parts[0].strip()
             value: Any = (
-                self._apply_func(first, None) if "(" in first else self._resolve_key(first, in_key=in_key)
+                self._apply_func(first, None)
+                if "(" in first
+                else self._resolve_key(first, in_key=in_key)
             )
             for func_call in parts[1:]:
                 value = self._apply_func(func_call.strip(), value)

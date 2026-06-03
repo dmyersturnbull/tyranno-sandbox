@@ -22,8 +22,8 @@ from loguru import logger
 from typer import Argument, Option, Typer
 
 from tyranno_sandbox._about import __about__
-from tyranno_sandbox._global_vars import EnvGlobalVarsFactory, GlobalVars
-from tyranno_sandbox.context import ContextFactory, DefaultContextFactory
+from tyranno_sandbox.context import Context, ContextFactory, DefaultContextFactory
+from tyranno_sandbox.global_vars import EnvGlobalVarsFactory, GlobalVars
 from tyranno_sandbox.sync import Syncer
 
 ENV: GlobalVars = EnvGlobalVarsFactory(env=os.environ)()
@@ -60,16 +60,17 @@ class LogSink:
     """An output path or named pipe for a loguru handler."""
 
     sink: Path | TextIO
+    name: str
 
     @classmethod
     def of(cls, name: str) -> Self:
         if name.lower() == "stdout":
-            return LogSink(sys.stdout)
+            return cls(sys.stdout, "stdout")
         if name.lower() == "stderr":
-            return LogSink(sys.stderr)
+            return cls(sys.stderr, "stderr")
         if name.startswith("file://"):
-            return LogSink(Path.from_uri(name))
-        return LogSink(Path(name))
+            return cls(Path.from_uri(name), name)
+        return cls(Path(name), name)
 
     @property
     def path(self) -> Path | None:
@@ -84,14 +85,14 @@ class LogSink:
         return repr(self)
 
     def __repr__(self) -> str:
-        return str(self.path) if self.path else self.stream.__name__.upper()
+        return str(self.path) if self.path else self.name.upper()
 
 
 @dataclass(slots=True, kw_only=True)
 class Logging:
     """A logging util."""
 
-    level: LogLevel = ...
+    level: LogLevel = LogLevel.SUCCESS  # Will be set later.
 
     # ruff: noqa: A001, A002
     def configure(self, *, quiet: int, verbose: int, to: str, format: str) -> None:
@@ -181,7 +182,7 @@ class State:
     """A container for meta args."""
 
     context_factory: ContextFactory
-    is_dry_run: bool = ...
+    is_dry_run: bool = False  # Will be set later.
 
     def create_context(self) -> Context:
         return self.context_factory(Path.cwd(), ENV, dry_run=self.is_dry_run)

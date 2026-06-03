@@ -4,16 +4,28 @@
 
 """Misc. shared code."""
 
+from collections.abc import MutableMapping, MutableSequence
 from typing import Final, NoReturn, final
+
+try:
+    import orjson as json
+except ImportError:
+    import json
 
 __all__ = ["JSON", "Json", "JsonArray", "JsonBranch", "JsonLeaf", "JsonLimb", "JsonPrimitive"]
 
 type JsonPrimitive = str | int | float | bool | None
-type JsonArray = list[Json]
+type JsonArray = MutableSequence[Json]
 type JsonLeaf = JsonPrimitive | JsonArray
-type JsonBranch = dict[str, Json]  # aka object
-type JsonLimb = dict[str, JsonLeaf]
+type JsonBranch = MutableMapping[str, Json]  # aka object
+type JsonLimb = MutableMapping[str, JsonLeaf]
 type Json = JsonLeaf | JsonBranch
+
+type YamlPrimitive = JsonPrimitive
+type YamlArray = MutableSequence[Yaml]
+type YamlLeaf = YamlPrimitive | YamlArray
+type YamlBranch = MutableMapping[Yaml, Yaml]  # different from JSON
+type Yaml = YamlLeaf | YamlBranch
 
 
 @final
@@ -27,8 +39,6 @@ class _JsonUtil:
         return "JSON"
 
     def encode(self, data: Json) -> str:
-        import json  # noqa: PLC0415
-
         return json.dumps(data, ensure_ascii=False, allow_nan=False, indent=2)
 
     def decode(self, data: str) -> Json:

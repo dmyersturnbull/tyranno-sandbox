@@ -4,42 +4,40 @@
 
 """Unit and integration tests for context.py expression evaluation."""
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
-from tyranno_sandbox._global_vars import GlobalVars
 from tyranno_sandbox.context import Context, Data, ExpressionError
 from tyranno_sandbox.dot_tree import DotTree
+from tyranno_sandbox.global_vars import GlobalVars
 from tyranno_sandbox.sync import SyncHelper
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _make_data(raw: dict) -> Data:
     return Data(DotTree.from_nested(raw))
 
 
-@pytest.fixture()
+@pytest.fixture
 def data() -> Data:
-    return _make_data({
-        "project": {
-            "name": "my-project",
-            "description": "A test project",
-            "version": "1.2.3",
-            "keywords": ["alpha", "beta", "gamma"],
-            "urls": {"Homepage": "https://example.com/my-project"},
-        },
-        "tool": {
-            "tyranno": {
-                "data": {
-                    "vendor": "acme",
-                    "namespace": "my_project",
-                },
+    return _make_data(
+        {
+            "project": {
+                "name": "my-project",
+                "description": "A test project",
+                "version": "1.2.3",
+                "keywords": ["alpha", "beta", "gamma"],
+                "urls": {"Homepage": "https://example.com/my-project"},
             },
-        },
-    })
+            "tool": {"tyranno": {"data": {"vendor": "acme", "namespace": "my_project"}}},
+        }
+    )
 
 
-@pytest.fixture()
+@pytest.fixture
 def env(tmp_path: Path) -> GlobalVars:
     return GlobalVars(
         cache_dir=tmp_path / "cache",
@@ -172,9 +170,7 @@ class TestSyncHelperIntegration:
 
         target = tmp_path / "test.toml"
         target.write_text(
-            '# ::tyranno:: name = "$<<project.name>>"\n'
-            'name = "old-value"\n',
-            encoding="utf-8",
+            '# ::tyranno:: name = "$<<project.name>>"\nname = "old-value"\n', encoding="utf-8"
         )
 
         helper = SyncHelper(ctx, target)
@@ -183,7 +179,9 @@ class TestSyncHelperIntegration:
         assert helper.new_lines[0].startswith("# ::tyranno::")
         assert helper.new_lines[1] == 'name = "my-project"'
 
-    def test_multiple_consecutive_tyranno_lines(self, tmp_path: Path, data: Data, env: GlobalVars) -> None:
+    def test_multiple_consecutive_tyranno_lines(
+        self, tmp_path: Path, data: Data, env: GlobalVars
+    ) -> None:
         ctx = Context(env=env, repo_dir=tmp_path, data=data, dry_run=True)
 
         target = tmp_path / "test.toml"

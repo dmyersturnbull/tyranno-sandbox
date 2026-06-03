@@ -146,7 +146,7 @@ class TestSourceFuncs:
         assert "year" in result
 
     def test_now_utc_is_startup_time(self) -> None:
-        from tyranno_sandbox._global_vars import STARTUP
+        from tyranno_sandbox.global_vars import STARTUP
 
         result = now_utc()
         assert result["unix_time"] == int(STARTUP.utc.timestamp())

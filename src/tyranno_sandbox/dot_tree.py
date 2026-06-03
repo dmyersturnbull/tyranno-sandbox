@@ -7,40 +7,42 @@
 See [DotTree][].
 """
 
-import re
 from collections import Counter, defaultdict
-from collections.abc import Callable, Generator, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterator, Mapping, MutableMapping, MutableSequence
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
-from typing import Literal, Self, TypeGuard, overload
+from typing import TYPE_CHECKING, Literal, Self, TypeIs, overload
+
+if TYPE_CHECKING:
+    import re
 
 try:
     import orjson as json
 except ImportError:
     import json
 
-type Primitive = str | int | float | bool | date | datetime | time
-type Array = list[Toml]
-type Leaf = Primitive | Array
-type Branch = dict[str, Toml]
-type Limb = dict[str, Leaf]
-type Toml = Leaf | Branch
+type TomlPrimitive = str | int | float | bool | date | datetime | time
+type TomlArray = MutableSequence[Toml]
+type TomlLeaf = TomlPrimitive | TomlArray
+type TomlBranch = MutableMapping[str, Toml]
+type TomlLimb = MutableMapping[str, TomlLeaf]
+type Toml = TomlLeaf | TomlBranch
 
 __all__ = [
-    "Array",
-    "Branch",
     "DotDictChecker",
     "DotTree",
     "DotTrees",
     "DottedToNested",
-    "Leaf",
     "LeafConflictError",
     "LeafIntersectionError",
     "LeavesInCommonError",
-    "Limb",
     "NestedToDotted",
-    "Primitive",
     "Toml",
+    "TomlArray",
+    "TomlBranch",
+    "TomlLeaf",
+    "TomlLimb",
+    "TomlPrimitive",
 ]
 
 
@@ -79,7 +81,7 @@ class LeafIntersectionError(LeavesInCommonError):
         msg: Returned by `str(error)`.
     """
 
-    intersection: dict[str, list[Leaf]]
+    intersection: dict[str, list[TomlLeaf]]
     msg: str = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -89,7 +91,9 @@ class LeafIntersectionError(LeavesInCommonError):
             intersect = "{ " + ", ".join(j.keys()) + " }"
             msg = f"{n_intersect} present in multiple trees: {intersect}."
             if conflicts := {k: v for k, v in j.items() if len(set(v)) > 1}:
-                conflict_str = ", ".join(f"{k}: {'/'.join(v)}" for k, v in conflicts.items())
+                conflict_str = ", ".join(
+                    f"{k}: {'/'.join(str(z) for z in v)}" for k, v in conflicts.items()
+                )
                 n_conflict = str(len(conflicts)) + ("have" if len(conflicts) > 1 else "has")
                 msg += f" {n_conflict} conflicting values: {conflict_str}."
         object.__setattr__(self, "msg", msg)
@@ -107,7 +111,7 @@ class LeafConflictError(LeavesInCommonError):
         msg: Returned by `str(error)`.
     """
 
-    intersection: dict[str, list[Leaf]]
+    intersection: dict[str, list[TomlLeaf]]
     msg: str = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -115,7 +119,9 @@ class LeafConflictError(LeavesInCommonError):
         if self.intersection:
             clashes = {k: v for k, v in self.intersection.items() if len(set(v)) > 1}
             n_clash = str(len(clashes)) + (" leaves are" if len(clashes) > 1 else " leaf is")
-            clash_list = ", ".join(f"{k}: {'/'.join(v)}" for k, v in clashes.items())
+            clash_list = ", ".join(
+                f"{k}: {'/'.join(str(z) for z in v)}" for k, v in clashes.items()
+            )
             msg = f"{n_clash} are present with clashing values in multiple trees: {clash_list}"
         object.__setattr__(self, "msg", msg)
 
@@ -137,13 +143,13 @@ class DotDictChecker:
     key_pattern: re.Pattern[str] | None = None
 
     @overload
-    def check(self, node: Branch, /) -> Branch: ...
+    def check(self, node: TomlBranch, /) -> TomlBranch: ...
 
     @overload
-    def check(self, node: Array, /) -> Array: ...
+    def check(self, node: TomlArray, /) -> TomlArray: ...
 
     @overload
-    def check(self, node: Primitive, /) -> Primitive: ...
+    def check(self, node: TomlPrimitive, /) -> TomlPrimitive: ...
 
     def check(self, node: Toml, /) -> Toml:
         """Verifies that `node` is valid.
@@ -164,12 +170,12 @@ class DotDictChecker:
         return node
 
     @overload
-    def check_keys(self, node: Branch, /) -> Branch: ...
+    def check_keys(self, node: TomlBranch, /) -> TomlBranch: ...
 
     @overload
-    def check_keys(self, node: Array, /) -> Array: ...
+    def check_keys(self, node: TomlArray, /) -> TomlArray: ...
 
-    def check_keys(self, node: Branch | Array, /) -> Branch | Array:
+    def check_keys(self, node: TomlBranch | TomlArray, /) -> TomlBranch | TomlArray:
         """Validates the keys in `node` and (if `node` is a `Branch`) its sub-dicts recursively.
 
         Raises:
@@ -197,12 +203,12 @@ class DotDictChecker:
         return node
 
     @overload
-    def check_values(self, node: Branch, /) -> Branch: ...
+    def check_values(self, node: TomlBranch, /) -> TomlBranch: ...
 
     @overload
-    def check_values(self, node: Array, /) -> Array: ...
+    def check_values(self, node: TomlArray, /) -> TomlArray: ...
 
-    def check_values(self, node: Branch | Array, /) -> Branch | Array:
+    def check_values(self, node: TomlBranch | TomlArray, /) -> TomlBranch | TomlArray:
         """Recursively, verifies that values have valid types."""
         if isinstance(node, list):
             for v in node:
@@ -211,28 +217,33 @@ class DotDictChecker:
                 else:
                     self.check_primitive(v)
         elif isinstance(node, dict):
-            if bad := {k: type(v) for k, v in node.items()
-                       if not isinstance(v, dict | list) and not self.is_primitive(v)}:
+            if bad := {
+                k: type(v)
+                for k, v in node.items()
+                if not isinstance(v, dict | list) and not self.is_primitive(v)
+            }:
                 # noinspection PyUnboundLocalVariable
-                msg = f"Key(s) {list(bad.keys())} have invalid values of type(s) {set(bad.values())}"
+                msg = (
+                    f"Key(s) {list(bad.keys())} have invalid values of type(s) {set(bad.values())}"
+                )
                 raise TypeError(msg)
             for v in node.values():
                 if isinstance(v, dict | list):
                     self.check_values(v)
         return node
 
-    def check_primitive[T](self, value: T, /) -> T:
+    def check_primitive(self, value: TomlPrimitive, /) -> TomlPrimitive:
         if not self.is_primitive(value):
             msg = f"Invalid type {type(value)}"
             raise TypeError(msg)
         return value
 
-    def is_primitive(self, value: Toml, /) -> TypeGuard[Primitive]:
+    def is_primitive(self, value: Toml, /) -> TypeIs[TomlPrimitive]:
         return isinstance(value, str | int | float | bool | date | datetime | time)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class DottedToNested(Callable[[Branch], Branch]):
+class DottedToNested(Callable[[TomlBranch], TomlBranch]):
     """Callable that converts a [Branch][] with dotted keys to a nested `Branch`.
 
     The input must a valid [Branch][] (not checked).
@@ -255,42 +266,43 @@ class DottedToNested(Callable[[Branch], Branch]):
 
     merge_lists: bool = False
 
-    def __call__(self, items: Branch, /) -> Branch:
-        out: Branch = {}
+    def __call__(self, items: TomlBranch, /) -> TomlBranch:
+        out: TomlBranch = {}
         for k, v in items.items():
             self._nest(out, k, v)
         return out
 
-    def _nest(self, dst: Branch, key: str, item: Toml) -> None:
+    def _nest(self, dst: TomlBranch, key: str, item: Toml) -> None:
         self._nest_check(dst, key, item)
         if "." in key:
             self._nest_branch(dst, key, item)
         else:
             self._nest_leaf(dst, key, item)
 
-    def _nest_check(self, dst: Branch, key: str, item: Toml) -> None:
+    def _nest_check(self, dst: TomlBranch, key: str, item: Toml) -> None:
         if (found := dst.get(key)) is not None and (
             type(found) is not type(item)
-            or type(found) not in {dict, list}
+            or type(found) != dict
+            and type(found) != list
             or (type(found) is list and not self.merge_lists)
         ):
             raise DuplicateKeyError(key)
 
-    def _nest_branch(self, dst: Branch, key: str, item: Toml) -> None:
+    def _nest_branch(self, dst: TomlBranch, key: str, item: Toml) -> None:
         head, tail = key.split(".", 1)
         sub = dst.setdefault(head, {})
         if not isinstance(sub, dict):
             raise DuplicateKeyError(head)
         self._nest(sub, tail, item)
 
-    def _nest_leaf(self, dst: Branch, key: str, item: Toml) -> None:
+    def _nest_leaf(self, dst: TomlBranch, key: str, item: Toml) -> None:
         if isinstance(item, dict):
             node = dst.setdefault(key, {})
             for k, v in item.items():
                 self._nest(node, k, v)
         elif isinstance(item, list) and self.merge_lists:
-            list_: Array = dst.setdefault(key, [])
-            node: Branch = {}
+            list_: TomlArray = dst.setdefault(key, [])
+            node: TomlBranch = {}
             for v in item:
                 self._nest(node, key, v)
             list_ += list(node.values())
@@ -299,7 +311,7 @@ class DottedToNested(Callable[[Branch], Branch]):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class NestedToDotted(Callable[[Branch], Branch]):
+class NestedToDotted(Callable[[TomlBranch], TomlBranch]):
     """Callable that converts a nested [Branch][] to a `Branch` with dotted keys.
 
     The input can contain dotted keys; i.e. it can be a mixture of nested and dotted.
@@ -318,16 +330,16 @@ class NestedToDotted(Callable[[Branch], Branch]):
         [DotDictChecker][]
     """
 
-    def __call__(self, items: Branch, /) -> Branch:
+    def __call__(self, items: TomlBranch, /) -> TomlBranch:
         return dict(self._dotify("", items))
 
-    def _dotify(self, path: str, item: Toml) -> Generator[tuple[str, Leaf]]:
+    def _dotify(self, path: str, item: Toml) -> Generator[tuple[str, TomlLeaf]]:
         if isinstance(item, dict):
             for k, v in item.items():
                 new_path = f"{path}.{k}" if path else k
                 yield from self._dotify(new_path, v)
         elif isinstance(item, list):
-            lst: Leaf = []
+            lst: TomlLeaf = []
             for v in item:
                 sub = list(self._dotify("", v))
                 lst.append(sub[0] if len(sub) == 1 else dict(sub))
@@ -392,7 +404,7 @@ class DotTree(Mapping[str, Toml]):
     def __iter__(self) -> Iterator[str]:
         return iter(self._raw)
 
-    def __init__(self, /, x: Branch) -> None:
+    def __init__(self, /, x: TomlBranch) -> None:
         """Constructs a tree from a nested dict (about the same as `dict(x)`)."""
         if not isinstance(x, dict):
             msg = f"Not a dict; actually {type(x)} (value: '{x}')"
@@ -406,7 +418,7 @@ class DotTree(Mapping[str, Toml]):
         return len(self._raw)
 
     @classmethod
-    def from_mixed(cls, x: Branch, /) -> Self:
+    def from_mixed(cls, x: TomlBranch, /) -> Self:
         """Builds from a potential mixture of nested and `"."`-separated keys.
 
         Raises:
@@ -420,7 +432,7 @@ class DotTree(Mapping[str, Toml]):
         return cls(DottedToNested()(NestedToDotted()(x)))
 
     @classmethod
-    def from_nested(cls, x: Branch, /) -> Self:
+    def from_nested(cls, x: TomlBranch, /) -> Self:
         """Creates a tree from a nested dict.
 
         In contrast to the constructor, this verifies that the keys are valid.
@@ -432,7 +444,7 @@ class DotTree(Mapping[str, Toml]):
         return cls(_CHECKER.check(x))
 
     @classmethod
-    def from_dotted(cls, x: Limb, /) -> Self:
+    def from_dotted(cls, x: TomlLimb, /) -> Self:
         """Creates a new tree from a dict of leaves.
 
         Raises:
@@ -447,7 +459,7 @@ class DotTree(Mapping[str, Toml]):
         """
         return cls(DottedToNested()(x))
 
-    def transform_leaves(self, fn: Callable[[str, Leaf], Leaf | None], /) -> Self:
+    def transform_leaves(self, fn: Callable[[str, TomlLeaf], TomlLeaf | None], /) -> Self:
         """Applies a function to each leaf, returning a new tree.
 
         Arguments:
@@ -476,7 +488,7 @@ class DotTree(Mapping[str, Toml]):
             else:
                 yield value
 
-    def limbs(self) -> dict[str, Limb]:
+    def limbs(self) -> dict[str, TomlLimb]:
         """Maps each bottom-level branch to a dict of its leaves.
 
         Leaves directly under the root are assigned to key `""`.
@@ -490,7 +502,7 @@ class DotTree(Mapping[str, Toml]):
             dicts[k0][k1] = v
         return dicts
 
-    def leaves(self) -> Limb:
+    def leaves(self) -> TomlLimb:
         """Gets the leaves in this tree.
 
         For example: `{"info.pet.genus": "Felis", "info.pet.species": "catus"}`.
@@ -498,7 +510,7 @@ class DotTree(Mapping[str, Toml]):
         Warning:
             A `DotTree` can contain empty branches (`{}`), which this method ignores.
         """
-        dct: Limb = {}
+        dct: TomlLimb = {}
         for key, value in self.items():
             if isinstance(value, dict):
                 dct.update({key + "." + k: v for k, v in self.__class__(value).leaves().items()})
@@ -515,7 +527,7 @@ class DotTree(Mapping[str, Toml]):
         """
         return self.__class__(self._access(keys))
 
-    def get_subtree(self, keys: str, /, default: Branch | None = None) -> Self:
+    def get_subtree(self, keys: str, /, default: TomlBranch | None = None) -> Self:
         """Returns the subtree under the `.`-delimited key string, `keys`.
 
         If `keys` is not found, returns `default`; returns `{}` if `default=None`.
@@ -530,14 +542,16 @@ class DotTree(Mapping[str, Toml]):
         return self.__class__(x)
 
     @overload
-    def get_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T], default: T) -> T: ...
+    def get_primitive_as[T: TomlPrimitive](
+        self, keys: str, /, as_type: type[T], default: T
+    ) -> T: ...
 
     @overload
-    def get_primitive_as[T: Primitive](
+    def get_primitive_as[T: TomlPrimitive](
         self, keys: str, /, as_type: type[T], default: None
     ) -> T | None: ...
 
-    def get_primitive_as[T: Primitive](
+    def get_primitive_as[T: TomlPrimitive](
         self, keys: str, /, as_type: type[T], default: T | None = None
     ) -> T | None:
         """Returns a primitive value after checking its type, or `default` if not found.
@@ -554,7 +568,7 @@ class DotTree(Mapping[str, Toml]):
             raise TypeError(msg)
         return x
 
-    def access_primitive_as[T: Primitive](self, keys: str, /, as_type: type[T]) -> T:
+    def access_primitive_as[T: TomlPrimitive](self, keys: str, /, as_type: type[T]) -> T:
         """Returns a value after checking its type, or raises a `KeyError` if not found.
 
         Raises:
@@ -567,7 +581,7 @@ class DotTree(Mapping[str, Toml]):
             raise TypeError(msg)
         return x
 
-    def get_list(self, keys: str, /, default: Array | None = None) -> Array:
+    def get_list(self, keys: str, /, default: TomlArray | None = None) -> TomlArray:
         """Returns a list, or `default` if not found.
 
         `default=None` is equivalent to `default=[]`.
@@ -602,7 +616,6 @@ class DotTree(Mapping[str, Toml]):
             msg = f"Value from key {keys} is not a list"
             raise TypeError(msg)
         if bad := [y for y in x if not isinstance(y, as_type)]:
-            # noinspection PyUnboundLocalVariable
             msg = f"Values from key {keys} are not {as_type}: '{bad}'"
             raise TypeError(msg)
         return x
@@ -624,12 +637,12 @@ class DotTree(Mapping[str, Toml]):
         return x
 
     @overload
-    def get_primitive[T: Primitive](self, keys: str, /, default: T) -> T: ...
+    def get_primitive[T: TomlPrimitive](self, keys: str, /, default: T) -> T: ...
 
     @overload
-    def get_primitive[T: Primitive](self, keys: str, /, default: T | None) -> T | None: ...
+    def get_primitive[T: TomlPrimitive](self, keys: str, /, default: T | None) -> T | None: ...
 
-    def get_primitive[T: Primitive](self, keys: str, /, default: T | None = None) -> T | None:
+    def get_primitive[T: TomlPrimitive](self, keys: str, /, default: T | None = None) -> T | None:
         """Returns a primitive value, or `default` if not found.
 
         Raises:
@@ -641,7 +654,7 @@ class DotTree(Mapping[str, Toml]):
             return default
         return _CHECKER.check_primitive(v)
 
-    def access_primitive(self, keys: str) -> Primitive:
+    def access_primitive(self, keys: str) -> TomlPrimitive:
         """Returns a primitive value, or raises a `KeyError`.
 
         Raises:
@@ -734,13 +747,13 @@ class DotTrees:
             and any(len(set(v)) > 1 for v in intersect.values())
         ):
             raise LeafConflictError(intersect)
-        merged: dict[str, Leaf] = {}
+        merged: dict[str, TomlLeaf] = {}
         for limb in limbs:
             merged.update(limb)
         return DotTree.from_dotted(merged)
 
     @classmethod
-    def leaf_intersection(cls, *limbs: Limb) -> dict[str, list[Leaf]]:
+    def leaf_intersection(cls, *limbs: TomlLimb) -> dict[str, list[TomlLeaf]]:
         """Returns a mapping of each leaf key to its values in `limbs` for keys that 2+ limbs share.
 
         The length of each list is equal to the number of limbs sharing that key.
@@ -753,7 +766,7 @@ class DotTrees:
         return {k: v for k, v in dict_.items() if len(v) > 1}
 
     @classmethod
-    def leaf_intersection_size(cls, *limbs: Limb) -> dict[str, int]:
+    def leaf_intersection_size(cls, *limbs: TomlLimb) -> dict[str, int]:
         """Equivalent to `{k: len(v) for k, v in leaf_intersection(limbs).items()}`.
 
         This is simply faster than using [leaf_intersection][].

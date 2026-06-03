@@ -13,12 +13,12 @@ from packaging.specifiers import SpecifierSet
 from packaging.version import Version as Pep440
 from semver import VersionInfo as Semver
 
-from tyranno_sandbox._global_vars import STARTUP
 from tyranno_sandbox.functions.licenses import LicenseDict, LicenseFunctions
 from tyranno_sandbox.functions.pep440 import Pep440Dict, Pep440Functions
 from tyranno_sandbox.functions.pypi import PypiFunctions
 from tyranno_sandbox.functions.semver import SemverDict, SemverFunctions
 from tyranno_sandbox.functions.times import DatetimeFunctions, TimeDict
+from tyranno_sandbox.global_vars import STARTUP
 
 if TYPE_CHECKING:
     from niquests import Session

@@ -5,16 +5,18 @@
 """Environment variables and internal utils."""
 
 import time
-from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from functools import cached_property
 from pathlib import Path
-from typing import Final, Self
+from typing import TYPE_CHECKING, Final, Protocol, Self
 
 import platformdirs
 
 from tyranno_sandbox._about import __about__
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 __all__ = [
     "STARTUP",
@@ -77,17 +79,34 @@ class GlobalConfigError(Exception):
         return f"{self.title.title()} (={self.value}) {self.issue}."
 
 
+class XdgDirFunction(Protocol):
+    def __call__(
+        self, *, appname: str, appauthor: str, version: str, ensure_exists: bool
+    ) -> str: ...
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
-class XdgHelper[**P]:
+class XdgHelper:
     """Helper that gets directories from XDG config or tyranno environment variables."""
 
-    env: Mapping[str, str | None]
+    env: Mapping[str, str]
 
-    def dir(self, xdg_fn: Callable[P, str]) -> Path:
-        fn_name: str = xdg_fn.__name__  # ty: ignore[unresolved-attribute]
+    def dir(self, xdg_fn: XdgDirFunction) -> Path:
+        fn_name: str = xdg_fn.__name__  # ty:ignore[unresolved-attribute] # require a name
         var_name = self._var_name(fn_name)
-        value = self.env.get(var_name, xdg_fn(**self._args()))
-        title = "$" + var_name if var_name in self.env else f"platform config {fn_name}"
+        value: str
+        title: str
+        if v := self.env.get(var_name):
+            value = v
+            title = "$" + var_name
+        else:
+            value = xdg_fn(
+                appname=__about__["name"],
+                appauthor=__about__["vendor"],
+                version=str(__about__["version_parts"].major),
+                ensure_exists=False,
+            )
+            title = "platform config " + fn_name
         path = Path(value).expanduser()
         if not path.is_absolute():
             raise GlobalConfigError(title, value, "is not an absolute path")
@@ -95,25 +114,16 @@ class XdgHelper[**P]:
             raise GlobalConfigError(title, value, "exists and is not a directory")
         return path
 
-    @staticmethod
-    def _var_name(fn_name: str) -> str:
+    @classmethod
+    def _var_name(cls, fn_name: str) -> str:
         return "TYRANNO_" + fn_name.removeprefix("user_")
-
-    @staticmethod
-    def _args[**P]() -> P.kwargs:
-        return {
-            "appname": __about__["name"],
-            "appauthor": __about__["vendor"],
-            "version": str(__about__["version_parts"].major),
-            "ensure_exists": False,
-        }
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class EnvGlobalVarsFactory(GlobalVarsFactory):
     """Factory that reads from environment variables and platform config."""
 
-    env: Mapping[str, str | None]
+    env: Mapping[str, str]
 
     def __call__(self) -> GlobalVars:
         xdg = XdgHelper(env=self.env)

@@ -7,16 +7,20 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import yaml as _yaml_lib
 
-from tyranno_sandbox._global_vars import STARTUP
+from tyranno_sandbox import Json
+from tyranno_sandbox._core import Yaml
 from tyranno_sandbox.functions.pep440 import Pep440Dict, Pep440Functions
 from tyranno_sandbox.functions.semver import SemverDict, SemverFunctions
 from tyranno_sandbox.functions.times import DatetimeFunctions, TimeDict
+from tyranno_sandbox.global_vars import STARTUP
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = [
     "FUNCS",
@@ -87,65 +91,73 @@ def now_local() -> TimeDict:
 
 
 @_func("yaml")
-def yaml(value: Any) -> str:
+def yaml(value: Yaml) -> str:
     return _yaml_dump(value)
 
 
 @_func("from_yaml")
-def from_yaml(value: Any) -> Any:
-    return _yaml_lib.safe_load(str(value))
+def from_yaml(value: str) -> Yaml:
+    return _yaml_lib.safe_load(value)
 
 
 @_func("from_json")
-def from_json(value: Any) -> Any:
-    return json.loads(str(value))
+def from_json(value: str) -> Json:
+    return json.loads(value)
 
 
 @_func("yaml_multiline")
-def yaml_multiline(value: Any, indent: int = 0) -> str:
+def yaml_multiline(value: Json, indent: int = 0) -> str:
     pad = " " * int(indent)
-    items = value if isinstance(value, list) else [v.strip() for v in str(value).split(",") if v.strip()]
+    items = (
+        value
+        if isinstance(value, list)
+        else [v.strip() for v in str(value).split(",") if v.strip()]
+    )
     return "\n".join(f"{pad}{_yaml_dump(item)}" for item in items)
 
 
 @_func("lower")
-def lower(value: Any) -> str:
-    return str(value).lower()
+def lower(value: str) -> str:
+    return value.lower()
 
 
 @_func("upper")
-def upper(value: Any) -> str:
-    return str(value).upper()
+def upper(value: str) -> str:
+    return value.upper()
 
 
 @_func("replace")
-def replace(value: Any, old: str, new: str) -> str:
-    return str(value).replace(old, new)
+def replace(value: str, old: str, new: str) -> str:
+    return value.replace(old, new)
 
 
 @_func("pep440")
-def pep440(value: Any) -> Pep440Dict:
-    return _f_pep440.of(str(value))
+def pep440(value: str) -> Pep440Dict:
+    return _f_pep440.of(value)
 
 
 @_func("pep440_minor")
-def pep440_minor(value: Any) -> str:
-    return _f_pep440.of(str(value))["minor_version"]
+def pep440_minor(value: str) -> str:
+    return _f_pep440.of(value)["minor_version"]
 
 
 @_func("semver")
-def semver(value: Any) -> SemverDict:
+def semver(value: str) -> SemverDict:
     return _f_semver.of(str(value))
 
 
 @_func("timestamp")
-def timestamp(value: Any) -> TimeDict:
-    return _f_time.of(datetime.fromisoformat(str(value)))
+def timestamp(value: str) -> TimeDict:
+    return _f_time.of(datetime.fromisoformat(value))
 
 
 @_func("sort")
 def sort(value: Any) -> str:
-    items = value if isinstance(value, list) else [i.strip() for i in str(value).split(",") if i.strip()]
+    items = (
+        value
+        if isinstance(value, list)
+        else [i.strip() for i in str(value).split(",") if i.strip()]
+    )
     return ", ".join(str(v) for v in sorted(items, key=str))
 
 

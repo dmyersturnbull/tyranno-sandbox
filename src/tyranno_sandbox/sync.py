@@ -6,6 +6,7 @@
 
 import re
 import shutil
+from collections.abc import MutableSequence
 from dataclasses import dataclass, field
 from functools import cache
 from re import Pattern
@@ -46,12 +47,7 @@ class Tokens:
         evaluate the template expression.
         """
         # Allow any leading whitespace (for indented comment lines).
-        start_seq = (
-            r"\s*"
-            + re.escape(comment_start)
-            + r"\s*"
-            + re.escape(self.tyranno_inline)
-        )
+        start_seq = r"\s*" + re.escape(comment_start) + r"\s*" + re.escape(self.tyranno_inline)
         # Everything up to (but not including) the comment-close token.
         if comment_end:
             capture = r".*?"
@@ -121,9 +117,9 @@ class DeltaBlock:
     kind: Literal["inline", "block"]
     path: Path
     first_line_number: int
-    templates: list[str]
-    old_lines: list[str | None]
-    new_lines: list[str | None]
+    templates: MutableSequence[str]
+    old_lines: MutableSequence[str | None]
+    new_lines: MutableSequence[str | None]
 
     def __len__(self) -> int:
         return len(self.templates)
@@ -209,9 +205,9 @@ class SyncHelper:
 
             # Consume old content lines (one per template) and emit new ones.
             n = len(expressions)
-            old_lines = lines[i : i + n]
+            old_lines: MutableSequence[str] = lines[i : i + n]
             i += n
-            new_lines: list[str] = []
+            new_lines: MutableSequence[str] = []
             content_start = first_line + len(header_lines) + 1  # 1-based line number
             for idx, expr in enumerate(expressions):
                 try:

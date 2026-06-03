@@ -42,9 +42,14 @@ class Pep440SpecDict(TypedDict):
 @dataclass(frozen=True, slots=True)
 class Pep440Functions:
     PEP440_PRE_STRS: ClassVar = {
-        "a": "a", "alpha": "a",
-        "b": "b", "beta": "b",
-        "rc": "rc", "c": "rc", "pre": "rc", "preview": "rc",
+        "a": "a",
+        "alpha": "a",
+        "b": "b",
+        "beta": "b",
+        "rc": "rc",
+        "c": "rc",
+        "pre": "rc",
+        "preview": "rc",
     }
     PEP440_SPEC_RE: ClassVar = re.compile(r"""([A-Za-z0-9_-]++)(.++)""")
 

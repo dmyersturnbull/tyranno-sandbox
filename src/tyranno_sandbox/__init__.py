@@ -14,9 +14,9 @@ Example:
 
 from tyranno_sandbox._about import __about__
 from tyranno_sandbox._core import Json, JsonArray, JsonBranch, JsonPrimitive
-from tyranno_sandbox._global_vars import STARTUP, GlobalConfigError, GlobalVars, GlobalVarsFactory
 from tyranno_sandbox.context import Context, ContextFactory, DefaultContextFactory
 from tyranno_sandbox.dot_tree import DotTree, DotTrees, LeavesInCommonError
+from tyranno_sandbox.global_vars import STARTUP, GlobalConfigError, GlobalVars, GlobalVarsFactory
 from tyranno_sandbox.sync import Syncer
 
 __all__ = [
