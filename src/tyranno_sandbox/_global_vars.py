@@ -4,7 +4,6 @@
 
 """Environment variables and internal utils."""
 
-import sys
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -46,6 +45,13 @@ class Startup:
         return time.monotonic() - self.monotonic
 
 
+class GlobalVarsFactory:
+    """Factory that creates a [GlobalVars][] instance."""
+
+    def __call__(self) -> GlobalVars:
+        raise NotImplementedError
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class GlobalVars:
     """Collection of config values from environment variables and/or the platform."""
@@ -55,7 +61,6 @@ class GlobalVars:
     data_dir: Path
     log_dir: Path
     tyranno_dir: str
-    use_color: bool
     log_format: str
     debug_mode: bool
 
@@ -100,13 +105,12 @@ class XdgHelper[**P]:
             "appname": __about__["name"],
             "appauthor": __about__["vendor"],
             "version": str(__about__["version_parts"].major),
-            "roaming": False,
             "ensure_exists": False,
         }
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class EnvGlobalVarsFactory(Callable[[], GlobalVars]):
+class EnvGlobalVarsFactory(GlobalVarsFactory):
     """Factory that reads from environment variables and platform config."""
 
     env: Mapping[str, str | None]
@@ -118,15 +122,10 @@ class EnvGlobalVarsFactory(Callable[[], GlobalVars]):
             config_dir=xdg.dir(platformdirs.user_config_dir),
             data_dir=xdg.dir(platformdirs.user_data_dir),
             log_dir=xdg.dir(platformdirs.user_log_dir),
-            use_color=self._use_color(),
             tyranno_dir=str(self._rel_dir("TYRANNO_DIR", Path(".tyranno"))),
             log_format=self._str("TYRANNO_LOG_FORMAT", ""),
             debug_mode=self._flag("TYRANNO_DEBUG_MODE"),
         )
-
-    def _use_color(self) -> bool:
-        # See https://force-color.org/) and https://no-color.org/
-        return self._flag("FORCE_COLOR", self._flag("NO_COLOR", sys.stdout.isatty()))
 
     def _str(self, var: str, default: str) -> str:
         return self.env.get(var, default)
