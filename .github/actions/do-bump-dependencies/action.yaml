@@ -24,7 +24,7 @@ outputs:
     value: ${{ steps.lock.outputs.diff && 'true' || '' }}
   changed-hooks:
     description: >-
-      'true' if .pre-commit-config.yaml was modified; '' otherwise.
+      'true' if prek.toml was modified; '' otherwise.
     value: ${{ steps.precommit.outputs.diff && 'true' || '' }}
 
 runs:
@@ -67,14 +67,14 @@ runs:
         uv sync --frozen --only-group git-hooks
         uv run --no-sync prek install
         uv run --no-sync prek autoupdate
-        if [[ -n "$(git status --porcelain .pre-commit-config.yaml)" ]]; then
+        if [[ -n "$(git status --porcelain prek.toml)" ]]; then
           echo "diff=true" >> $GITHUB_OUTPUT
         fi
     - if: ${{ steps.precommit.outputs.diff }}
       name: Commit prek changes
       shell: bash
       run: |
-        git add .pre-commit-config.yaml
+        git add prek.toml
         git commit --no-verify -m "chore: update commit hooks"
     - if: ${{ inputs.push && (steps.lock.outputs.diff || steps.precommit.outputs.diff) }}
       name: Push changes

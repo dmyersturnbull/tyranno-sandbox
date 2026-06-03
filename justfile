@@ -275,7 +275,7 @@ _fix_ruff *args: (ruff "check --fix-only --config 'output-format=\"grouped\"'" a
 # <Internal.>
 [no-exit-message]
 _stage_precommit:
-    git add .pre-commit-config.yaml
+    git add prek.toml
 
 ###################################################################################################
 

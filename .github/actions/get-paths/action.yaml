@@ -87,7 +87,7 @@ runs:
             - tests/**
           tools:
             - .editorconfig
-            - .pre-commit-config.yaml
+            - prek.toml
             - biome.jsonc
             - devcontainer.json
             - justfile
