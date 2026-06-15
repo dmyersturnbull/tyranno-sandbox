@@ -6,7 +6,8 @@
 # See https://prek.j178.dev for more information.
 #:schema https://www.schemastore.org/prek.json
 
-minimum_pre_commit_version = "4.5.0"
+# ::tyranno:: minimum_prek_version = "$<<project.dependency-groups.pypa_dependency_map(@).prek.min>>"
+minimum_prek_version = "0.4.5"
 # Set the default stages for hooks that don't specify `stages`.
 # If we didn't set this, the defaults would be all 10 stages:
 #   commit-msg
@@ -146,7 +147,7 @@ rules:
 # Run `uv lock` and `uv sync`.
 [[repos]]
 repo = "https://github.com/astral-sh/uv-pre-commit"
-rev = "0.11.18"
+rev = "0.11.21"
 hooks = [
   {
     id = "uv-sync",
@@ -159,7 +160,7 @@ hooks = [
 # Format and lint Python with Ruff.
 [[repos]]
 repo = "https://github.com/astral-sh/ruff-pre-commit"
-rev = "v0.15.15"
+rev = "v0.15.17"
 hooks = [
   {
     id = "ruff-check",
@@ -190,7 +191,7 @@ hooks = [
 # Format and auto-fix various files with Biome.
 [[repos]]
 repo = "https://github.com/biomejs/pre-commit"
-rev = "v2.4.16"  # biomejs/pre-commit only uses tags, not releases.
+rev = "v2.5.0"  # biomejs/pre-commit only uses tags, not releases.
 hooks = [
   # "check" hook: auto-format and auto-fix
   {

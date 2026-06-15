@@ -146,7 +146,7 @@ test = [
 # Documentation tools
 docs = [
   "mkdocstrings-python>=2.0,<3.0",
-  "zensical>=0.0.43", # https://zensical.org/
+  "zensical>=0.0.45", # https://zensical.org/
 ]
 
 sbom = [
@@ -155,14 +155,14 @@ sbom = [
 
 # Python-ecosystem lint tools that can be called directly
 lint = [
-  "ruff>=0.15.15",
-  "ty>=0.0.42", # Astral's fledgling type checker.
+  "ruff>=0.15.17",
+  "ty>=0.0.49", # Astral's fledgling type checker.
 ]
 
-# prek and any dependencies for local hooks
+# Prek and any dependencies for local hooks
 git-hooks = [
   "pathvalidate>=3.3", # Needed for local prek hook.
-  "prek>=0.4.3",
+  "prek>=0.4.5",
 ]
 
 #

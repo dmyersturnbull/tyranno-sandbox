@@ -36,7 +36,7 @@ ENV UV_COMPILE_BYTECODE=1
 
 # These are standard opencontainer labels; see:
 # https://github.com/opencontainers/image-spec/blob/master/annotations.md
-# ::tyranno:: LABEL org.opencontainers.image.version="$<<project.version.pypa_ver(@).to_semver(@)>>"
+# ::tyranno:: LABEL org.opencontainers.image.version="$<<project.version>>"
 LABEL org.opencontainers.image.version="0.0.1-alpha.0"
 # ::tyranno:: LABEL org.opencontainers.image.vendor="$<<.vendor>>"
 LABEL org.opencontainers.image.vendor="dmyersturnbull"
