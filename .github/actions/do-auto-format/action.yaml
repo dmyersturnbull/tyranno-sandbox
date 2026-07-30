@@ -13,7 +13,7 @@ inputs:
     description: >-
       Only reformat files that differ from this ref.
       If empty, runs on all files.
-      For a PR, this is probably the base commit.
+      For a PR, this is probably the merge base, which must be computed.
   push:
     default: ""
     description: >-

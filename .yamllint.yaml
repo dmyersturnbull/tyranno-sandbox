@@ -1,0 +1,48 @@
+rules:
+  anchors:
+    forbid-undeclared-aliases: true
+    forbid-duplicated-anchors: true
+    forbid-unused-anchors: true
+    level: error
+  comments-indentation:
+    level: warning
+  document-end:
+    present: false
+    level: error
+  document-start:
+    present: false
+    level: error
+  empty-values:
+    forbid-in-block-mappings: true
+    forbid-in-flow-mappings: true
+    forbid-in-block-sequences: true
+    level: error
+  float-values:
+    require-numeral-before-decimal: true
+    forbid-scientific-notation: true
+    forbid-nan: true
+    forbid-inf: true
+    level: error
+  key-duplicates:
+    forbid-duplicated-merge-keys: true
+    level: error
+  line-length:
+    max: 100
+    level: warning
+  new-lines: disable
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
+    level: error
+  truthy:
+    allowed-values:
+      - "true"
+      - "false"
+    check-keys: false
+    level: error
+  quoted-strings:
+    allow-quoted-quotes: true
+    check-keys: true
+    quote-type: double
+    required: only-when-needed
+    level: warning

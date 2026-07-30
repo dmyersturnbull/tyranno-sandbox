@@ -10,7 +10,7 @@
 [build-system]
 
 build-backend = "uv_build"
-requires = ["uv-build>=0.11, <1.0"]
+requires = ["uv-build>=0.12, <1.0"]
 
 #
 ####################################################################################################
@@ -27,7 +27,7 @@ name = "tyranno-sandbox"
 # 1. `major.minor.patch` => triggers release
 # 2. `major.minor.patch.{alpha|beta|rc}.{0+}` (e.g. `1.0.0-rc.0`) => test only
 version = "0.0.1-alpha.0"
-requires-python = "~=3.14.5"
+requires-python = "~=3.14.6"
 
 # `readme` is `description` in `importlib.metadata`.
 readme = { file = "README.md", content-type = "text/markdown" }
@@ -68,12 +68,13 @@ classifiers = [
 dependencies = [
   "aiofiles>=25.1",
   "loguru>=0.7.3",
-  "niquests>=3.19",
+  "niquests>=3.21",
   "packaging>=26.0",
   "platformdirs>=4.10",
   "pathspec>=1.1",
   "jsonpath-ng>=1.8",
-  "pyyaml>=6.0",
+  "orjson>=3.11",
+  "pyyaml>=6.0.3",
   "semver>=3.0.4",
   # /usr/share/zoneinfo uses IANA zones; Windows does not
   # OR `"tzdata>=2026.1; platform_system == 'Windows'",`
@@ -83,10 +84,10 @@ dependencies = [
 # -------------------------- optional dependencies ----------------------------
 [project.optional-dependencies]
 cli = [
-  "typer>=0.26.6",
+  "typer>=0.27",
 ]
 server = [
-  "fastapi>=0.136",
+  "fastapi>=0.141",
   "fastapi-problem>=0.12",
   "Hypercorn[h3]>=0.18",
   "pydantic>=2.13",
@@ -134,19 +135,19 @@ dev = [
 
 # pytest and supporting tools
 test = [
-  "coverage[toml]>=7.14", # Required for coverage.
-  "hypothesis>=6.155", # Required for property tests.
-  "pytest>=9.0", # Required.
+  "coverage[toml]>=7.15", # Required for coverage.
+  "hypothesis>=6.161", # Required for property tests.
+  "pytest>=9.1", # Required.
   "pytest-cov>=7.1", # Required for coverage.
   # "pytest-datadir>=1.8", # Optional. To read test resources in the same dir.
-  # "pytest-randomly>=4.0", # Optional. Sets and prints the seed, also randomizing test order.
+  # "pytest-randomly>=4.1", # Optional. Sets and prints the seed, also randomizing test order.
   # "pytest-xdist>=3.8", # Optional. Used to distribute tests over multiple cores.
 ]
 
 # Documentation tools
 docs = [
   "mkdocstrings-python>=2.0,<3.0",
-  "zensical>=0.0.45", # https://zensical.org/
+  "zensical>=0.0.51", # https://zensical.org/
 ]
 
 sbom = [
@@ -155,14 +156,14 @@ sbom = [
 
 # Python-ecosystem lint tools that can be called directly
 lint = [
-  "ruff>=0.15.17",
-  "ty>=0.0.49", # Astral's fledgling type checker.
+  "ruff>=0.16.0",
+  "ty>=0.0.65", # Astral's fledgling type checker.
 ]
 
 # Prek and any dependencies for local hooks
 git-hooks = [
   "pathvalidate>=3.3", # Needed for local prek hook.
-  "prek>=0.4.5",
+  "prek>=0.4.11",
 ]
 
 #
@@ -191,45 +192,45 @@ select = ["ALL"]
 ignore = [
   # Rules that conflict with the formatter:
   # (See https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules)
-  "W191",
-  "E111",
-  "E114",
-  "E117",
-  "D203",
-  "D206",
-  "D300",
+  "tab-indentation",
+  "indentation-with-invalid-multiple",
+  "indentation-with-invalid-multiple-comment",
+  "over-indented",
+  "incorrect-blank-line-before-class",
+  "docstring-tab-indentation",
+  "triple-single-quotes",
   "Q",
-  "COM812",
-  "COM819",
-  "ISC002",
-  "E501",
+  "missing-trailing-comma",
+  "prohibited-trailing-comma",
+  "multi-line-implicit-string-concatenation",
+  "line-too-long",
   # ---
   # Other ignored rules:
   # Syntax of comments: <rule-description> '(' <reason-ignored> ')'
   "D1",       # undocumented public __ (omit useless comments)
-  "D401",     # imperative mood (nitpicky rule)
-  "D417",     # undocumented param (omit useless comments)
-  "DOC201",   # missing `Returns:` (omit useless comments)
-  "DOC402",   # missing `Yields:` (omit useless comments)
-  "DOC501",   # missing `Raises:` exception (omit useless comments)
-  "DOC502",   # `Raises` lists exeption not raised directly (often helpful to list anyway)
-  "FIX002",   # TO*DO (consider TO*DO non-crucial tasks, whereas FIX*ME are crucial)
-  "PLR2004",  # magic value (includes 2, 256, 404, etc.)
-  "PLR6301",  # 'self' not used (total non-issue and unavoidable when overriding)
-  "RUF001",   # confusable characters in strings (bans useful chars)
-  "RUF002",   # confusable characters in docstrings (bans useful chars)
-  "RUF003",   # confusable characters in comments (bans useful chars)
-  "RUF021",   # `or x and y` without parentheses (unnecessary)
-  "S403",     # import of pickle (S301 on pickle calls is enough)
-  "S404",     # import of subprocess (S602/S603 on subprocess calls is enough)
+  "non-imperative-mood",     # imperative mood (nitpicky rule)
+  "undocumented-param",     # undocumented param (omit useless comments)
+  "docstring-missing-returns",   # missing `Returns:` (omit useless comments)
+  "docstring-missing-yields",   # missing `Yields:` (omit useless comments)
+  "docstring-missing-exception",   # missing `Raises:` exception (omit useless comments)
+  "docstring-extraneous-exception",   # `Raises` lists exeption not raised directly (often helpful to list anyway)
+  "line-contains-todo",   # TO*DO (consider TO*DO non-crucial tasks, whereas FIX*ME are crucial)
+  "magic-value-comparison",  # magic value (includes 2, 256, 404, etc.)
+  "no-self-use",  # 'self' not used (total non-issue and unavoidable when overriding)
+  "ambiguous-unicode-character-string",   # confusable characters in strings (bans useful chars)
+  "ambiguous-unicode-character-docstring",   # confusable characters in docstrings (bans useful chars)
+  "ambiguous-unicode-character-comment",   # confusable characters in comments (bans useful chars)
+  "parenthesize-chained-operators",   # `or x and y` without parentheses (unnecessary)
+  "suspicious-pickle-import",     # import of pickle (S301 on pickle calls is enough)
+  "suspicious-subprocess-import",     # import of subprocess (S602/S603 on subprocess calls is enough)
   "TD",       # flake8-to*do (requires a specific format)
   "Q",        # quotes (formatter should cover completely)
-  "W505",     # docstring line too long (use semantic line breaks instead)
+  "doc-line-too-long",     # docstring line too long (use semantic line breaks instead)
 ]
 
 # Syntax of comments: <rule-description> '(' <reason-for-change> ')'
 unfixable = [
-  "TC007",    # quotes type alias definitions (move needed imports outside `TYPE_CHECKING` instead)
+  "unquoted-type-alias",    # quotes type alias definitions (move needed imports outside `TYPE_CHECKING` instead)
 ]
 
 # Delegated options
@@ -254,8 +255,8 @@ allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*" = [
   "D1",       # missing docstrings
-  "S101",     # assert
-  "TID252",   # relative import
+  "assert",     # assert
+  "relative-imports",   # relative import
 ]
 
 #

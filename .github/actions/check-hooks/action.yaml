@@ -3,25 +3,54 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: check-hooks
-description: Runs basic prek hooks.
+description: Runs prek hooks.
 inputs:
   ref:
     default: ""
     description: A branch or tag ref; defaults to github.head_ref then to github.ref.
+  compare-to-ref:
+    description: >-
+      Only check files that differ from this ref.
+      If empty, runs on all files.
+      For a PR, this is probably the merge base, which must be computed.
+  group:
+    default: ci
+    description: >-
+      Target group of hooks, passed to prek via '--group'; omitted if empty.
+  fail-fast:
+    default: ""
+    description: >-
+      If true, passes '--fail-fast' to prek.
+      Literal 'true' or ''.
 
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         ref: ${{ inputs.ref || github.head_ref || github.ref }}
-    - uses: astral-sh/setup-uv@v8.1.0
+    - uses: astral-sh/setup-uv@v8.3.2
     - name: Sync and confirm lock file is up-to-date
       shell: bash
       run: |
         uv sync --frozen --only-group git-hooks
-    - uses: extractions/setup-just@v4
-    - name: Run prek hooks
+    - uses: j178/prek-action@v2
+        with:
+          install-only: true
+    - name: Run Prek
       shell: bash
       run: |
-        just check-core
+        prek run \
+          --all-files \
+          $([[ -n '${{ inputs.compare-to-ref }}' ]] && printf '%s %s' --from-ref '${{ inputs.compare-to-ref }}') \
+          $([[ -n '${{ inputs.group }}' ]] && printf '%s %s' --group '${{ inputs.group }}') \
+          $([[ -n '${{ inputs.fail-fast }}' ]] && printf '%s' --fail-fast)
+    - if: ${{ ! inputs.compare-to-ref }}
+      name: Run Prek on everything
+      shell: bash
+      run: |
+        prek run \
+          --all-files \
+          $([[ -n '${{ inputs.group }}' ]] && printf '%s %s' --group '${{ inputs.group }}') \
+          $([[ -n '${{ inputs.fail-fast }}' ]] && printf '%s' --fail-fast)
+

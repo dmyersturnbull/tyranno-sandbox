@@ -18,8 +18,11 @@ permissions:
 env:
   NULLARY_CMD: >-
     ^\/plz ++(?<cmd>[a-z0-9 -]++) *+$
+  BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
 jobs:
+  #
   # Parse the body and find lines matching `/plz <cmd> [<ref>]`.
   # Individual jobs could check e.g. `contains(github.event.comment.body, '/plz test')`.
   # However, that can't capture command "arguments" (though, currently, we only need `<ref>`).
@@ -41,10 +44,30 @@ jobs:
         run: |
           nullary=$( \
             grep --only-matching --perl-regexp "$NULLARY_CMD" <<< "$TEXT" \
-              | sed -E 's/-/ /g' \
-              | sed -E 's/plz ++//g' \
+            | sed -E 's/-/ /g' \
+            | sed -E 's/plz ++//g' \
           )
           echo "nullary=$nullary" >> "$GITHUB_OUTPUT"
+
+  merge-base:
+    name: Find merge base
+    runs-on: ubuntu-latest
+    outputs:
+      merge-base-sha: ${{ steps.compute.outputs.mege_base_sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref }}
+          # Avoid `fetch-depth: 0` because we only need `main` and the PR branch.
+          # Use `fetch-depth: 2` to get GitHub's merge commit and its parent, the last PR branch commit.
+          fetch-depth: 2
+      - name: Compute merge base
+        shell: bash
+        run: |
+          git fetch --no-tags origin "$GITHUB_BASE_REF"
+          # Compare against our HEAD, which is `github.head_ref`.
+          merge_base_sha=$(git merge-base "origin/$GITHUB_BASE_REF" HEAD)
+          echo merge_base_sha="$merge_base_sha" >> $GITHUB_ENV
 
   lint:
     if: ${{ contains(needs.cmd.outputs.nullary, 'lint') }}
@@ -90,11 +113,13 @@ jobs:
 
   format:
     if: ${{ contains(needs.cmd.outputs.nullary, 'format') }}
-    needs: cmd
+    needs:
+      - cmd
+      - merge-base
     permissions:
       contents: write
     uses: ./.github/actions/do-auto-format/action.yaml
     with:
       ref: ${{ github.head_ref }}
-      compare-to-ref: ${{ github.base_ref }}
+      compare-to-ref: ${{ needs.merge-base.outputs.merge-base }}
       push: 'true'

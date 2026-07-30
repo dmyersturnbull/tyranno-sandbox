@@ -77,10 +77,12 @@ hooks = [
     Path components \
     may only use 'A-Za-z0-9_.,~+=-', \
     cannot start with `~` or '-', \
-    and cannot end with `~` or '.'.\
+    cannot end with `~` or '.'. \
+    Filenames must have an extension, \
+    which must not be '.yml' (use .yaml instead).\
     """,
     language = "fail",
-    files = '[^/\w.,~+=-]|(^|/)[~-]|[~.]($|/)'
+    files = '[^/\w.,~+=-]|(^|/)[~-]|[~.]($|/)|(^|/)[^.]+$|\.yml$'
   },
   {
     id = "pathvalidate",
@@ -96,7 +98,7 @@ hooks = [
 # Validate JSON files agianst JSON Schemas.
 [[repos]]
 repo = "https://github.com/python-jsonschema/check-jsonschema"
-rev = "0.37.2"
+rev = "0.37.4"
 hooks = [
   {
     id = "check-github-actions"
@@ -119,28 +121,7 @@ repo = "https://github.com/adrienverge/yamllint"
 rev = "v1.38.0"
 hooks = [
   {
-    id = "yamllint",
-    args = [
-      "--strict",
-      "--config-data",
-      """
-rules:
-  anchors:
-    forbid-undeclared-aliases: true
-    forbid-duplicated-anchors: true
-    forbid-unused-anchors: true
-  float-values:
-    require-numeral-before-decimal: true
-    forbid-scientific-notation: true
-    forbid-nan: true
-    forbid-inf: true
-  key-duplicates:
-    forbid-duplicated-merge-keys: true
-  octal-values:
-    forbid-implicit-octal: true
-    forbid-explicit-octal: true
-"""
-    ]
+    id = "yamllint"
   }
 ]
 
@@ -154,6 +135,34 @@ hooks = [
     args = [
       "--all-extras"
     ]
+  }
+]
+
+
+# Validate OpenAPI specs with Redocly.
+[[repos]]
+repo = "local"
+hooks = [
+  {
+    id = "validate-openapi",
+    name = "Validate OpenAPI specs with Redocly.",
+    entry = "redocly lint",
+    language = "node",
+    additional_dependencies = [
+      "@redocly/cli@1",
+    ],
+    files = '\.(yaml|json)$',
+    pass_filenames = false
+  }
+]
+
+# Format YAML files with yamlfmt.
+[[repos]]
+repo = "https://github.com/google/yamlfmt"
+rev = "v0.21.0"
+hooks = [
+  {
+    id = "yamlfmt",
   }
 ]
 
