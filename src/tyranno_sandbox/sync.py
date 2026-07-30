@@ -6,7 +6,6 @@
 
 import re
 import shutil
-from collections.abc import MutableSequence
 from dataclasses import dataclass, field
 from functools import cache
 from re import Pattern
@@ -17,6 +16,7 @@ from loguru import logger
 from tyranno_sandbox.context import ExpressionError
 
 if TYPE_CHECKING:
+    from collections.abc import MutableSequence
     from pathlib import Path
 
     from tyranno_sandbox.context import Context
@@ -38,7 +38,7 @@ class Tokens:
             tyranno_block_end="::tyranno end::",
         )
 
-    @cache  # noqa: B019
+    @cache  # ruff: ignore[cached-instance-method]
     def inline_regex(self, comment_start: str, comment_end: str) -> Pattern[str]:
         """Build a regex matching a single `::tyranno::` comment line.
 

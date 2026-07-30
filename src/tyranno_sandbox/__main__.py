@@ -94,7 +94,6 @@ class Logging:
 
     level: LogLevel = LogLevel.SUCCESS  # Will be set later.
 
-    # ruff: noqa: A001, A002
     def configure(self, *, quiet: int, verbose: int, to: str, format: str) -> None:
         success_index = list(LogLevel).index(LogLevel.SUCCESS)
         index = success_index + quiet - verbose

@@ -12,8 +12,6 @@ from typing import TYPE_CHECKING, Any, Final
 
 import yaml as _yaml_lib
 
-from tyranno_sandbox import Json
-from tyranno_sandbox._core import Yaml
 from tyranno_sandbox.functions.pep440 import Pep440Dict, Pep440Functions
 from tyranno_sandbox.functions.semver import SemverDict, SemverFunctions
 from tyranno_sandbox.functions.times import DatetimeFunctions, TimeDict
@@ -21,6 +19,9 @@ from tyranno_sandbox.global_vars import STARTUP
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    from tyranno_sandbox import Json
+    from tyranno_sandbox._core import Yaml
 
 __all__ = [
     "FUNCS",

@@ -141,7 +141,7 @@ class Start:
 
     @property
     def elapsed(self) -> timedelta:
-        """Returns a timedelta of [elapsed_ns][] rounded to microseconds."""
+        """A timedelta of [elapsed_ns][] rounded to microseconds."""
         return timedelta(microseconds=round(self.ns_elapsed / 1000))
 
     def __str__(self) -> str:

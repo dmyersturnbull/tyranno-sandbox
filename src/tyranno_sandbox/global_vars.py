@@ -140,7 +140,7 @@ class EnvGlobalVarsFactory(GlobalVarsFactory):
     def _str(self, var: str, default: str) -> str:
         return self.env.get(var, default)
 
-    def _flag(self, var: str, default: bool = False) -> bool:  # noqa: FBT001, FBT002
+    def _flag(self, var: str, default: bool = False) -> bool:  # ruff: ignore[boolean-type-hint-positional-argument, boolean-default-value-positional-argument]
         if value := self.env.get(var):  # Treat empty the same as missing.
             return self.__parse_bool(var, value)
         return default

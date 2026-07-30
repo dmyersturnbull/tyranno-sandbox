@@ -28,8 +28,13 @@ class _FrozenList[T](Sequence[T]):
     def __getitem__(self, index: slice) -> Self: ...
 
     def __getitem__(self, index: int | slice) -> T | Self:
-        result = self.__items[index]
-        return type(self)(result) if isinstance(index, slice) else result
+        match index:
+            case int():
+                return self.__items[index]
+            case slice():
+                return self.__class__(*self.__items[index])
+        msg = f"Invalid type {type(index)} for index {index}"
+        raise TypeError(msg)
 
     def __len__(self) -> int:
         return len(self.__items)
@@ -160,4 +165,4 @@ __about__: Final = About(
 
 
 if __name__ == "__main__":
-    print(__about__)  # noqa: T201
+    print(__about__)  # ruff: ignore[print]

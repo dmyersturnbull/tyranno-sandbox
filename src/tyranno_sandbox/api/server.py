@@ -13,7 +13,11 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException, Response, status
 from loguru import logger
 from starlette.middleware.errors import ServerErrorMiddleware
 from starlette.middleware.exceptions import ExceptionMiddleware
-from starlette_compress import CompressMiddleware
+
+try:
+    from starlette_compress import CompressMiddleware
+except ImportError:
+    CompressMiddleware = None
 
 from tyranno_sandbox.api._meta import META
 
@@ -23,7 +27,8 @@ if TYPE_CHECKING:
 api = FastAPI(**META)
 api.add_middleware(ServerErrorMiddleware)
 api.add_middleware(ExceptionMiddleware)
-api.add_middleware(CompressMiddleware)
+if CompressMiddleware:
+    api.add_middleware(CompressMiddleware)
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,7 +58,7 @@ class JobManager:
         """Simulate a CPU-/IO-bound task that finishes after WAIT_SEC seconds."""
         self._running.add(job_id)
         logger.info("Started job {}", job_id)
-        await asyncio.sleep(2.5)  # 👈 your real work happens here
+        # TODO: real stuff
         self._running.remove(job_id)
         self._results[job_id] = message
         logger.info("Job {} finished – saved result {!r}", job_id, message)

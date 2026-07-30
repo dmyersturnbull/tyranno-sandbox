@@ -7,10 +7,7 @@
 from collections.abc import MutableMapping, MutableSequence
 from typing import Final, NoReturn, final
 
-try:
-    import orjson as json
-except ImportError:
-    import json
+import orjson
 
 __all__ = ["JSON", "Json", "JsonArray", "JsonBranch", "JsonLeaf", "JsonLimb", "JsonPrimitive"]
 
@@ -39,17 +36,10 @@ class _JsonUtil:
         return "JSON"
 
     def encode(self, data: Json) -> str:
-        return json.dumps(data, ensure_ascii=False, allow_nan=False, indent=2)
+        return orjson.dumps(data, option=orjson.OPT_INDENT_2).decode()
 
     def decode(self, data: str) -> Json:
-        import json  # noqa: PLC0415
-
-        return json.loads(data, parse_constant=self._parse_const)
-
-    @staticmethod
-    def _parse_const(s: str) -> NoReturn:
-        msg = f"Invalid JSON value: '{s}'"
-        raise ValueError(msg)
+        return orjson.loads(data)
 
 
 JSON: Final = _JsonUtil()

@@ -8,7 +8,7 @@ See [DotTree][].
 """
 
 from collections import Counter, defaultdict
-from collections.abc import Callable, Generator, Iterator, Mapping, MutableMapping, MutableSequence
+from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from typing import TYPE_CHECKING, Literal, Self, TypeIs, overload
@@ -16,16 +16,13 @@ from typing import TYPE_CHECKING, Literal, Self, TypeIs, overload
 if TYPE_CHECKING:
     import re
 
-try:
-    import orjson as json
-except ImportError:
-    import json
+import orjson
 
 type TomlPrimitive = str | int | float | bool | date | datetime | time
-type TomlArray = MutableSequence[Toml]
+type TomlArray = Sequence[Toml]
 type TomlLeaf = TomlPrimitive | TomlArray
-type TomlBranch = MutableMapping[str, Toml]
-type TomlLimb = MutableMapping[str, TomlLeaf]
+type TomlBranch = Mapping[str, Toml]
+type TomlLimb = Mapping[str, TomlLeaf]
 type Toml = TomlLeaf | TomlBranch
 
 __all__ = [
@@ -243,7 +240,7 @@ class DotDictChecker:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class DottedToNested(Callable[[TomlBranch], TomlBranch]):
+class DottedToNested:
     """Callable that converts a [Branch][] with dotted keys to a nested `Branch`.
 
     The input must a valid [Branch][] (not checked).
@@ -311,7 +308,7 @@ class DottedToNested(Callable[[TomlBranch], TomlBranch]):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class NestedToDotted(Callable[[TomlBranch], TomlBranch]):
+class NestedToDotted:
     """Callable that converts a nested [Branch][] to a `Branch` with dotted keys.
 
     The input can contain dotted keys; i.e. it can be a mixture of nested and dotted.
@@ -401,15 +398,15 @@ class DotTree(Mapping[str, Toml]):
           Be aware that any empty branches will be discarded.
     """
 
-    def __iter__(self) -> Iterator[str]:
-        return iter(self._raw)
-
     def __init__(self, /, x: TomlBranch) -> None:
         """Constructs a tree from a nested dict (about the same as `dict(x)`)."""
         if not isinstance(x, dict):
             msg = f"Not a dict; actually {type(x)} (value: '{x}')"
             raise TypeError(msg)
         self._raw = x
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._raw)
 
     def __getitem__(self, key: str, /) -> Toml:
         return self._raw[key]
@@ -664,7 +661,7 @@ class DotTree(Mapping[str, Toml]):
         return _CHECKER.check_primitive(self._access(keys))
 
     @overload
-    def get(self, keys: str, default: Toml = None) -> Toml: ...
+    def get(self, keys: str, default: Toml) -> Toml: ...
 
     @overload
     def get(self, keys: str, default: Toml | None = None) -> Toml | None: ...
@@ -707,9 +704,7 @@ class DotTree(Mapping[str, Toml]):
 
     def print(self) -> str:
         """Pretty-prints the leaves of this dict using `json.dumps`."""
-        import json  # noqa: PLC0415
-
-        return json.dumps(self, ensure_ascii=False, indent=2)
+        return orjson.dumps(self, option=orjson.OPT_INDENT_2).decode()
 
 
 class DotTrees:
@@ -779,12 +774,12 @@ class DotTrees:
     @classmethod
     def from_json(cls, data: str | bytes | bytearray, /) -> DotTree:
         """Builds a tree from a JSON string."""
-        return DotTree.from_nested(json.loads(data))
+        return DotTree.from_nested(orjson.loads(data))
 
     @classmethod
     def from_toml(cls, data: str | bytes | bytearray, /) -> DotTree:
         """Builds a tree from a TOML string, parsed with `tomllib`."""
-        import tomllib  # noqa: PLC0415
+        import tomllib  # ruff: ignore[import-outside-top-level]
 
         if isinstance(data, (bytes, bytearray)):
             data = data.decode()
@@ -793,4 +788,4 @@ class DotTrees:
     @classmethod
     def to_json(cls, tree: DotTree, /, *, sort: bool = False) -> str:
         """Converts to JSON, raising `ValueError` for `NaN`, `Inf`, and `-Inf` values."""
-        return json.dumps(tree, ensure_ascii=False, allow_nan=False, sort_keys=sort)
+        return orjson.dumps(tree, option=orjson.OPT_SORT_KEYS if sort else 0).decode()
