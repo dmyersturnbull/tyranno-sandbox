@@ -1,2 +1,19 @@
 extends:
-  - minimal
+  - recommended
+
+rules:
+  operation-4xx-response: false
+  path-not-include-query: error
+  no-ambiguous-paths: error
+  no-http-verbs-in-paths: warn
+  path-http-verbs-order: warn
+  paths-kebab-case: error
+  component-name-unique: error
+  no-invalid-media-type-examples: error
+  no-mixed-number-range-constraints: error
+  no-invalid-schema-examples: error
+  no-required-schema-properties-undefined: error
+  spec-discriminator-defaultMapping: error
+  no-duplicated-tag-names: error
+  operation-tag-defined: error
+  tag-description: error

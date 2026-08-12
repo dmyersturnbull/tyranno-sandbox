@@ -76,9 +76,8 @@ dependencies = [
   "orjson>=3.11",
   "pyyaml>=6.0.3",
   "semver>=3.0.4",
-  # /usr/share/zoneinfo uses IANA zones; Windows does not
-  # OR `"tzdata>=2026.1; platform_system == 'Windows'",`
-  "tzdata>=2026.2; platform_system != 'Linux'",
+  # /usr/share/zoneinfo uses IANA zones; Windows does not.
+  "tzdata>=2026.2; platform_system == 'Windows'",
 ]
 
 # -------------------------- optional dependencies ----------------------------
@@ -92,7 +91,6 @@ server = [
   "Hypercorn[h3]>=0.18",
   "pydantic>=2.13",
   "rfc9457>=0.4",
-  "starlette-compress>=1.7; python_version < '3.14'",
 ]
 
 # -------------------------- scripts ------------------------------------------
@@ -147,7 +145,7 @@ test = [
 # Documentation tools
 docs = [
   "mkdocstrings-python>=2.0,<3.0",
-  "zensical>=0.0.51", # https://zensical.org/
+  "zensical>=0.0.53", # https://zensical.org/
 ]
 
 sbom = [
@@ -156,14 +154,14 @@ sbom = [
 
 # Python-ecosystem lint tools that can be called directly
 lint = [
-  "ruff>=0.16.0",
-  "ty>=0.0.65", # Astral's fledgling type checker.
+  "ruff>=0.16.2",
+  "ty>=0.0.70", # Astral's fledgling type checker.
 ]
 
 # Prek and any dependencies for local hooks
 git-hooks = [
   "pathvalidate>=3.3", # Needed for local prek hook.
-  "prek>=0.4.11",
+  "prek>=0.4.12",
 ]
 
 #
@@ -188,7 +186,6 @@ skip-magic-trailing-comma = true
 preview = true
 select = ["ALL"]
 
-#          >>>#<<< align to col 15 (max possible width)
 ignore = [
   # Rules that conflict with the formatter:
   # (See https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules)
@@ -204,33 +201,26 @@ ignore = [
   "prohibited-trailing-comma",
   "multi-line-implicit-string-concatenation",
   "line-too-long",
-  # ---
   # Other ignored rules:
   # Syntax of comments: <rule-description> '(' <reason-ignored> ')'
-  "D1",       # undocumented public __ (omit useless comments)
-  "non-imperative-mood",     # imperative mood (nitpicky rule)
-  "undocumented-param",     # undocumented param (omit useless comments)
-  "docstring-missing-returns",   # missing `Returns:` (omit useless comments)
-  "docstring-missing-yields",   # missing `Yields:` (omit useless comments)
-  "docstring-missing-exception",   # missing `Raises:` exception (omit useless comments)
-  "docstring-extraneous-exception",   # `Raises` lists exeption not raised directly (often helpful to list anyway)
-  "line-contains-todo",   # TO*DO (consider TO*DO non-crucial tasks, whereas FIX*ME are crucial)
-  "magic-value-comparison",  # magic value (includes 2, 256, 404, etc.)
-  "no-self-use",  # 'self' not used (total non-issue and unavoidable when overriding)
-  "ambiguous-unicode-character-string",   # confusable characters in strings (bans useful chars)
-  "ambiguous-unicode-character-docstring",   # confusable characters in docstrings (bans useful chars)
-  "ambiguous-unicode-character-comment",   # confusable characters in comments (bans useful chars)
-  "parenthesize-chained-operators",   # `or x and y` without parentheses (unnecessary)
-  "suspicious-pickle-import",     # import of pickle (S301 on pickle calls is enough)
-  "suspicious-subprocess-import",     # import of subprocess (S602/S603 on subprocess calls is enough)
-  "TD",       # flake8-to*do (requires a specific format)
-  "Q",        # quotes (formatter should cover completely)
-  "doc-line-too-long",     # docstring line too long (use semantic line breaks instead)
-]
-
-# Syntax of comments: <rule-description> '(' <reason-for-change> ')'
-unfixable = [
-  "unquoted-type-alias",    # quotes type alias definitions (move needed imports outside `TYPE_CHECKING` instead)
+  "D1", # undocumented public __ (omit useless comments)
+  "non-imperative-mood", # imperative mood (nitpicky rule)
+  "undocumented-param", # undocumented param (omit useless comments)
+  "docstring-missing-returns", # missing `Returns:` (omit useless comments)
+  "docstring-missing-yields", # missing `Yields:` (omit useless comments)
+  "docstring-missing-exception", # missing `Raises:` exception (omit useless comments)
+  "docstring-extraneous-exception", # `Raises` lists exeption not raised directly (often helpful to list anyway)
+  "line-contains-todo", # TO*DO (consider TO*DO non-crucial tasks, whereas FIX*ME are crucial)
+  "magic-value-comparison", # magic value (includes 2, 256, 404, etc.)
+  "no-self-use", # 'self' not used (total non-issue and unavoidable when overriding)
+  "ambiguous-unicode-character-string", # confusable characters in strings (bans useful chars)
+  "ambiguous-unicode-character-docstring", # confusable characters in docstrings (bans useful chars)
+  "ambiguous-unicode-character-comment", # confusable characters in comments (bans useful chars)
+  "parenthesize-chained-operators", # `or x and y` without parentheses (unnecessary)
+  "suspicious-pickle-import", # import of pickle (S301 on pickle calls is enough)
+  "suspicious-subprocess-import", # import of subprocess (S602/S603 on subprocess calls is enough)
+  "TD", # flake8-to*do (requires a specific format)
+  "doc-line-too-long", # docstring line too long (use semantic line breaks instead)
 ]
 
 # Delegated options
@@ -254,9 +244,9 @@ allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*" = [
-  "D1",       # missing docstrings
-  "assert",     # assert
-  "relative-imports",   # relative import
+  "D1", # missing docstrings
+  "assert", # assert
+  "relative-imports", # relative import
 ]
 
 #
@@ -269,7 +259,7 @@ allow-dunder-method-names = ["__rich_repr__"] # allow custom dunders
 # ******************************* Notes for running tests ******************************************
 # CWD and editor support:
 # - When running tests, the working directory should be the project root.
-# - pytest-cov is not compatible with the PyCharm/IntelliJ debugger.
+# - pytest-cov is not compatible with the PyCharm debugger.
 #   See https://www.jetbrains.com/help/pycharm/run-debug-configuration-py-test.html
 #
 # Notable CLI options:
